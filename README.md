@@ -19,3 +19,6 @@ Notre idée de jeu : créer une version de base qui correspond au jeu Snake, pui
 │   └── variantB.dsl<br>
 └── OPEN-QUESTIONS.md<br>
 
+## HOW-TO SNAKE :
+Rédiger clairement içi comment générer, où sont les variantes, validations, preview.
+Si ça veut dire qqch...

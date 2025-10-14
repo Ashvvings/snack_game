@@ -8,7 +8,7 @@ Proposition de nom de langage : "FourchLangium".
 
 - Grammaire :
 ```
-grammar SnakeGame
+grammar FourchLangium
 
 entry Model:
     (grid+=Grid 
