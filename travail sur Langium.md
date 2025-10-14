@@ -12,6 +12,7 @@ grammar SnakeGame
 
 entry Model:
     (grid+=Grid 
+    | fruit_generation+=FruitGenerator
     | player+=Player 
     | ennemies+=Ennemy 
     | scoring=Scoring 
@@ -21,11 +22,14 @@ entry Model:
 Grid:
     'grid' 'size' x=NUM ('x'|'*') y=NUM;
 
+FruitGenerator:
+    'fruits' ('does' 'not')? 'reappear' ('every' seconds=NUM)?('when' 'eaten')?;
+
 Player:
-    'player' ('in' '('x=NUM',' y=NUM')')?;
+    'player' ('in' '('x=NUM',' y=NUM')')? ('with' 'speed' speed=NUM ('variable')?)?;
 
 Ennemy:
-    'ennemy' 'in' '('x=NUM',' y=NUM')';
+    'ennemy' 'in' '('x=NUM',' y=NUM')' ('moves' ('with' 'speed' speed=NUM)?)?;
 
 Scoring:
     'fruits' 'score' point=NUM ('and' 'grow' length=NUM)?;
@@ -50,11 +54,16 @@ hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;
 ```
 grid size 5 x 5
 
+fruits reappear when eaten
+
 player in (2,2)
 //player // snake then placed at random
+//player in (2,2) with speed 4 // gotta go fast
+player in (2,2) with speed 1 variable // display way to modulate speed
 
-ennemy in (3,3)
 ennemy in (2,3)
+ennemy in (2,4) moves
+ennemy in (2,5) moves with speed 2
 
 fruits score 3 and grow 1
 // fruits score 1 // snake doesn't grow -> Pacman
