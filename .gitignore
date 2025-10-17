@@ -1,4 +1,5 @@
 package-lock.json
+.gitignore
 package.json
 FourchLang/README.md
 FourchLang/tsconfig.build.json
