@@ -26,10 +26,10 @@ FruitGenerator:
     'fruits' ('does' 'not')? 'reappear' ('every' seconds=NUM)?('when' 'eaten')?;
 
 Player:
-    'player' ('in' '('x=NUM',' y=NUM')')? ('with' 'speed' speed=NUM ('variable')?)?;
+    'player' ('in' '('x=NUM',' y=NUM')')? 'with' 'size' len=NUM (',' 'speed' speed=NUM ('variable')?)?;
 
 Ennemy:
-    'ennemy' 'in' '('x=NUM',' y=NUM')' ('moves' ('with' 'speed' speed=NUM)?)?;
+    type=('ennemy'|('snake body')) 'in' '('x=NUM',' y=NUM')' ('moves' ('with' 'speed' speed=NUM)?)?;
 
 Scoring:
     'fruits' 'score' point=NUM ('and' 'grow' length=NUM)?;
@@ -38,7 +38,7 @@ Fruit:
     'fruit' 'in' '('x=NUM',' y=NUM')';
 
 GameOverCondition:
-    end=('ennemies'| 'borders' | 'fruits') 'end' 'game';
+    end=('snake'|'ennemies'|'borders'|'fruits') 'end' 'game';
 
 hidden terminal WS: /\s+/;
 // terminal ID: /[_a-zA-Z][\w_]*/;
@@ -56,11 +56,12 @@ grid size 5 x 5
 
 fruits reappear when eaten
 
-player in (2,2)
+player in (2,2) with size 0
 //player // snake then placed at random
 //player in (2,2) with speed 4 // gotta go fast
-player in (2,2) with speed 1 variable // display way to modulate speed
+player in (2,2) with size 3, speed 1 variable // display way to modulate speed
 
+snake body in (3,4)
 ennemy in (2,3)
 ennemy in (2,4) moves
 ennemy in (2,5) moves with speed 2
