@@ -1,2 +1,14 @@
-grid size 10*9
+grid size 10 x 9
 
+fruits reappear when eaten
+
+player in (3, 3) with size 3
+
+ennemy in (2, 3)
+ennemy in (1, 3)
+
+fruits scores 1
+
+fruit in (7, 6)
+
+ennemies end game

@@ -1,5 +1,5 @@
 package-lock.json
-.gitignore
+# .gitignore
 package.json
 FourchLang/README.md
 FourchLang/tsconfig.build.json
@@ -7,5 +7,16 @@ FourchLang/tsconfig.json
 FourchLang/.vscode/extensions.json
 FourchLang/.vscode/launch.json
 FourchLang/.vscode/tasks.json
-FourchLang/packages
+FourchLang/packages/cli
+FourchLang/packages/extension
+FourchLang/packages/language/out
+FourchLang/packages/language/src/generated
+FourchLang/packages/language/src/syntaxes
 node_modules
+FourchLang/packages/language/langium-config.json
+FourchLang/packages/language/tsconfig.src.json
+.gitignore
+FourchLang/packages/language/README.md
+FourchLang/packages/language/tsconfig.json
+FourchLang/packages/language/tsconfig.test.json
+FourchLang/packages/language/vitest.config.ts
