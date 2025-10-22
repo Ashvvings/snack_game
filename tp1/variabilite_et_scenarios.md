@@ -2,8 +2,7 @@
 
 ## Variabilité : compile-time vs run-time
 
-Dans notre projet, nous distinguons clairement les paramètres qui agissent à la compilation (Compile-Time, CT) de ceux modifiables en cours de jeu (Run-Time, RT).
-Paramètres à la compilation (Compile-Time)
+### Paramètres à la compilation (Compile-Time)
 
 Ces paramètres définissent la structure ou la logique fixe de la variante du jeu. Ils sont figés au moment de construire la version du jeu et influencent son comportement profond :
 
@@ -24,7 +23,8 @@ Ces paramètres définissent la structure ou la logique fixe de la variante du j
 - Règles de fin de partie liées aux bords ou à la morsure du serpent
 
 Ces choix peuvent impacter la structure du plateau, les règles et la sémantique du jeu.
-Paramètres à l’exécution (Run-Time)
+
+### Paramètres à l’exécution (Run-Time)
 
 Ces paramètres sont dynamiques et peuvent être ajustés pendant la partie sans modifier la logique de base :
 
