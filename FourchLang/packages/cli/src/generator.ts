@@ -26,7 +26,7 @@ export function generateOutput(model: Model, source: string, destination: string
         grid += "# "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`;
         for (let j = 0; j < +model.grid.map(g => g.x)[0]; j++) {
             if (+model.player.map(p => p.x)[0] == j && +model.player.map(p => p.y)[0] == i) {
-                grid += "A "; consoleGrid += `${ansiStyles.green.open}A ${ansiStyles.green.close}`;
+                grid += "A "; consoleGrid += `${ansiStyles.green.open}O ${ansiStyles.green.close}`;
             } else if (snakeBodyParts.includes("("+j+","+i+")")) {
                 grid += "S "; consoleGrid += `${ansiStyles.green.open}S ${ansiStyles.green.close}`;
             } else if (enemies.includes("("+j+","+i+")")) {
