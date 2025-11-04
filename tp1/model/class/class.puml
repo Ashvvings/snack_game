@@ -1,0 +1,108 @@
+@startuml
+
+enum Direction {
+  North
+  East
+  South
+  West
+}
+
+enum Mode {
+  pacman
+  snake
+}
+
+class GameSession {
+  - id : Long
+  - isOver : boolean
+  - points : int
+  + start() : void
+  + pause() : void
+  + resume() : void
+  + over() : void
+}
+
+class Map {
+  - size : [int n, int m]
+  - horizontalBorderCrossable : boolean
+  - verticalBorderCrossable : boolean
+  - fruitsReappear : boolean
+  + addEnemy() : void
+}
+
+class Tile {
+  - position : [int x, int y]
+}
+
+class Wall {
+}
+
+class EmptyTile {
+}
+
+class Fruit {
+  - points : int
+}
+
+class Player {
+  - isAlive : boolean
+  + eat(Fruit fruit) : void
+  + gainPoints(int) : void
+  + dies() : void
+  + moves(Direction) : void
+}
+
+class SnakePlayer {
+  - size : int
+  + growUp() : void
+}
+
+class PacManPlayer {
+}
+
+class Enemy {
+  - canMove : boolean
+}
+
+class MovingEnemy {
+  + moves(Direction) : void
+}
+
+class StaticEnemy {
+}
+
+class SnakeBody {
+  + moves() : void
+}
+
+
+GameSession --> "1" Map
+GameSession --> Player : gainPoint
+
+Map o-- "n * m" Tile : tiles[]
+
+Player --> Enemy : kills
+Player --> Fruit : eats
+Player <|-- SnakePlayer
+Player <|-- PacManPlayer
+
+SnakeBody --> SnakePlayer : parent
+SnakeBody "0..1" --> SnakeBody : parent
+
+Enemy <|-- MovingEnemy
+Enemy <|-- StaticEnemy
+Enemy <|-- SnakeBody
+
+Tile <|-- Wall
+Tile <|-- EmptyTile
+Tile <|-- Fruit
+Tile <|-- Enemy
+Tile <|-- Player
+
+GameSession --> Mode
+
+note bottom of SnakePlayer
+  size = nbSnakeBody + 1
+end note
+
+@enduml
