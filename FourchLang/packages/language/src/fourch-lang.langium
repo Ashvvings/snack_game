@@ -25,7 +25,8 @@ FruitConfiguration:
 
 Player:
     'player' name=ID? 'at' '(' x=NUM ',' y=NUM ')' 
-    ('with' 'size' len=NUM)?;
+    ('with' 'size' len=NUM)?
+    (('speed' speed=NUM)?)?;
 
 Enemy:
     'enemy' 'at' '(' x=NUM ',' y=NUM ')'
@@ -57,6 +58,6 @@ GameOverCondition:
 
 hidden terminal WS: /\s+/;
 terminal ID: /[_a-zA-Z][\w_]*/;
-terminal NUM: /[0-9]+/;
+terminal NUM: /-?[0-9]+/;
 hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
 hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;
