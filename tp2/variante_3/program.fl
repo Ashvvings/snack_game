@@ -1,0 +1,15 @@
+grid size 10 x 10
+
+border horizontal crossable
+border vertical crossable
+
+fruits reappear when eaten
+
+player uwu at (2, 1) with size 4
+
+snake body owo at (3, 1) following uwu
+snake body awa at (4, 1) following owo
+snake body ewe at (5, 1) following awa
+
+enemy bowser at (7, 8) with size 4
+enemy koopa at (8, 8) with size 4

@@ -1,0 +1,18 @@
+grid size 10 x 9
+
+border horizontal crossable
+border vertical crossable
+
+fruits reappear when eaten grow snake by 1
+
+player blob at (3, 3) with size 3
+
+enemy ganon at (2, 3) with size 1
+
+snake body bodA at (3,4) following blob
+snake body bodB at (3,5) following bodA
+
+fruit at (7, 6) worth 1
+
+game over when hitting snake_body
+game over when hitting enemy
