@@ -1,6 +1,6 @@
 grid size 15*17
 
-player schnek at (7, 13) with size 1
+player schnek at (7, 13) with size 1 with color magenta
 snake body at (7, 14) following schnek
 
 enemy at (5, 5)

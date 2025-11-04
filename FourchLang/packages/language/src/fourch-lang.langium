@@ -25,7 +25,9 @@ FruitConfiguration:
 
 Player:
     'player' name=ID? 'at' '(' x=NUM ',' y=NUM ')' 
-    ('with' 'size' len=NUM)?;
+    ('with' 'size' len=NUM)?
+    ('with' 'speed' speed=NUM ('variable')?)?
+    ('with' 'color' color=COLOR ('variable')?)?;
 
 Enemy:
     'enemy' name=ID? 'at' '(' x=NUM ',' y=NUM ')'
@@ -54,6 +56,9 @@ Fruit:
 
 GameOverCondition:
     'game' 'over' 'when' 'hitting' target=('snake_body'|'enemy'|'border');
+
+COLOR returns string:
+    'red' | 'green' | 'blue' | 'yellow' | 'black' | 'white' | 'gray' | 'magenta' | 'cyan';
 
 hidden terminal WS: /\s+/;
 terminal ID: /[_a-zA-Z][\w_]*/;

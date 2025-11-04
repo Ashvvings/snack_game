@@ -17,6 +17,21 @@ export function generateOutput(model: Model, source: string, destination: string
         "("+f.x+","+f.y+")");
     let walls : string[] = model.walls.map(w => 
         "("+w.x+","+w.y+")");
+    
+    let using_color = (color:string, text:string) =>{
+        switch(color) {
+            case "white":   return `${ansiStyles.white.open}${text}${ansiStyles.white.close}`;
+            case "green":   return `${ansiStyles.green.open}${text}${ansiStyles.green.close}`;
+            case "red":     return `${ansiStyles.red.open}${text}${ansiStyles.red.close}`;
+            case "yellow":  return `${ansiStyles.yellow.open}${text}${ansiStyles.yellow.close}`;
+            case "blue":    return `${ansiStyles.blue.open}${text}${ansiStyles.blue.close}`;
+            case "black":   return `${ansiStyles.black.open}${text}${ansiStyles.black.close}`;
+            case "gray":    return `${ansiStyles.gray.open}${text}${ansiStyles.gray.close}`;
+            case "cyan":    return `${ansiStyles.cyan.open}${text}${ansiStyles.cyan.close}`;
+            case "magenta": return `${ansiStyles.magenta.open}${text}${ansiStyles.magenta.close}`;
+            default:        return `${ansiStyles.green.open}${text}${ansiStyles.green.close}`;
+        }
+    };
 
     let grid = "";
     let consoleGrid = "";
@@ -26,9 +41,9 @@ export function generateOutput(model: Model, source: string, destination: string
         grid += "# "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`;
         for (let j = 0; j < +model.grid.map(g => g.x)[0]; j++) {
             if (+model.player.map(p => p.x)[0] == j && +model.player.map(p => p.y)[0] == i) {
-                grid += "A "; consoleGrid += `${ansiStyles.green.open}O ${ansiStyles.green.close}`;
+                grid += "A "; consoleGrid += using_color((model.player[0].color? model.player[0].color : ""), 'O ');
             } else if (snakeBodyParts.includes("("+j+","+i+")")) {
-                grid += "S "; consoleGrid += `${ansiStyles.green.open}S ${ansiStyles.green.close}`;
+                grid += "S "; consoleGrid += using_color((model.player[0].color? model.player[0].color : ""), 'S ');
             } else if (enemies.includes("("+j+","+i+")")) {
                 grid += "M "; consoleGrid += `${ansiStyles.red.open}M ${ansiStyles.red.close}`;
             } else if (enemyBodies.includes("("+j+","+i+")")) {
