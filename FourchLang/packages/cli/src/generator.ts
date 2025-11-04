@@ -12,6 +12,7 @@ export function generateOutput(model: Model, source: string, destination: string
         Testing ${source} generation.
         player name is ${model.player.map(player => player.name).join(', ')}
         grid size is ${model.grid.map(g => g.x)} x ${model.grid.map(g => g.y)}
+        add grid below : 
     `.appendNewLineIfNotEmpty();
     if (!fs.existsSync(data.destination)) {
         fs.mkdirSync(data.destination, { recursive: true });
