@@ -1,9 +1,17 @@
 grid size 15*17
 
-player at (7, 13) with size 1
+player schnek at (7, 13) with size 1
+snake body at (7, 14) following schnek
 
 enemy at (5, 5)
 enemy at (10, 10) 
 enemy at (5, 5)
 enemy at (10, 10) 
+enemy head at (4, 7)
+enemy body at (4, 8) following head
 
+fruit at (3, 3) worth 1
+fruit at (12, 14) worth 2
+fruit at (6, 1) worth 3
+
+wall at (1, 1)

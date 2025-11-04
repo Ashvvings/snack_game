@@ -28,7 +28,7 @@ Player:
     ('with' 'size' len=NUM)?;
 
 Enemy:
-    'enemy' 'at' '(' x=NUM ',' y=NUM ')'
+    'enemy' name=ID? 'at' '(' x=NUM ',' y=NUM ')'
     ('with' 'size' len=NUM)?
     (movable?=('moves') ('speed' speed=NUM)?)?;
 
