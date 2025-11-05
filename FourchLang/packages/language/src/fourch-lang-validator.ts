@@ -195,18 +195,8 @@ export class FourchLangValidator {
         const growthLength = config.growthLength ? parseInt(config.growthLength, 10) : undefined;
         const seconds = config.seconds ? parseInt(config.seconds, 10) : undefined;
 
-        // Cas 1 : reappear = true → seconds doit exister et être positif
-        if (config.reappear) {
-            if (seconds === undefined || isNaN(seconds) || seconds <= 0) {
-                accept(
-                    'error',
-                    'When "reappear" is true, "seconds" must be a positive number.',
-                    { node: config, property: 'seconds' }
-                );
-            }
-        } 
-        // Cas 2 : reappear = false → seconds ne doit pas être défini
-        else if (seconds !== undefined) {
+        // Cas 1 : reappear = false → seconds ne doit pas être défini
+        if (seconds !== undefined) {
             accept(
                 'warning',
                 'When "reappear" is false, "seconds" should not be defined.',
@@ -214,7 +204,7 @@ export class FourchLangValidator {
             );
         }
 
-        // Cas 3 : growthLength doit être positif s’il est défini
+        // Cas 2 : growthLength doit être positif s’il est défini
         if (growthLength !== undefined && (isNaN(growthLength) || growthLength <= 0)) {
             accept(
                 'error',
