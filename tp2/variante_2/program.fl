@@ -1,7 +1,7 @@
 grid size 10 x 9
 
-border horizontal not crossable
-border vertical not crossable
+border horizontal uncrossable
+border vertical uncrossable
 
 fruits reappear when eaten
 

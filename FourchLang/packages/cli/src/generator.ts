@@ -41,7 +41,7 @@ export function generateOutput(model: Model, source: string, destination: string
         grid += "# "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`;
         for (let j = 0; j < +model.grid.map(g => g.x)[0]; j++) {
             if (+model.player.map(p => p.x)[0] == j && +model.player.map(p => p.y)[0] == i) {
-                grid += "A "; consoleGrid += using_color((model.player[0].color? model.player[0].color : ""), 'O ');
+                grid += "O "; consoleGrid += using_color((model.player[0].color? model.player[0].color : ""), 'O ');
             } else if (snakeBodyParts.includes("("+j+","+i+")")) {
                 grid += "S "; consoleGrid += using_color((model.player[0].color? model.player[0].color : ""), 'S ');
             } else if (enemies.includes("("+j+","+i+")")) {

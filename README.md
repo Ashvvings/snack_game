@@ -19,3 +19,56 @@ Ce sous-domaine vise exclusivement les jeux 2D se déroulant sur une grille disc
 Le jeu repose sur des états successifs simples, clairement définis et entièrement descriptibles, ce qui facilite la modélisation et la mise en œuvre.
 Les concepts fondamentaux du sous-domaine (taille du joueur, collisions, apparition d’objets, type d’objets) sont indépendants mais peuvent être combinés et paramétrés de nombreuses manières, générant ainsi une grande diversité de variantes possibles. Par exemple, on peut ajuster la taille de la grille, le comportement aux bordures, la nature des objets ou les règles de fin de partie.
 
+## Comment compiler un fichier FourchLang (.fl)
+
+La commande, à lancer dans un terminal, permettant de passer d'un fichier **.fl** contenant la description du jeu dans son état initial à un fichier contenant l'affichage de la grille de jeu de snake dans l'état décrit est la suivante : 
+
+```shell 
+~$ npm run generate --source=[chemin/vers/fichier/source] --destination=[chemin/où/mettre/le/fichier/généré]
+```
+Cette commande retourne par défaut un fichier texte avec une représentation de l'état initial d'un jeu de Snake en art ASCII.
+Elle affiche égalementdans le terminal le même affichage, cette fois-ci en couleur.
+
+Cette commande fonctionne uniquement en se plaçant dans le dossier FourchLang de ce projet.
+Il est préférable d'avoir au préalable lancé les commandes : 
+```shell 
+~$ npm run langium:generate
+~$ npm run build
+```
+
+Exemple de compilation obtenue avec le fichier suivant : 
+```fl 
+grid size 10 x 9
+
+border horizontal not crossable
+border vertical not crossable
+
+fruits reappear when eaten
+
+player blob at (3, 3) with size 2
+
+snake body bobA at (2, 3) following blob
+snake body bobB at (1, 3) following bobA
+
+fruit at (7, 6) worth 1
+
+game over when hitting snake_body
+game over when hitting enemy
+game over when hitting border
+```
+
+Fichier obtenu :
+```ansi
+# # # # # # # # # # # # 
+# . . . . . . . . . . #
+# . . . . . . . . . . #
+# . . . . . . . . . . #
+# . S S O . . . . . . #
+# . . . . . . . . . . #
+# . . . . . . . . . . #
+# . . . . . . . F . . #
+# . . . . . . . . . . #
+# . . . . . . . . . . #
+# # # # # # # # # # # # 
+```
+Affichage dans le terminal : 
