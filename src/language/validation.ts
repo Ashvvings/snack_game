@@ -1,0 +1,1 @@
+// voir snack_game/FourchLang/packages/language/src/fourch-lang-validator.ts

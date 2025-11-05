@@ -2,6 +2,7 @@ grammar FourchLang
 
 entry Model:
     (grid+=Grid 
+    | gameMode+=GameMode
     | borderRules+=BorderRule
     | fruitConfig+=FruitConfiguration
     | player+=Player 
@@ -15,8 +16,11 @@ entry Model:
 Grid:
     'grid' 'size' x=NUM ('x'|'*') y=NUM;
 
+GameMode:
+    'game' 'mode' mode=('snake'|'pacman'|'adder');
+
 BorderRule:
-    'border' direction=('horizontal'|'vertical') (crossable?='crossable' | 'uncrossable');
+    'border' direction=('horizontally'|'vertically') 'crossable';
 
 FruitConfiguration:
     'fruits' 

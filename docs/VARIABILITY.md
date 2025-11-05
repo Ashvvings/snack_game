@@ -1,9 +1,5 @@
 # Variabilités et Scénarios
 
-## Presets
-
-
-
 ## Variabilité : compile-time vs run-time
 
 ### Paramètres à la compilation (Compile-Time)
@@ -46,25 +42,31 @@ Nous proposons trois scénarios illustrant l’impact concret de ces paramètres
 
 - Jeu Snake classique :
 
-    Grille 10x9, serpent de taille 2, 1 fruit.
+    Grille 10x9, serpent de taille 3.
+
+    1 fruit qui vaut 1, fait grandir de 1 et réapparaît quand il est mangé.
 
     Fin de jeu si serpent se mord.
-
-    Manger un fruit augmente la taille du serpent.
 
 - Variante bord fermé :
 
     Même grille et serpent.
 
-    Les bords provoquent aussi la fin du jeu.
+    1 fruit qui vaut 1, fait grandir de 1 et réapparaît quand il est mangé.
+
+    Des fruits apparaissent aléatoirement toutes les 2 secondes.
+
+    Les bords provoquent la fin du jeu.
 
     Même croissance du serpent.
 
 - SnakeAdder :
 
-    Grille 16x16, serpent taille 2, 1 fruit.
+    Grille 16x16, serpent taille 2.
 
-    Fruits ont une valeur entière, matrice des multiples autorisés.
+    4 fruits (3, 12, 9, 21)
+
+    Fruits ont une valeur entière, matrice des multiples de 3 autorisés.
 
     Collision avec serpent éliminante, mais pas avec les bords.
 
@@ -87,13 +89,54 @@ Nous proposons trois scénarios illustrant l’impact concret de ces paramètres
 ## Presets dans notre grammaire
 
 - Jeu Snake classique :
+    grid size 10 x 9
 
+    border horizontally crossable
+    border vertically crossable
+
+    fruits reappear when eaten grow snake by 1
+
+    player blob at (3, 3) with size 3
+
+    snake body bodA at (3,4) following blob
+    snake body bodB at (3,5) following bodA
+
+    fruit at (7, 6) worth 1
+
+    game over when hitting snake_body
 
     
 - Variante bords fermés :
+    grid size 10 x 9
 
+    fruits reappear every 2 seconds
+
+    player blob at (3, 3) with size 3
+
+    snake body bobA at (2, 3) following blob
+    snake body bobB at (1, 3) following bobA
+
+    fruit at (7, 6) worth 1
+
+    game over when hitting border
 
 
 - SnakeAdder :
+    grid size 16 x 16
 
+    game mode adder
 
+    fruits reappear every 3 seconds
+
+    player snackinou at (14,3) with size 2
+
+    snake body bodA at (14,4) following snackinou
+
+    fruit at (1,2) worth 3
+    fruit at (1,5) worth 12
+    fruit at (8,9) worth 9
+    fruit at (5,2) worth 21
+
+    enemy pasMultiple at (7,7) 
+
+- Pac-Man :

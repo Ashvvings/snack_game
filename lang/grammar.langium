@@ -1,0 +1,71 @@
+grammar FourchLang
+
+entry Model:
+    (grid+=Grid 
+    | gameMode+=GameMode
+    | borderRules+=BorderRule
+    | fruitConfig+=FruitConfiguration
+    | player+=Player 
+    | enemies+=Enemy 
+    | snakeBodies+=SnakeBody
+    | enemyBodies+=EnemyBody
+    | walls+=Wall
+    | fruits+=Fruit
+    | game_over_conditions+=GameOverCondition)*;
+
+Grid:
+    'grid' 'size' x=NUM ('x'|'*') y=NUM;
+
+GameMode:
+    'game' 'mode' mode=('snake'|'pacman'|'adder');
+
+BorderRule:
+    'border' direction=('horizontally'|'vertically') 'crossable';
+
+FruitConfiguration:
+    'fruits' 
+    (reappear?='reappear' ('every' seconds=NUM 'seconds')? ('when' 'eaten')?)?
+    ('grow' 'snake' 'by' growthLength=NUM)?;
+
+Player:
+    'player' name=ID? 'at' '(' x=NUM ',' y=NUM ')' 
+    ('with' 'size' len=NUM)?
+    ('with' 'speed' speed=NUM ('variable')?)?
+    ('with' 'color' color=COLOR ('variable')?)?;
+
+Enemy:
+    'enemy' name=ID? 'at' '(' x=NUM ',' y=NUM ')'
+    ('with' 'size' len=NUM)?
+    (movable?=('moves') ('speed' speed=NUM)?)?;
+
+ToFollowSnake:
+    Player | SnakeBody;
+
+ToFollowEnemy:
+    Enemy | EnemyBody;
+
+SnakeBody:
+    'snake' 'body' name=ID? 'at' '(' x=NUM ',' y=NUM ')'
+    'following' (parent=[ToFollowSnake:ID]);
+
+EnemyBody:
+    'enemy' 'body' name=ID? 'at' '(' x=NUM ',' y=NUM ')'
+    'following' (parent=[ToFollowEnemy:ID]);
+
+Wall:
+    'wall' 'at' '(' x=NUM ',' y=NUM ')';
+
+Fruit:
+    'fruit' 'at' '(' x=NUM ',' y=NUM ')' 'worth' points=NUM;
+
+GameOverCondition:
+    'game' 'over' 'when' 'hitting' target=('snake_body'|'enemy'|'border');
+
+COLOR returns string:
+    'red' | 'green' | 'blue' | 'yellow' | 'black' | 'white' | 'gray' | 'magenta' | 'cyan';
+
+hidden terminal WS: /\s+/;
+terminal ID: /[_a-zA-Z][\w_]*/;
+terminal NUM: /-?[0-9]+/;
+hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
+hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;
