@@ -21,6 +21,13 @@ Les concepts fondamentaux du sous-domaine (taille du joueur, collisions, apparit
 
 ## Comment compiler un fichier FourchLang (.fl)
 
+La compilation n'est possible que si les fichiers du language FourchLang ont été générés, pensez donc au préalable avant de suivre le restant de cette partie à exécuter les commandes suivantes : 
+```shell 
+~$ npm run langium:generate
+~$ npm run build
+```
+Et en vous plaçant à l'aide d'un terminal dans le dossier FourchLang de ce projet.
+
 La commande, à lancer dans un terminal, permettant de passer d'un fichier **.fl** contenant la description du jeu dans son état initial à un fichier contenant l'affichage de la grille de jeu de snake dans l'état décrit est la suivante : 
 
 ```shell 
@@ -28,13 +35,6 @@ La commande, à lancer dans un terminal, permettant de passer d'un fichier **.fl
 ```
 Cette commande retourne par défaut un fichier texte avec une représentation de l'état initial d'un jeu de Snake en art ASCII.
 Elle affiche égalementdans le terminal le même affichage, cette fois-ci en couleur.
-
-Cette commande fonctionne uniquement en se plaçant dans le dossier FourchLang de ce projet.
-Il est préférable d'avoir au préalable lancé les commandes : 
-```shell 
-~$ npm run langium:generate
-~$ npm run build
-```
 
 Exemple de compilation obtenue avec le fichier suivant : 
 ```fl 
@@ -72,3 +72,5 @@ Fichier obtenu :
 # # # # # # # # # # # # 
 ```
 Affichage dans le terminal : 
+
+![Grid_example](Grid_example.png)
