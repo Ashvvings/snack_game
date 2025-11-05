@@ -166,7 +166,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
             "terminal": {
               "$type": "RuleCall",
               "rule": {
-                "$ref": "#/rules@15"
+                "$ref": "#/rules@16"
               },
               "arguments": []
             }
@@ -191,7 +191,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
             "terminal": {
               "$type": "RuleCall",
               "rule": {
-                "$ref": "#/rules@15"
+                "$ref": "#/rules@16"
               },
               "arguments": []
             }
@@ -290,7 +290,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
                     "terminal": {
                       "$type": "RuleCall",
                       "rule": {
-                        "$ref": "#/rules@15"
+                        "$ref": "#/rules@16"
                       },
                       "arguments": []
                     }
@@ -341,7 +341,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
                 "terminal": {
                   "$type": "RuleCall",
                   "rule": {
-                    "$ref": "#/rules@15"
+                    "$ref": "#/rules@16"
                   },
                   "arguments": []
                 }
@@ -372,7 +372,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
             "terminal": {
               "$type": "RuleCall",
               "rule": {
-                "$ref": "#/rules@14"
+                "$ref": "#/rules@15"
               },
               "arguments": []
             },
@@ -393,7 +393,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
             "terminal": {
               "$type": "RuleCall",
               "rule": {
-                "$ref": "#/rules@15"
+                "$ref": "#/rules@16"
               },
               "arguments": []
             }
@@ -409,7 +409,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
             "terminal": {
               "$type": "RuleCall",
               "rule": {
-                "$ref": "#/rules@15"
+                "$ref": "#/rules@16"
               },
               "arguments": []
             }
@@ -436,10 +436,72 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
                 "terminal": {
                   "$type": "RuleCall",
                   "rule": {
-                    "$ref": "#/rules@15"
+                    "$ref": "#/rules@16"
                   },
                   "arguments": []
                 }
+              }
+            ],
+            "cardinality": "?"
+          },
+          {
+            "$type": "Group",
+            "elements": [
+              {
+                "$type": "Keyword",
+                "value": "with"
+              },
+              {
+                "$type": "Keyword",
+                "value": "speed"
+              },
+              {
+                "$type": "Assignment",
+                "feature": "speed",
+                "operator": "=",
+                "terminal": {
+                  "$type": "RuleCall",
+                  "rule": {
+                    "$ref": "#/rules@16"
+                  },
+                  "arguments": []
+                }
+              },
+              {
+                "$type": "Keyword",
+                "value": "variable",
+                "cardinality": "?"
+              }
+            ],
+            "cardinality": "?"
+          },
+          {
+            "$type": "Group",
+            "elements": [
+              {
+                "$type": "Keyword",
+                "value": "with"
+              },
+              {
+                "$type": "Keyword",
+                "value": "color"
+              },
+              {
+                "$type": "Assignment",
+                "feature": "color",
+                "operator": "=",
+                "terminal": {
+                  "$type": "RuleCall",
+                  "rule": {
+                    "$ref": "#/rules@13"
+                  },
+                  "arguments": []
+                }
+              },
+              {
+                "$type": "Keyword",
+                "value": "variable",
+                "cardinality": "?"
               }
             ],
             "cardinality": "?"
@@ -461,6 +523,19 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
             "value": "enemy"
           },
           {
+            "$type": "Assignment",
+            "feature": "name",
+            "operator": "=",
+            "terminal": {
+              "$type": "RuleCall",
+              "rule": {
+                "$ref": "#/rules@15"
+              },
+              "arguments": []
+            },
+            "cardinality": "?"
+          },
+          {
             "$type": "Keyword",
             "value": "at"
           },
@@ -475,7 +550,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
             "terminal": {
               "$type": "RuleCall",
               "rule": {
-                "$ref": "#/rules@15"
+                "$ref": "#/rules@16"
               },
               "arguments": []
             }
@@ -491,7 +566,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
             "terminal": {
               "$type": "RuleCall",
               "rule": {
-                "$ref": "#/rules@15"
+                "$ref": "#/rules@16"
               },
               "arguments": []
             }
@@ -518,7 +593,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
                 "terminal": {
                   "$type": "RuleCall",
                   "rule": {
-                    "$ref": "#/rules@15"
+                    "$ref": "#/rules@16"
                   },
                   "arguments": []
                 }
@@ -552,7 +627,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
                     "terminal": {
                       "$type": "RuleCall",
                       "rule": {
-                        "$ref": "#/rules@15"
+                        "$ref": "#/rules@16"
                       },
                       "arguments": []
                     }
@@ -642,7 +717,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
             "terminal": {
               "$type": "RuleCall",
               "rule": {
-                "$ref": "#/rules@14"
+                "$ref": "#/rules@15"
               },
               "arguments": []
             },
@@ -663,7 +738,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
             "terminal": {
               "$type": "RuleCall",
               "rule": {
-                "$ref": "#/rules@15"
+                "$ref": "#/rules@16"
               },
               "arguments": []
             }
@@ -679,7 +754,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
             "terminal": {
               "$type": "RuleCall",
               "rule": {
-                "$ref": "#/rules@15"
+                "$ref": "#/rules@16"
               },
               "arguments": []
             }
@@ -704,7 +779,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
               "terminal": {
                 "$type": "RuleCall",
                 "rule": {
-                  "$ref": "#/rules@14"
+                  "$ref": "#/rules@15"
                 },
                 "arguments": []
               },
@@ -739,7 +814,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
             "terminal": {
               "$type": "RuleCall",
               "rule": {
-                "$ref": "#/rules@14"
+                "$ref": "#/rules@15"
               },
               "arguments": []
             },
@@ -760,7 +835,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
             "terminal": {
               "$type": "RuleCall",
               "rule": {
-                "$ref": "#/rules@15"
+                "$ref": "#/rules@16"
               },
               "arguments": []
             }
@@ -776,7 +851,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
             "terminal": {
               "$type": "RuleCall",
               "rule": {
-                "$ref": "#/rules@15"
+                "$ref": "#/rules@16"
               },
               "arguments": []
             }
@@ -801,7 +876,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
               "terminal": {
                 "$type": "RuleCall",
                 "rule": {
-                  "$ref": "#/rules@14"
+                  "$ref": "#/rules@15"
                 },
                 "arguments": []
               },
@@ -840,7 +915,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
             "terminal": {
               "$type": "RuleCall",
               "rule": {
-                "$ref": "#/rules@15"
+                "$ref": "#/rules@16"
               },
               "arguments": []
             }
@@ -856,7 +931,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
             "terminal": {
               "$type": "RuleCall",
               "rule": {
-                "$ref": "#/rules@15"
+                "$ref": "#/rules@16"
               },
               "arguments": []
             }
@@ -896,7 +971,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
             "terminal": {
               "$type": "RuleCall",
               "rule": {
-                "$ref": "#/rules@15"
+                "$ref": "#/rules@16"
               },
               "arguments": []
             }
@@ -912,7 +987,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
             "terminal": {
               "$type": "RuleCall",
               "rule": {
-                "$ref": "#/rules@15"
+                "$ref": "#/rules@16"
               },
               "arguments": []
             }
@@ -932,7 +1007,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
             "terminal": {
               "$type": "RuleCall",
               "rule": {
-                "$ref": "#/rules@15"
+                "$ref": "#/rules@16"
               },
               "arguments": []
             }
@@ -994,6 +1069,55 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
       "parameters": []
     },
     {
+      "$type": "ParserRule",
+      "name": "COLOR",
+      "dataType": "string",
+      "definition": {
+        "$type": "Alternatives",
+        "elements": [
+          {
+            "$type": "Keyword",
+            "value": "red"
+          },
+          {
+            "$type": "Keyword",
+            "value": "green"
+          },
+          {
+            "$type": "Keyword",
+            "value": "blue"
+          },
+          {
+            "$type": "Keyword",
+            "value": "yellow"
+          },
+          {
+            "$type": "Keyword",
+            "value": "black"
+          },
+          {
+            "$type": "Keyword",
+            "value": "white"
+          },
+          {
+            "$type": "Keyword",
+            "value": "gray"
+          },
+          {
+            "$type": "Keyword",
+            "value": "magenta"
+          },
+          {
+            "$type": "Keyword",
+            "value": "cyan"
+          }
+        ]
+      },
+      "entry": false,
+      "fragment": false,
+      "parameters": []
+    },
+    {
       "$type": "TerminalRule",
       "hidden": true,
       "name": "WS",
@@ -1020,7 +1144,7 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
       "name": "NUM",
       "definition": {
         "$type": "RegexToken",
-        "regex": "/[0-9]+/",
+        "regex": "/-?[0-9]+/",
         "parenthesized": false
       },
       "fragment": false,

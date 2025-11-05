@@ -9,7 +9,7 @@ import * as langium from 'langium';
 export const FourchLangTerminals = {
     WS: /\s+/,
     ID: /[_a-zA-Z][\w_]*/,
-    NUM: /[0-9]+/,
+    NUM: /-?[0-9]+/,
     ML_COMMENT: /\/\*[\s\S]*?\*\//,
     SL_COMMENT: /\/\/[^\n\r]*/,
 };
@@ -22,10 +22,14 @@ export type FourchLangKeywordNames =
     | "*"
     | ","
     | "at"
+    | "black"
+    | "blue"
     | "body"
     | "border"
     | "by"
+    | "color"
     | "crossable"
+    | "cyan"
     | "eaten"
     | "enemy"
     | "every"
@@ -33,26 +37,33 @@ export type FourchLangKeywordNames =
     | "fruit"
     | "fruits"
     | "game"
+    | "gray"
+    | "green"
     | "grid"
     | "grow"
     | "hitting"
     | "horizontal"
+    | "magenta"
     | "moves"
     | "over"
     | "player"
     | "reappear"
+    | "red"
     | "seconds"
     | "size"
     | "snake"
     | "snake_body"
     | "speed"
     | "uncrossable"
+    | "variable"
     | "vertical"
     | "wall"
     | "when"
+    | "white"
     | "with"
     | "worth"
-    | "x";
+    | "x"
+    | "yellow";
 
 export type FourchLangTokenNames = FourchLangTerminalNames | FourchLangKeywordNames;
 
@@ -73,11 +84,18 @@ export function isBorderRule(item: unknown): item is BorderRule {
     return reflection.isInstance(item, BorderRule.$type);
 }
 
+export type COLOR = 'black' | 'blue' | 'cyan' | 'gray' | 'green' | 'magenta' | 'red' | 'white' | 'yellow';
+
+export function isCOLOR(item: unknown): item is COLOR {
+    return item === 'red' || item === 'green' || item === 'blue' || item === 'yellow' || item === 'black' || item === 'white' || item === 'gray' || item === 'magenta' || item === 'cyan';
+}
+
 export interface Enemy extends langium.AstNode {
     readonly $container: Model;
     readonly $type: 'Enemy';
     len?: string;
     movable: boolean;
+    name?: string;
     speed?: string;
     x: string;
     y: string;
@@ -87,6 +105,7 @@ export const Enemy = {
     $type: 'Enemy',
     len: 'len',
     movable: 'movable',
+    name: 'name',
     speed: 'speed',
     x: 'x',
     y: 'y'
@@ -222,16 +241,20 @@ export function isModel(item: unknown): item is Model {
 export interface Player extends langium.AstNode {
     readonly $container: Model;
     readonly $type: 'Player';
+    color?: COLOR;
     len?: string;
     name?: string;
+    speed?: string;
     x: string;
     y: string;
 }
 
 export const Player = {
     $type: 'Player',
+    color: 'color',
     len: 'len',
     name: 'name',
+    speed: 'speed',
     x: 'x',
     y: 'y'
 } as const;
@@ -338,6 +361,9 @@ export class FourchLangAstReflection extends langium.AbstractAstReflection {
                 movable: {
                     name: Enemy.movable,
                     defaultValue: false
+                },
+                name: {
+                    name: Enemy.name
                 },
                 speed: {
                     name: Enemy.speed
@@ -471,11 +497,17 @@ export class FourchLangAstReflection extends langium.AbstractAstReflection {
         Player: {
             name: Player.$type,
             properties: {
+                color: {
+                    name: Player.color
+                },
                 len: {
                     name: Player.len
                 },
                 name: {
                     name: Player.name
+                },
+                speed: {
+                    name: Player.speed
                 },
                 x: {
                     name: Player.x
