@@ -180,13 +180,42 @@ export class FourchLangValidator {
     // At least one game over condition must be defined
     checkGameOverConditions(model: Model, accept: ValidationAcceptor): void {
         const conditions = model.game_over_conditions ?? [];
+        const hasWalls = (model.walls?.length ?? 0) > 0;
 
+        // Vérifie qu'il y a au moins une condition
         if (conditions.length === 0) {
             accept(
                 'error',
-                'At least one game over condition must be defined (e.g. hitting border, enemy, or snake body).',
+                'At least one game over condition must be defined (e.g. hitting border, enemy, wall, or snake body).',
                 { node: model }
             );
+            return;
+        }
+
+        // Vérifie que si des murs existent, le game over "wall" est défini
+        if (hasWalls) {
+            const hasWallCondition = conditions.some(
+                cond => cond.target === 'wall'
+            );
+            if (!hasWallCondition) {
+                accept(
+                    'warning',
+                    'Walls are defined but no "game over when hitting wall" condition exists.',
+                    { node: model }
+                );
+            }
+        }
+
+        // Vérifie que toutes les cibles déclarées dans les conditions sont valides
+        const validTargets = ['snake_body', 'enemy', 'border', 'wall'];
+        for (const cond of conditions) {
+            if (!validTargets.includes(cond.target)) {
+                accept(
+                    'error',
+                    `Invalid game over target "${cond.target}". Must be one of: ${validTargets.join(', ')}.`,
+                    { node: cond }
+                );
+            }
         }
     } 
     

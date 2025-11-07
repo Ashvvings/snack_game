@@ -1098,6 +1098,10 @@ export const FourchLangGrammar = (): Grammar => loadedFourchLangGrammar ?? (load
                 {
                   "$type": "Keyword",
                   "value": "border"
+                },
+                {
+                  "$type": "Keyword",
+                  "value": "wall"
                 }
               ]
             }

@@ -22,7 +22,7 @@ Le rendu graphique du jeu sera affiché dans une interface web illustrant la gri
 
 ### IA basique
 
-Notre langage pourra être utilisé pour entraîner et faire fonctionner une IA basique, par exemple un joueur automatique se déplaçant aléatoirement ou suivant une heuristique simple (chercher le fruit le plus proche). Cela permettra de tester la cohérence du DSL et la robustesse des variantes du jeu sans intervention humaine. L’objectif n’est pas la performance, mais l’expérimentation de comportements logiques simples.
+Notre langage pourra être utilisé pour entraîner et faire fonctionner une IA basique, par exemple un·e joueur·euse automatique se déplaçant aléatoirement ou suivant une heuristique simple (chercher le fruit le plus proche). Cela permettra de tester la cohérence du DSL et la robustesse des variantes du jeu sans intervention humaine. L’objectif n’est pas la performance, mais l’expérimentation de comportements logiques simples.
 
 ### IA plus forte (optionnel)
 

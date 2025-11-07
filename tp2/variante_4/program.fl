@@ -1,6 +1,6 @@
 grid size 29*28
 
-player pacman at (16, 13) with speed 1
+player pakinou at (16, 13) with speed 1
 
 border horizontally crossable
 
