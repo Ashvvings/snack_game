@@ -40,20 +40,20 @@ export function generateOutput(model: Model, source: string, destination: string
     for (let i = 0; i < +model.grid.map(g => g.x)[0]; i++) {
         grid += "# "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`;
         for (let j = 0; j < +model.grid.map(g => g.y)[0]; j++) {
-            if (+model.player.map(p => p.x)[0] == j && +model.player.map(p => p.y)[0] == i) {
-                grid += "O "; consoleGrid += using_color((model.player[0].color? model.player[0].color : ""), 'O ');
-            } else if (snakeBodyParts.includes("("+j+","+i+")")) {
+            if (+model.player.map(p => p.x)[0] == i && +model.player.map(p => p.y)[0] == j) {
+                grid += "◉ "; consoleGrid += using_color((model.player[0].color? model.player[0].color : ""), '◉ ');
+            } else if (snakeBodyParts.includes("("+i+","+j+")")) {
                 grid += "S "; consoleGrid += using_color((model.player[0].color? model.player[0].color : ""), 'S ');
-            } else if (enemies.includes("("+j+","+i+")")) {
+            } else if (enemies.includes("("+i+","+j+")")) {
                 grid += "M "; consoleGrid += `${ansiStyles.red.open}M ${ansiStyles.red.close}`;
-            } else if (enemyBodies.includes("("+j+","+i+")")) {
+            } else if (enemyBodies.includes("("+i+","+j+")")) {
                 grid += "X "; consoleGrid += `${ansiStyles.red.open}X ${ansiStyles.red.close}`;
-            } else if (fruits.includes("("+j+","+i+")")) {
-                grid += "F "; consoleGrid += `${ansiStyles.magenta.open}F ${ansiStyles.magenta.close}`;
-            } else if (walls.includes("("+j+","+i+")")) {
-                grid += "+ "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`;
+            } else if (fruits.includes("("+i+","+j+")")) {
+                grid += "· "; consoleGrid += `${ansiStyles.magenta.open}· ${ansiStyles.magenta.close}`;
+            } else if (walls.includes("("+i+","+j+")")) {
+                grid += "█ "; consoleGrid += `${ansiStyles.gray.open}█ ${ansiStyles.gray.close}`;
             } else {
-                grid += ". "; consoleGrid += `${ansiStyles.blue.open}. ${ansiStyles.blue.close}`;
+                grid += "  "; consoleGrid += `${ansiStyles.blue.open}  ${ansiStyles.blue.close}`;
             }
         }
         grid += "#\n"; consoleGrid += `${ansiStyles.white.open}#${ansiStyles.white.close}\n`;
