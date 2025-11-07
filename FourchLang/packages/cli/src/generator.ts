@@ -4,67 +4,127 @@ import * as fs from 'node:fs';
 import { extractDestinationAndName } from './util.js';
 import ansiStyles from 'ansi-styles';
 
-export function generateOutput(model: Model, source: string, destination: string): string {
+export function generateOutput(model: Model, source: string, destination: string, mode: string): string {
     const data = extractDestinationAndName(destination);
-
-    let enemies : string[] = model.enemies.map(e => 
-        "("+e.x+","+e.y+")");
-    let enemyBodies : string[] = model.enemyBodies.map(e => 
-        "("+e.x+","+e.y+")");
-    let snakeBodyParts : string[] = model.snakeBodies.map(s => 
-        "("+s.x+","+s.y+")");
-    let fruits : string[] = model.fruits.map(f => 
-        "("+f.x+","+f.y+")");
-    let walls : string[] = model.walls.map(w => 
-        "("+w.x+","+w.y+")");
-    
-    let using_color = (color:string, text:string) =>{
-        switch(color) {
-            case "white":   return `${ansiStyles.white.open}${text}${ansiStyles.white.close}`;
-            case "green":   return `${ansiStyles.green.open}${text}${ansiStyles.green.close}`;
-            case "red":     return `${ansiStyles.red.open}${text}${ansiStyles.red.close}`;
-            case "yellow":  return `${ansiStyles.yellow.open}${text}${ansiStyles.yellow.close}`;
-            case "blue":    return `${ansiStyles.blue.open}${text}${ansiStyles.blue.close}`;
-            case "black":   return `${ansiStyles.black.open}${text}${ansiStyles.black.close}`;
-            case "gray":    return `${ansiStyles.gray.open}${text}${ansiStyles.gray.close}`;
-            case "cyan":    return `${ansiStyles.cyan.open}${text}${ansiStyles.cyan.close}`;
-            case "magenta": return `${ansiStyles.magenta.open}${text}${ansiStyles.magenta.close}`;
-            default:        return `${ansiStyles.green.open}${text}${ansiStyles.green.close}`;
-        }
-    };
+    const selectedMode = mode.toLowerCase();
 
     let grid = "";
-    let consoleGrid = "";
-    for (let s = 0; s < +model.grid.map(g => g.y)[0] + 2; s++) { grid += "# "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`; }
-    grid += "\n"; consoleGrid += "\n";
-    for (let i = 0; i < +model.grid.map(g => g.x)[0]; i++) {
-        grid += "# "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`;
-        for (let j = 0; j < +model.grid.map(g => g.y)[0]; j++) {
-            if (+model.player.map(p => p.x)[0] == j && +model.player.map(p => p.y)[0] == i) {
-                grid += "O "; consoleGrid += using_color((model.player[0].color? model.player[0].color : ""), 'O ');
-            } else if (snakeBodyParts.includes("("+j+","+i+")")) {
-                grid += "S "; consoleGrid += using_color((model.player[0].color? model.player[0].color : ""), 'S ');
-            } else if (enemies.includes("("+j+","+i+")")) {
-                grid += "M "; consoleGrid += `${ansiStyles.red.open}M ${ansiStyles.red.close}`;
-            } else if (enemyBodies.includes("("+j+","+i+")")) {
-                grid += "X "; consoleGrid += `${ansiStyles.red.open}X ${ansiStyles.red.close}`;
-            } else if (fruits.includes("("+j+","+i+")")) {
-                grid += "F "; consoleGrid += `${ansiStyles.magenta.open}F ${ansiStyles.magenta.close}`;
-            } else if (walls.includes("("+j+","+i+")")) {
-                grid += "+ "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`;
-            } else {
-                grid += ". "; consoleGrid += `${ansiStyles.blue.open}. ${ansiStyles.blue.close}`;
-            }
-        }
-        grid += "#\n"; consoleGrid += `${ansiStyles.white.open}#${ansiStyles.white.close}\n`;
-    }
-    for (let s = 0; s < +model.grid.map(g => g.y)[0] + 2; s++) { grid += "# "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`; }
 
+    if (selectedMode === 'ascii.txt') {
+        let enemies: string[] = model.enemies.map(e =>
+            "(" + e.x + "," + e.y + ")");
+        let enemyBodies: string[] = model.enemyBodies.map(e =>
+            "(" + e.x + "," + e.y + ")");
+        let snakeBodyParts: string[] = model.snakeBodies.map(s =>
+            "(" + s.x + "," + s.y + ")");
+        let fruits: string[] = model.fruits.map(f =>
+            "(" + f.x + "," + f.y + ")");
+        let walls: string[] = model.walls.map(w =>
+            "(" + w.x + "," + w.y + ")");
+        let using_color = (color: string, text: string) => {
+            switch (color) {
+                case "white": return `${ansiStyles.white.open}${text}${ansiStyles.white.close}`;
+                case "green": return `${ansiStyles.green.open}${text}${ansiStyles.green.close}`;
+                case "red": return `${ansiStyles.red.open}${text}${ansiStyles.red.close}`;
+                case "yellow": return `${ansiStyles.yellow.open}${text}${ansiStyles.yellow.close}`;
+                case "blue": return `${ansiStyles.blue.open}${text}${ansiStyles.blue.close}`;
+                case "black": return `${ansiStyles.black.open}${text}${ansiStyles.black.close}`;
+                case "gray": return `${ansiStyles.gray.open}${text}${ansiStyles.gray.close}`;
+                case "cyan": return `${ansiStyles.cyan.open}${text}${ansiStyles.cyan.close}`;
+                case "magenta": return `${ansiStyles.magenta.open}${text}${ansiStyles.magenta.close}`;
+                default: return `${ansiStyles.green.open}${text}${ansiStyles.green.close}`;
+            }
+        };
+
+        let consoleGrid = "";
+        for (let s = 0; s < +model.grid.map(g => g.y)[0] + 2; s++) { grid += "# "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`; }
+        grid += "\n"; consoleGrid += "\n";
+        for (let i = 0; i < +model.grid.map(g => g.x)[0]; i++) {
+            grid += "# "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`;
+            for (let j = 0; j < +model.grid.map(g => g.y)[0]; j++) {
+                if (+model.player.map(p => p.x)[0] == j && +model.player.map(p => p.y)[0] == i) {
+                    grid += "O "; consoleGrid += using_color((model.player[0].color ? model.player[0].color : ""), 'O ');
+                } else if (snakeBodyParts.includes("(" + j + "," + i + ")")) {
+                    grid += "S "; consoleGrid += using_color((model.player[0].color ? model.player[0].color : ""), 'S ');
+                } else if (enemies.includes("(" + j + "," + i + ")")) {
+                    grid += "M "; consoleGrid += `${ansiStyles.red.open}M ${ansiStyles.red.close}`;
+                } else if (enemyBodies.includes("(" + j + "," + i + ")")) {
+                    grid += "X "; consoleGrid += `${ansiStyles.red.open}X ${ansiStyles.red.close}`;
+                } else if (fruits.includes("(" + j + "," + i + ")")) {
+                    grid += "F "; consoleGrid += `${ansiStyles.yellow.open}F ${ansiStyles.yellow.close}`;
+                } else if (walls.includes("(" + j + "," + i + ")")) {
+                    grid += "+ "; consoleGrid += `${ansiStyles.white.open}+ ${ansiStyles.white.close}`;
+                } else {
+                    grid += ". "; consoleGrid += `${ansiStyles.blue.open}. ${ansiStyles.blue.close}`;
+                }
+            }
+            grid += "#\n"; consoleGrid += `${ansiStyles.white.open}#${ansiStyles.white.close}\n`;
+        }
+        for (let s = 0; s < +model.grid.map(g => g.y)[0] + 2; s++) { grid += "# "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`; }
+        console.log(consoleGrid);
+    }
+    else if (selectedMode === 'index.html') {
+        let gridContent : string[][] = [...Array(Number(model.grid[0].y)).keys()].map(i => Array(Number(model.grid[0].x)).fill("'.'"));
+        model.enemies.map(e => gridContent[Number(e.y)][Number(e.x)] = "'M'");
+        model.enemyBodies.map(e => gridContent[Number(e.y)][Number(e.x)] = "'X'");
+        model.snakeBodies.map(e => gridContent[Number(e.y)][Number(e.x)] = "'S'");
+        model.fruits.map(e => gridContent[Number(e.y)][Number(e.x)] = "'F'");
+        model.walls.map(e => gridContent[Number(e.y)][Number(e.x)] = "'W'");
+
+
+        grid += `<html>
+    <head>
+        <title>Snack Game Grid</title>
+        <style>
+            body { font-family: monospace; white-space: pre; }
+                .player { color: ${model.player[0].color ? model.player[0].color : 'green'}; }
+                .enemy { color: red; }
+                .enemy-body { color: darkred; }
+                .snake-body { color: ${model.player[0].color ? model.player[0].color : 'green'}; }
+                .fruit { color: magenta; }
+                .wall { color: black; }
+                .empty { color: blue; }
+        </style>
+    </head>
+    <body>
+    </body>
+</html>\n
+<script>
+    const body = document.querySelector('body');
+    let grid = "";\n
+    for (let s = 0; s < ${+model.grid.map(g => g.y)[0]} + 2; s++) { grid += "<span class='wall'># </span>"; }\n
+    grid += "<br>";\n
+    for (let i = 0; i < ${+model.grid.map(g => g.x)[0]}; i++) {
+        grid += "<span class='wall'># </span>";\n
+        for (let j = 0; j < ${+model.grid.map(g => g.y)[0]}; j++) {
+            if (${+model.player.map(p => p.x)[0]} == j && ${+model.player.map(p => p.y)[0]} == i) {
+                grid += "<span class='player'>O </span>";\n
+            } else if ([${gridContent}][j][i] == 'S'){
+                grid += "<span class='snake-body'>S </span>";\n
+            } else if ([${gridContent}][j][i] == 'M') {
+                grid += "<span class='enemy'>M </span>";\n
+            } else if ([${gridContent}][j][i] == 'X') {
+                grid += "<span class='enemy-body'>X </span>";\n
+            } else if ([${gridContent}][j][i] == 'F') {
+                grid += "<span class='fruit'>F </span>";\n
+            } else if ([${gridContent}][j][i] == 'W') {
+                grid += "<span class='wall'>+ </span>";\n
+            } else {
+                grid += "<span class='empty'>. </span>";\n
+            }
+        }\n
+        gridContent += "<span class='wall'>#</span><br>";\n
+    }\n
+    for (let s = 0; s < ${+model.grid.map(g => g.y)[0]} + 2; s++) { gridContent += "<span class='wall'># </span>"; }\n
+    body.innerHTML = gridContent;\n
+</script>\n
+    `;
+    }
     // Edition
     const fileNode = expandToNode`
         ${grid}
     `.appendNewLineIfNotEmpty();
-    console.log(consoleGrid);
+
     if (!fs.existsSync(data.destination)) {
         fs.mkdirSync(data.destination, { recursive: true });
     }

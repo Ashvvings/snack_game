@@ -12,7 +12,8 @@
         "langium:generate": "npm run --workspace packages/language langium:generate",
         "langium:watch": "npm run --workspace packages/language langium:watch",
         "test": "npm run --workspace packages/language test",
-        "generate": "npm run build && node ./packages/cli/bin/cli.js generate $npm_config_source $npm_config_destination ascii.txt"
+        "generate": "npm run build && node ./packages/cli/bin/cli.js generate $npm_config_source $npm_config_destination ascii.txt",
+        "launch": "npm run build && node ./packages/cli/bin/cli.js generate $npm_config_source $npm_config_destination index.html"
     },
     "devDependencies": {
         "@types/node": "~20.17.48",
