@@ -21,6 +21,7 @@ export type FourchLangKeywordNames =
     | ")"
     | "*"
     | ","
+    | "adder"
     | "at"
     | "black"
     | "blue"
@@ -42,10 +43,12 @@ export type FourchLangKeywordNames =
     | "grid"
     | "grow"
     | "hitting"
-    | "horizontal"
+    | "horizontally"
     | "magenta"
+    | "mode"
     | "moves"
     | "over"
+    | "pacman"
     | "player"
     | "reappear"
     | "red"
@@ -54,9 +57,8 @@ export type FourchLangKeywordNames =
     | "snake"
     | "snake_body"
     | "speed"
-    | "uncrossable"
     | "variable"
-    | "vertical"
+    | "vertically"
     | "wall"
     | "when"
     | "white"
@@ -70,13 +72,11 @@ export type FourchLangTokenNames = FourchLangTerminalNames | FourchLangKeywordNa
 export interface BorderRule extends langium.AstNode {
     readonly $container: Model;
     readonly $type: 'BorderRule';
-    crossable: boolean;
-    direction: 'horizontal' | 'vertical';
+    direction: 'horizontally' | 'vertically';
 }
 
 export const BorderRule = {
     $type: 'BorderRule',
-    crossable: 'crossable',
     direction: 'direction'
 } as const;
 
@@ -174,6 +174,21 @@ export function isFruitConfiguration(item: unknown): item is FruitConfiguration 
     return reflection.isInstance(item, FruitConfiguration.$type);
 }
 
+export interface GameMode extends langium.AstNode {
+    readonly $container: Model;
+    readonly $type: 'GameMode';
+    mode: 'adder' | 'pacman' | 'snake';
+}
+
+export const GameMode = {
+    $type: 'GameMode',
+    mode: 'mode'
+} as const;
+
+export function isGameMode(item: unknown): item is GameMode {
+    return reflection.isInstance(item, GameMode.$type);
+}
+
 export interface GameOverCondition extends langium.AstNode {
     readonly $container: Model;
     readonly $type: 'GameOverCondition';
@@ -214,6 +229,7 @@ export interface Model extends langium.AstNode {
     fruitConfig: Array<FruitConfiguration>;
     fruits: Array<Fruit>;
     game_over_conditions: Array<GameOverCondition>;
+    gameMode: Array<GameMode>;
     grid: Array<Grid>;
     player: Array<Player>;
     snakeBodies: Array<SnakeBody>;
@@ -228,6 +244,7 @@ export const Model = {
     fruitConfig: 'fruitConfig',
     fruits: 'fruits',
     game_over_conditions: 'game_over_conditions',
+    gameMode: 'gameMode',
     grid: 'grid',
     player: 'player',
     snakeBodies: 'snakeBodies',
@@ -327,6 +344,7 @@ export type FourchLangAstType = {
     EnemyBody: EnemyBody
     Fruit: Fruit
     FruitConfiguration: FruitConfiguration
+    GameMode: GameMode
     GameOverCondition: GameOverCondition
     Grid: Grid
     Model: Model
@@ -342,10 +360,6 @@ export class FourchLangAstReflection extends langium.AbstractAstReflection {
         BorderRule: {
             name: BorderRule.$type,
             properties: {
-                crossable: {
-                    name: BorderRule.crossable,
-                    defaultValue: false
-                },
                 direction: {
                     name: BorderRule.direction
                 }
@@ -427,6 +441,15 @@ export class FourchLangAstReflection extends langium.AbstractAstReflection {
             },
             superTypes: []
         },
+        GameMode: {
+            name: GameMode.$type,
+            properties: {
+                mode: {
+                    name: GameMode.mode
+                }
+            },
+            superTypes: []
+        },
         GameOverCondition: {
             name: GameOverCondition.$type,
             properties: {
@@ -473,6 +496,10 @@ export class FourchLangAstReflection extends langium.AbstractAstReflection {
                 },
                 game_over_conditions: {
                     name: Model.game_over_conditions,
+                    defaultValue: []
+                },
+                gameMode: {
+                    name: Model.gameMode,
                     defaultValue: []
                 },
                 grid: {
