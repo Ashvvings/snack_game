@@ -192,7 +192,7 @@ export function isGameMode(item: unknown): item is GameMode {
 export interface GameOverCondition extends langium.AstNode {
     readonly $container: Model;
     readonly $type: 'GameOverCondition';
-    target: 'border' | 'enemy' | 'snake_body';
+    target: 'border' | 'enemy' | 'snake_body' | 'wall';
 }
 
 export const GameOverCondition = {
