@@ -51,7 +51,7 @@ export function generateOutput(model: Model, source: string, destination: string
             } else if (fruits.includes("("+j+","+i+")")) {
                 grid += "F "; consoleGrid += `${ansiStyles.magenta.open}F ${ansiStyles.magenta.close}`;
             } else if (walls.includes("("+j+","+i+")")) {
-                grid += "# "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`;
+                grid += "+ "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`;
             } else {
                 grid += ". "; consoleGrid += `${ansiStyles.blue.open}. ${ansiStyles.blue.close}`;
             }
