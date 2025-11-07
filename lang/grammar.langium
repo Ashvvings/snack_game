@@ -59,7 +59,7 @@ Fruit:
     'fruit' 'at' '(' x=NUM ',' y=NUM ')' 'worth' points=NUM;
 
 GameOverCondition:
-    'game' 'over' 'when' 'hitting' target=('snake_body'|'enemy'|'border');
+    'game' 'over' 'when' 'hitting' target=('snake_body'|'enemy'|'border'|'wall');
 
 COLOR returns string:
     'red' | 'green' | 'blue' | 'yellow' | 'black' | 'white' | 'gray' | 'magenta' | 'cyan';
