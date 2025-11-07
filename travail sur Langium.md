@@ -89,8 +89,8 @@ hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;
 ```
 grid size 4 x 9
 
-border horizontal crossable
-border vertical not crossable
+border horizontally crossable
+border vertically not crossable
 
 fruits reappear when eaten grow snake by 1
 // fruits reappear when eaten grow snake by 0 // snake doesn't grow -> Pacman
