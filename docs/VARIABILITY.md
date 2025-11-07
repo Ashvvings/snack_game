@@ -62,9 +62,9 @@ Nous proposons trois scénarios illustrant l’impact concret de ces paramètres
 
 - Pac-Man :
 
-    Cette variante ressemble à la configuration d'un jeu de "Pac-Man" avec un joueur, une grille de 29 cases de long par 28 cases de large, des murs, des fruits et des ennemis. Un passage existe entre les bords gauche et droit vers le milieu de la grille.
+    Cette variante ressemble à la configuration d'un jeu de "Pac-Man" avec un·e joueur·euse, une grille de 29 cases de long par 28 cases de large, des murs, des fruits et des ennemis. Un passage existe entre les bords gauche et droit vers le milieu de la grille.
     
-    Manger un fruit avec le joueur augmente le score de 10.
+    Manger un fruit avec la ou le joueur·euse augmente le score de 10.
     Entrer en contact avec une case où se trouve un ennemi met fin au jeu.
 
 ## Presets dans notre grammaire

@@ -24,7 +24,7 @@
 
 ## Limites et évolutions attendues
 
-- Pour modéliser précisément chaque mécanique (Snake/Pacman), des distinctions explicites de type de joueur et de gestion du corps du serpent pourraient être rajoutées ; l’actuelle fusion dans Player via len est efficace mais moins fine.
+- Pour modéliser précisément chaque mécanique (Snake/Pacman), des distinctions explicites de type de joueur·euse et de gestion du corps du serpent pourraient être rajoutées ; l’actuelle fusion dans Player via len est efficace mais moins fine.
 - L’absence de Tile ou de case individuelle limite la finesse spatiale mais améliore les performances et la clarté pour des grilles raisonnables.
 - Les conditions de fin de partie sont simplifiées mais pourront recevoir d’autres critères (score, temps, objets spéciaux) via des paramètres supplémentaires.
 
