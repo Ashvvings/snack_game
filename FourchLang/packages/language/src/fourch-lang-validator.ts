@@ -146,17 +146,16 @@ export class FourchLangValidator {
         // Rajoute une vérification pour chaque segment parent/enfant si EnemyBody forme une chaîne
     }
  
-    
     // No overlapping entities, maximum one entity per tile
     checkNoOverlap(model: Model, accept: ValidationAcceptor): void {
         // Récupère toutes les entités avec des coordonnées
         const entities = [
-            ...(model.player ?? []),
-            ...(model.enemies ?? []),
-            ...(model.snakeBodies ?? []),
-            ...(model.enemyBodies ?? []),
-            ...(model.walls ?? []),
-            ...(model.fruits ?? [])
+            ...(Array.isArray(model.player) ? model.player : [model.player]),
+            ...(Array.isArray(model.enemies) ? model.enemies : [model.enemies]),
+            ...(Array.isArray(model.snakeBodies) ? model.snakeBodies : [model.snakeBodies]),
+            ...(Array.isArray(model.enemyBodies) ? model.enemyBodies : [model.enemyBodies]),
+            ...(Array.isArray(model.walls) ? model.walls : [model.walls]),
+            ...(Array.isArray(model.fruits) ? model.fruits : [model.fruits])
         ];
         
         // Map des positions occupées
@@ -164,8 +163,10 @@ export class FourchLangValidator {
 
         for (const entity of entities) {
             // Vérifie que x et y existent et sont des nombres entiers
-            if (typeof entity.x === 'number' && typeof entity.y === 'number') {
-                const key = `${entity.x},${entity.y}`;
+            const x = Number(entity.x);
+            const y = Number(entity.y);
+            if (!Number.isNaN(x) && !Number.isNaN(y)) {
+                const key = `${x},${y}`;
                 if (positions.has(key)) {
                     // Génère une erreur : case déjà occupée
                     accept('error', `Overlap detected: more than one entity at (${key}).`, { node: entity });
