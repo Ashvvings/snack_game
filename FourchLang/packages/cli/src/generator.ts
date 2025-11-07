@@ -35,11 +35,11 @@ export function generateOutput(model: Model, source: string, destination: string
 
     let grid = "";
     let consoleGrid = "";
-    for (let s = 0; s < +model.grid.map(g => g.x)[0] + 2; s++) { grid += "# "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`; }
+    for (let s = 0; s < +model.grid.map(g => g.y)[0] + 2; s++) { grid += "# "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`; }
     grid += "\n"; consoleGrid += "\n";
-    for (let i = 0; i < +model.grid.map(g => g.y)[0]; i++) {
+    for (let i = 0; i < +model.grid.map(g => g.x)[0]; i++) {
         grid += "# "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`;
-        for (let j = 0; j < +model.grid.map(g => g.x)[0]; j++) {
+        for (let j = 0; j < +model.grid.map(g => g.y)[0]; j++) {
             if (+model.player.map(p => p.x)[0] == j && +model.player.map(p => p.y)[0] == i) {
                 grid += "O "; consoleGrid += using_color((model.player[0].color? model.player[0].color : ""), 'O ');
             } else if (snakeBodyParts.includes("("+j+","+i+")")) {
@@ -58,7 +58,7 @@ export function generateOutput(model: Model, source: string, destination: string
         }
         grid += "#\n"; consoleGrid += `${ansiStyles.white.open}#${ansiStyles.white.close}\n`;
     }
-    for (let s = 0; s < +model.grid.map(g => g.x)[0] + 2; s++) { grid += "# "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`; }
+    for (let s = 0; s < +model.grid.map(g => g.y)[0] + 2; s++) { grid += "# "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`; }
 
     // Edition
     const fileNode = expandToNode`
