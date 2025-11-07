@@ -5,7 +5,7 @@ border vertically crossable
 
 fruits reappear when eaten
 
-player uwu at (2, 1) with size 4
+player uwu at (2, 1) with size 4 with color white
 
 snake body owo at (3, 1) following uwu
 snake body awa at (4, 1) following owo

@@ -1,6 +1,6 @@
 grid size 29*28
 
-player pakinou at (16, 13) with speed 1
+player Pacman at (16, 13) with speed 1 with color yellow
 
 border horizontally crossable
 
@@ -375,6 +375,14 @@ wall at (26, 14)
 wall at (27, 13)
 wall at (27, 14)
 
+wall at (17, 10)
+wall at (17, 11)
+wall at (17, 12)
+wall at (17, 13)
+wall at (17, 14)
+wall at (17, 15)
+wall at (17, 16)
+wall at (17, 17)
 wall at (18, 10)
 wall at (18, 11)
 wall at (18, 12)
@@ -383,20 +391,12 @@ wall at (18, 14)
 wall at (18, 15)
 wall at (18, 16)
 wall at (18, 17)
-wall at (19, 10)
-wall at (19, 11)
-wall at (19, 12)
 wall at (19, 13)
 wall at (19, 14)
-wall at (19, 15)
-wall at (19, 16)
-wall at (19, 17)
 wall at (20, 13)
 wall at (20, 14)
 wall at (21, 13)
 wall at (21, 14)
-wall at (22, 13)
-wall at (22, 14)
 
 wall at (5, 10)
 wall at (5, 11)
@@ -647,7 +647,7 @@ fruit at (13, 23) worth 10
 fruit at (13, 24) worth 10
 fruit at (13, 25) worth 10
 fruit at (13, 26) worth 10
-fruit at (13, 26) worth 10
+fruit at (13, 27) worth 10
 
 fruit at (19, 1) worth 10
 fruit at (19, 2) worth 10

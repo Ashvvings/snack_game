@@ -12,5 +12,10 @@ snake body bodd at (0,2) following bod
 fruit at (2, 1) worth 4
 fruit at (2, 2) worth -4
 
+wall at (1, 0)
+wall at (1, 1)
+wall at (1, 2)
+
 game over when hitting snake_body
 game over when hitting enemy
+game over when hitting wall
