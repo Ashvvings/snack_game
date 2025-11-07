@@ -13,10 +13,10 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 const packagePath = path.resolve(__dirname, '..', 'package.json');
 const packageContent = await fs.readFile(packagePath, 'utf-8');
 
-export const generateAction = async (source: string, destination: string): Promise<void> => {
+export const generateAction = async (source: string, destination: string, mode:string): Promise<void> => {
     const services = createFourchLangServices(NodeFileSystem).FourchLang;
     const model = await extractAstNode<Model>(source, services);
-    const generatedFilePath = generateOutput(model, source, destination);
+    const generatedFilePath = generateOutput(model, source, destination, mode);
     console.log(chalk.green(`Code generated succesfully: ${generatedFilePath}`));
 };
 
@@ -29,8 +29,9 @@ export default function(): void {
     const fileExtensions = FourchLangLanguageMetaData.fileExtensions.join(', ');
     program
         .command('generate')
-        .argument('<file>', `source file (possible file extensions: ${fileExtensions})`)
+        .argument('<source>', `source file (possible file extensions: ${fileExtensions})`)
         .argument('<destination>', 'destination file')
+        .argument('<mode>', 'generation mode: ascii.txt or index.html')
         .description('Generates code for a provided source file.')
         .action(generateAction);
 
