@@ -35,30 +35,30 @@ export function generateOutput(model: Model, source: string, destination: string
 
     let grid = "";
     let consoleGrid = "";
-    for (let s = 0; s < +model.grid.map(g => g.y)[0] + 2; s++) { grid += "# "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`; }
+    for (let s = 0; s < +model.grid.map(g => g.y)[0] + 2; s++) { grid += " # "; consoleGrid += `${ansiStyles.white.open} # ${ansiStyles.white.close}`; }
     grid += "\n"; consoleGrid += "\n";
     for (let i = 0; i < +model.grid.map(g => g.x)[0]; i++) {
-        grid += "# "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`;
+        grid += " # "; consoleGrid += `${ansiStyles.white.open} # ${ansiStyles.white.close}`;
         for (let j = 0; j < +model.grid.map(g => g.y)[0]; j++) {
             if (+model.player.map(p => p.x)[0] == i && +model.player.map(p => p.y)[0] == j) {
-                grid += "◉ "; consoleGrid += using_color((model.player[0].color? model.player[0].color : ""), '◉ ');
+                grid += " ◉ "; consoleGrid += using_color((model.player[0].color? model.player[0].color : ""), ' ◉ ');
             } else if (snakeBodyParts.includes("("+i+","+j+")")) {
-                grid += "◎ "; consoleGrid += using_color((model.player[0].color? model.player[0].color : ""), '◎ ');
+                grid += " ◎ "; consoleGrid += using_color((model.player[0].color? model.player[0].color : ""), ' ◎ ');
             } else if (enemies.includes("("+i+","+j+")")) {
-                grid += "M "; consoleGrid += `${ansiStyles.red.open}M ${ansiStyles.red.close}`;
+                grid += " M "; consoleGrid += `${ansiStyles.red.open} M ${ansiStyles.red.close}`;
             } else if (enemyBodies.includes("("+i+","+j+")")) {
-                grid += "X "; consoleGrid += `${ansiStyles.red.open}X ${ansiStyles.red.close}`;
+                grid += " X "; consoleGrid += `${ansiStyles.red.open} X ${ansiStyles.red.close}`;
             } else if (fruits.includes("("+i+","+j+")")) {
-                grid += "· "; consoleGrid += `${ansiStyles.magenta.open}· ${ansiStyles.magenta.close}`;
+                grid += " ♥ "; consoleGrid += `${ansiStyles.magenta.open} ♥ ${ansiStyles.magenta.close}`;
             } else if (walls.includes("("+i+","+j+")")) {
-                grid += "█ "; consoleGrid += `${ansiStyles.gray.open}█ ${ansiStyles.gray.close}`;
+                grid += "███"; consoleGrid += `${ansiStyles.gray.open}███${ansiStyles.gray.close}`;
             } else {
-                grid += "  "; consoleGrid += `${ansiStyles.blue.open}  ${ansiStyles.blue.close}`;
+                grid += "   "; consoleGrid += `${ansiStyles.blue.open}   ${ansiStyles.blue.close}`;
             }
         }
-        grid += "#\n"; consoleGrid += `${ansiStyles.white.open}#${ansiStyles.white.close}\n`;
+        grid += " # \n"; consoleGrid += `${ansiStyles.white.open} # ${ansiStyles.white.close}\n`;
     }
-    for (let s = 0; s < +model.grid.map(g => g.y)[0] + 2; s++) { grid += "# "; consoleGrid += `${ansiStyles.white.open}# ${ansiStyles.white.close}`; }
+    for (let s = 0; s < +model.grid.map(g => g.y)[0] + 2; s++) { grid += " # "; consoleGrid += `${ansiStyles.white.open} # ${ansiStyles.white.close}`; }
 
     // Edition
     const fileNode = expandToNode`
