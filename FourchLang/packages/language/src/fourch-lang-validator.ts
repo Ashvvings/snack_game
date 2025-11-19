@@ -10,10 +10,10 @@ import { isEnemy } from './generated/ast.js';
 export function registerValidationChecks(services: FourchLangServices) {
     const registry = services.validation.ValidationRegistry;
     const validator = services.validation.FourchLangValidator;
-    
+
     const checks: ValidationChecks<FourchLangAstType> = {
         // TODO: Declare validators for your properties
-        // See doc : 
+        // See doc :
         Model: [
             validator.checkNumberOfPlayers,
             validator.checkGameOverConditions,
@@ -36,7 +36,6 @@ export function registerValidationChecks(services: FourchLangServices) {
         FruitConfiguration: [
             validator.checkFruitConfiguration
         ]
-
     };
 
     registry.register(checks, validator);
@@ -60,7 +59,7 @@ export class FourchLangValidator {
             accept('error', `Exactly one player must be defined (${playerCount} found).`, { node: model });
         }
     }
-    
+
     // No negative numbers for coordinates and coordinates inside the map
     checkPositionValues(model: Model, accept: ValidationAcceptor): void {
         // Only one grid defined
@@ -126,7 +125,7 @@ export class FourchLangValidator {
         }
         // Si le serpent est plus long (chaîne de SnakeBodies), rajoute une boucle pour chaque segment parent/enfant
     }
- 
+
     // Enemy segments must be continuous (watch out for borders) (watch out the body should have only one parent and one descendant max)
     checkEnemiesContinuity(enemy: Enemy, accept: ValidationAcceptor): void {
         // Recherche les EnemyBody qui suivent cet enemy
@@ -145,8 +144,8 @@ export class FourchLangValidator {
         }
         // Rajoute une vérification pour chaque segment parent/enfant si EnemyBody forme une chaîne
     }
- 
-    
+
+
     // No overlapping entities, maximum one entity per tile
     checkNoOverlap(model: Model, accept: ValidationAcceptor): void {
         // Récupère toutes les entités avec des coordonnées
@@ -158,7 +157,7 @@ export class FourchLangValidator {
             ...(model.walls ?? []),
             ...(model.fruits ?? [])
         ];
-        
+
         // Map des positions occupées
         const positions = new Map<string, string>();
 
@@ -182,21 +181,9 @@ export class FourchLangValidator {
         const conditions = model.game_over_conditions ?? [];
         const hasWalls = (model.walls?.length ?? 0) > 0;
 
-        // Vérifie qu'il y a au moins une condition
-        if (conditions.length === 0) {
-            accept(
-                'error',
-                'At least one game over condition must be defined (e.g. hitting border, enemy, wall, or snake body).',
-                { node: model }
-            );
-            return;
-        }
-
-        // Vérifie que si des murs existent, le game over "wall" est défini
+        // S’il y a des murs mais aucune condition "wall"
         if (hasWalls) {
-            const hasWallCondition = conditions.some(
-                cond => cond.target === 'wall'
-            );
+            const hasWallCondition = conditions.some(cond => cond.target === 'wall');
             if (!hasWallCondition) {
                 accept(
                     'warning',
@@ -206,7 +193,7 @@ export class FourchLangValidator {
             }
         }
 
-        // Vérifie que toutes les cibles déclarées dans les conditions sont valides
+        // Cibles valides uniquement
         const validTargets = ['snake_body', 'enemy', 'border', 'wall'];
         for (const cond of conditions) {
             if (!validTargets.includes(cond.target)) {
@@ -217,39 +204,39 @@ export class FourchLangValidator {
                 );
             }
         }
-    } 
-    
+    }
+
     // Fruits must have a valid configuration for the spawning behavior
     checkFruitConfiguration(config: FruitConfiguration, accept: ValidationAcceptor): void {
-        const growthLength = config.growthLength ? parseInt(config.growthLength, 10) : undefined;
         const seconds = config.seconds ? parseInt(config.seconds, 10) : undefined;
+        const hasReappear = config.reappear === true;
 
-        // Cas 1 : reappear = false → seconds ne doit pas être défini
-        if (seconds !== undefined) {
+        if (seconds !== undefined && !hasReappear) {
             accept(
-                'warning',
-                'When "reappear" is false, "seconds" should not be defined.',
+                'error',
+                'Using "every X seconds" requires "reappear".',
                 { node: config, property: 'seconds' }
             );
         }
 
-        // Cas 2 : growthLength doit être positif s’il est défini
-        if (growthLength !== undefined && (isNaN(growthLength) || growthLength <= 0)) {
-            accept(
-                'error',
-                '"growthLength" must be a positive integer if defined.',
-                { node: config, property: 'growthLength' }
-            );
+        if (config.growthLength) {
+            const growth = parseInt(config.growthLength, 10);
+            if (isNaN(growth) || growth <= 0) {
+                accept(
+                    'error',
+                    `Fruit growth must be a positive number. Got: ${config.growthLength}`,
+                    { node: config, property: 'growthLength' }
+                );
+            }
         }
     }
-    
+
     // Speed values must be positive integers
     checkEntitySpeed(node: Player | Enemy, accept: ValidationAcceptor): void {
         // Vérifie si la propriété speed est définie
         const speedStr = (node as Player | Enemy).speed;
 
         if (speedStr === undefined) {
-            // Optionnel : décommente si tu veux rendre la vitesse obligatoire
             // const who = isEnemy(node) ? 'Enemy' : 'Player';
             // accept('error', `${who} speed must be defined.`, { node });
             return;
