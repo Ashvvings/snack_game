@@ -45,9 +45,9 @@ export function generateOutput(model: Model, source: string, destination: string
             } else if (snakeBodyParts.includes("("+i+","+j+")")) {
                 grid += " ◎ "; consoleGrid += using_color((model.player[0].color? model.player[0].color : ""), ' ◎ ');
             } else if (enemies.includes("("+i+","+j+")")) {
-                grid += " M "; consoleGrid += `${ansiStyles.red.open} M ${ansiStyles.red.close}`;
+                grid += " ☢ "; consoleGrid += `${ansiStyles.red.open} ☢ ${ansiStyles.red.close}`;
             } else if (enemyBodies.includes("("+i+","+j+")")) {
-                grid += " X "; consoleGrid += `${ansiStyles.red.open} X ${ansiStyles.red.close}`;
+                grid += " ◎ "; consoleGrid += `${ansiStyles.red.open} ◎ ${ansiStyles.red.close}`;
             } else if (fruits.includes("("+i+","+j+")")) {
                 grid += " ♥ "; consoleGrid += `${ansiStyles.magenta.open} ♥ ${ansiStyles.magenta.close}`;
             } else if (walls.includes("("+i+","+j+")")) {
