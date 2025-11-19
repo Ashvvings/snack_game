@@ -71,7 +71,7 @@ export function generateOutput(model: Model, source: string, destination: string
         model.fruits.map(e => gridContent[Number(e.y)][Number(e.x)] = "'F'");
         model.walls.map(e => gridContent[Number(e.y)][Number(e.x)] = "'W'");
 
-
+        console.log(gridContent);
         grid += `<html>
     <head>
         <title>Snack Game Grid</title>
@@ -88,36 +88,36 @@ export function generateOutput(model: Model, source: string, destination: string
     </head>
     <body>
     </body>
-</html>\n
+</html>
 <script>
     const body = document.querySelector('body');
-    let grid = "";\n
-    for (let s = 0; s < ${+model.grid.map(g => g.y)[0]} + 2; s++) { grid += "<span class='wall'># </span>"; }\n
-    grid += "<br>";\n
+    let grid = "";
+    for (let s = 0; s < ${+model.grid.map(g => g.y)[0]} + 2; s++) { grid += "<span class='wall'># </span>"; }
+    grid += "<br>";
     for (let i = 0; i < ${+model.grid.map(g => g.x)[0]}; i++) {
-        grid += "<span class='wall'># </span>";\n
+        grid += "<span class='wall'># </span>";
         for (let j = 0; j < ${+model.grid.map(g => g.y)[0]}; j++) {
             if (${+model.player.map(p => p.x)[0]} == j && ${+model.player.map(p => p.y)[0]} == i) {
-                grid += "<span class='player'>O </span>";\n
-            } else if ([${gridContent}][j][i] == 'S'){
-                grid += "<span class='snake-body'>S </span>";\n
-            } else if ([${gridContent}][j][i] == 'M') {
-                grid += "<span class='enemy'>M </span>";\n
-            } else if ([${gridContent}][j][i] == 'X') {
-                grid += "<span class='enemy-body'>X </span>";\n
-            } else if ([${gridContent}][j][i] == 'F') {
-                grid += "<span class='fruit'>F </span>";\n
-            } else if ([${gridContent}][j][i] == 'W') {
-                grid += "<span class='wall'>+ </span>";\n
+                grid += "<span class='player'>O </span>";
+            } else if ([${gridContent}][i*${model.grid.map(g =>g.x)[0]}+j] == 'S'){
+                grid += "<span class='snake-body'>S </span>";
+            } else if ([${gridContent}][i*${model.grid.map(g =>g.x)[0]}+j] == 'M') {
+                grid += "<span class='enemy'>M </span>";
+            } else if ([${gridContent}][i*${model.grid.map(g =>g.x)[0]}+j] == 'X') {
+                grid += "<span class='enemy-body'>X </span>";
+            } else if ([${gridContent}][i*${model.grid.map(g =>g.x)[0]}+j] == 'F') {
+                grid += "<span class='fruit'>F </span>";
+            } else if ([${gridContent}][i*${model.grid.map(g =>g.x)[0]}+j] == 'W') {
+                grid += "<span class='wall'>+ </span>";
             } else {
-                grid += "<span class='empty'>. </span>";\n
+                grid += "<span class='empty'>. </span>";
             }
-        }\n
-        gridContent += "<span class='wall'>#</span><br>";\n
-    }\n
-    for (let s = 0; s < ${+model.grid.map(g => g.y)[0]} + 2; s++) { gridContent += "<span class='wall'># </span>"; }\n
-    body.innerHTML = gridContent;\n
-</script>\n
+        }
+        grid += "<span class='wall'>#</span><br>";
+    }
+    for (let s = 0; s < ${+model.grid.map(g => g.y)[0]} + 2; s++) { grid += "<span class='wall'># </span>"; }
+    body.innerHTML = grid;
+</script>
     `;
     }
     // Edition
