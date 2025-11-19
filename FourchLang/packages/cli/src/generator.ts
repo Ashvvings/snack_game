@@ -1,4 +1,4 @@
-import type { Model } from 'fourch-lang-language';
+import { type Model } from 'fourch-lang-language';
 import { expandToNode, toString } from 'langium/generate';
 import * as fs from 'node:fs';
 import { extractDestinationAndName } from './util.js';
@@ -119,6 +119,78 @@ export function generateOutput(model: Model, source: string, destination: string
     body.innerHTML = grid;
 </script>
     `;
+    }
+    if (selectedMode=="python.json") {
+        grid += `{
+    "grid" : {
+        "x" : ${model.grid.map(g => g.x)[0]},
+        "y" : ${model.grid.map(g => g.x)[0]},
+    },
+    "game-mode" : ${model.gameMode[0]},
+    "border-rules" : {${model.borderRules.map((rule) => 
+        `"${rule.direction}" : true,`
+    )}},
+    "fruits-config" : {
+        "reappear" : ${model.fruitConfig[0].reappear? true : false},
+        "respawn-time" : ${
+            model.fruitConfig[0].reappear ?
+                ( model.fruitConfig[0].seconds ? model.fruitConfig[0].seconds : "null") :
+                "null"
+            },
+        "snake-growth" : ${model.fruitConfig[0].growthLength ? 
+            model.fruitConfig[0].growthLength : 1},
+    },
+    "player" : {
+        "id" : ${model.player[0].name},
+        "position" : {
+            "x" : ${model.player[0].x},
+            "y" : ${model.player[0].y},
+        },
+        "size" : ${model.player[0].len},
+        "speed" : ${model.player[0].speed},
+        "color" : ${model.player[0].color},
+    },
+    "enemies" : [${model.enemies.map((enemy) => `{
+        "id" : ${enemy.name},
+        "position" : {
+            "x" : ${enemy.x},
+            "y" : ${enemy.y},
+        },
+        "size" : ${enemy.len ? enemy.len : 'null'},
+        "moves" : ${enemy.movable ? true : false},
+        "speed" : ${enemy.speed ? enemy.speed : 'null'},
+    }`)}],
+    "snake-body" : [${model.snakeBodies.map((body) => `{
+        "id" : ${body.name},
+        "position" : {
+            "x" : ${body.x},
+            "y" : ${body.y},
+        },
+        "follows" : ${body.parent.$nodeDescription?.name},
+    }`)}],
+    "ennemy-bodies" : [${model.enemyBodies.map((body) => `{
+        "id" : ${body.name},
+        "position" : {
+            "x" : ${body.x},
+            "y" : ${body.y},
+        },
+        "follows" : ${body.parent.$nodeDescription?.name},
+    }`)}],
+    "walls" : [${model.walls.map((wall) => `{
+        "position" : {
+            "x" : ${wall.x},
+            "y" : ${wall.y},
+        },
+    }`)}],
+    "fruits" : [${model.fruits.map((fruit) => `{
+        "position" : {
+            "x" : ${fruit.x},
+            "y" : ${fruit.y},
+        },
+        "points" : ${fruit.points},
+    }`)}],
+    "game-over-conditions" : [${model.game_over_conditions.map((goc) => `{"target" : ${goc.target}}`)}],
+}`;
     }
     // Edition
     const fileNode = expandToNode`
