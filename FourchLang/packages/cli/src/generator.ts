@@ -168,7 +168,7 @@ export function generateOutput(model: Model, source: string, destination: string
         },
         "follows" : "${body.parent.$nodeDescription?.name}"
     }`)}],
-    "ennemy-bodies" : [${model.enemyBodies.map((body) => `{
+    "enemy-bodies" : [${model.enemyBodies.map((body) => `{
         "id" : "${body.name}",
         "position" : {
             "x" : ${body.x},
