@@ -1,0 +1,16 @@
+{
+    "projectName": "FourchLang",
+    "languages": [
+        {
+            "id": "fourch-lang",
+            "grammar": "src/fourch-lang.langium",
+            "fileExtensions": [
+                "fl"
+            ],
+            "textMate": {
+                "out": "syntaxes/fourch-lang.tmLanguage.json"
+            }
+        }
+    ],
+    "out": "src/generated"
+}
