@@ -43,7 +43,7 @@ export function generateOutput(model: Model, source: string, destination: string
             if (+model.player.map(p => p.x)[0] == i && +model.player.map(p => p.y)[0] == j) {
                 grid += "◉ "; consoleGrid += using_color((model.player[0].color? model.player[0].color : ""), '◉ ');
             } else if (snakeBodyParts.includes("("+i+","+j+")")) {
-                grid += "S "; consoleGrid += using_color((model.player[0].color? model.player[0].color : ""), 'S ');
+                grid += "◎ "; consoleGrid += using_color((model.player[0].color? model.player[0].color : ""), '◎ ');
             } else if (enemies.includes("("+i+","+j+")")) {
                 grid += "M "; consoleGrid += `${ansiStyles.red.open}M ${ansiStyles.red.close}`;
             } else if (enemyBodies.includes("("+i+","+j+")")) {
