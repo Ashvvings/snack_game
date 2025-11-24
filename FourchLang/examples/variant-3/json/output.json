@@ -1,0 +1,112 @@
+{
+    "grid": {
+        "x": 10,
+        "y": 10
+    },
+    "game-mode": "undefined",
+    "border-rules": [
+        {
+            "horizontally": true
+        },
+        {
+            "vertically": true
+        }
+    ],
+    "fruits-config": {
+        "reappear": true,
+        "respawn-time": "undefined",
+        "snake-growth": 1
+    },
+    "player": {
+        "id": "uwu",
+        "position": {
+            "x": 2,
+            "y": 1
+        },
+        "size": 4,
+        "speed": "undefined",
+        "color": "undefined"
+    },
+    "enemies": [
+        {
+            "id": "bowser",
+            "position": {
+                "x": 8,
+                "y": 9
+            },
+            "size": 4,
+            "moves": false,
+            "speed": "undefined"
+        }
+    ],
+    "snake-body": [
+        {
+            "id": "owo",
+            "position": {
+                "x": 3,
+                "y": 1
+            },
+            "follows": "uwu"
+        },
+        {
+            "id": "awa",
+            "position": {
+                "x": 4,
+                "y": 1
+            },
+            "follows": "owo"
+        },
+        {
+            "id": "ewe",
+            "position": {
+                "x": 5,
+                "y": 1
+            },
+            "follows": "awa"
+        }
+    ],
+    "enemy-bodies": [
+        {
+            "id": "koopa",
+            "position": {
+                "x": 7,
+                "y": 9
+            },
+            "follows": "bowser"
+        },
+        {
+            "id": "goomba",
+            "position": {
+                "x": 6,
+                "y": 9
+            },
+            "follows": "koopa"
+        },
+        {
+            "id": "piranha",
+            "position": {
+                "x": 5,
+                "y": 9
+            },
+            "follows": "goomba"
+        }
+    ],
+    "walls": [],
+    "fruits": [
+        {
+            "position": {
+                "x": 4,
+                "y": 5
+            },
+            "points": 1
+        }
+    ],
+    "game-over-conditions": [
+        {
+            "target": "snake_body"
+        },
+        {
+            "target": "enemy"
+        }
+    ]
+}

@@ -1,0 +1,27 @@
+:root {
+    --player-color: green;
+}
+
+body {
+    background: #222;
+    color: white;
+    font-family: monospace;
+    font-size: 20px;
+}
+
+.player {
+    color: var(--player-color);
+    font-weight: bold;
+}
+
+.enemy      { color: red; }
+.enemy-body { color: darkred; }
+.snake-body { color: var(--player-color); }
+.fruit      { color: magenta; }
+.wall       { color: black; font-weight: bold; }
+.empty      { color: rgb(120, 160, 255); }
+
+#grid {
+    line-height: 1.2;
+    padding: 10px;
+}

@@ -1,0 +1,13 @@
+{
+    "projectName": "FourchLang",
+    "languages": [
+        {
+            "id": "fourch-lang",
+            "grammar": "src/language/fourch-lang.langium",
+            "fileExtensions": [
+                "fl"
+            ]
+        }
+    ],
+    "out": "src/language/generated"
+}

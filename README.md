@@ -31,7 +31,10 @@ Et en vous plaçant à l'aide d'un terminal dans le dossier FourchLang de ce pro
 La commande, à lancer dans un terminal, permettant de passer d'un fichier **.fl** contenant la description du jeu dans son état initial à un fichier contenant l'affichage de la grille de jeu de snake dans l'état décrit est la suivante : 
 
 ```shell 
-~$ npm run generate --source=[chemin/vers/fichier/source] --destination=[chemin/où/mettre/le/fichier/généré]
+~$ npm run generate:auto -- --variant=[num-variante] --backend=[format-export]
+```
+```shell 
+~$ npm run generate -- [source] [destination] [backend]
 ```
 Cette commande retourne par défaut un fichier texte avec une représentation de l'état initial d'un jeu de Snake en art ASCII.
 Elle affiche égalementdans le terminal le même affichage, cette fois-ci en couleur.
@@ -73,4 +76,4 @@ Fichier obtenu :
 ```
 Affichage dans le terminal : 
 
-![Grid_example](Grid_example.png)
+![Grid_example](../snack_game/Grid_example.png)

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>FourchLang Grid</title>
+
+    <!-- Le style est maintenant externe -->
+    <link rel="stylesheet" href="./assets/style.css">
+</head>
+
+<body>
+<!-- La grille sera insérée ici -->
+<pre id="grid"></pre>
+
+<script>
+    const playerColor = "green";
+    const width = 4;
+    const height = 3;
+    const grid = [
+  ["M", ".", ".", "."],
+  [".", ".", "F", "."],
+  ["S", ".", "F", "."]
+];
+
+    document.documentElement.style.setProperty("--player-color", playerColor);
+
+    const container = document.getElementById("grid");
+    let html = "";
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const cell = grid[y][x];
+
+            if (cell === "O") html += `<span class="player">O </span>`;
+            else if (cell === "S") html += `<span class="snake-body">S </span>`;
+            else if (cell === "M") html += `<span class="enemy">M </span>`;
+            else if (cell === "X") html += `<span class="enemy-body">X </span>`;
+            else if (cell === "F") html += `<span class="fruit">F </span>`;
+            else if (cell === "W") html += `<span class="wall"># </span>`;
+            else html += `<span class="empty">. </span>`;
+        }
+        html += "<br>";
+    }
+
+    container.innerHTML = html;
+</script>
+</body>
+</html>
