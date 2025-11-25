@@ -35,7 +35,10 @@ class Jeu :
             self.position = (x,y)
             self.size = size
             self.speed = speed
-            self.color = color
+            if color == "undefined":
+                self.color = Colors.GREEN
+            else:
+                self.color = color
             self.fils = fils
             self.initial_fruit_number = initial_fruit_number
             self.snake_bodies = snake_bodies
@@ -67,7 +70,7 @@ class Jeu :
             self.y = y
             self.vertically = vertically
             self.horizontally = horizontally
-    
+        
     class SnakeBody:
         def __init__(self, id : str, x : int, y : int, parent_id : str) :
             self.id = id
@@ -127,7 +130,7 @@ class Jeu :
                 enemy["position"]["y"],
                 enemy["size"],
                 enemy["speed"],
-                enemy["color"]
+                Colors.RED
             ))
     
         self.snakeBodies = []
@@ -380,32 +383,61 @@ class Jeu :
     # TODO ALice
     # Dessine le serpent, les fruits, les ennemis et les murs dans une fenêtre    
     def draw(self):
-        # Taille fenêtre
+        # Taille fenêtre (définie dans JSONtoPython)
         
+        # Taille de cellule
         cell_size = 20
         
         # Fond
-        self.fenetre.fill(caca)
-
+        self.fenetre.fill(Colors.BLACK.value)
+        
         # Bordures
         # Haut
         if self.grid.vertically:
-            pygame.draw.rect(self.fenetre, Colors.WHITE, pygame.Rect(0, 0, (self.grid.y+2)*cell_size, cell_size))
-        
+            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect(0, 0, (self.grid.y+2)*cell_size, cell_size))
         # Bas
         if self.grid.vertically:
-            pygame.draw.rect(self.fenetre, Colors.WHITE, pygame.Rect(0, (self.grid.x + 1) * cell_size, (self.grid.y + 2) * cell_size, cell_size))
-
+            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect(0, (self.grid.x + 1) * cell_size, (self.grid.y + 2) * cell_size, cell_size))
         # Gauche
         if self.grid.horizontally:
-            pygame.draw.rect(self.fenetre, Colors.WHITE, pygame.Rect(0, 0, cell_size, (self.grid.x + 2) * cell_size))
-
+            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect(0, 0, cell_size, (self.grid.x + 2) * cell_size))
         # Droite
         if self.grid.horizontally:
-            pygame.draw.rect(self.fenetre, Colors.WHITE, pygame.Rect((self.grid.y + 1) * cell_size, 0, cell_size, (self.grid.x + 2) * cell_size))
-        
-         
+            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect((self.grid.y + 1) * cell_size, 0, cell_size, (self.grid.x + 2) * cell_size))
+        print(self.gameMode.gameMode)
+        if self.gameMode.gameMode==Mode.PACMAN:
+            # Ouvertures bordures
+            # Haut
+            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect(((self.grid.y+2)//2)*cell_size, 0, cell_size, cell_size))
+            # Bas
+            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect(((self.grid.y+2)//2)*cell_size, (self.grid.x + 1) * cell_size, cell_size, cell_size))
+            # Gauche
+            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect(0, ((self.grid.x + 2)//2)*cell_size, cell_size, cell_size))
+            # Droite
+            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect((self.grid.y + 1) * cell_size, ((self.grid.x + 2)//2)*cell_size, cell_size, cell_size))
 
+        # Serpent
+        pygame.draw.circle(self.fenetre, self.player.color.value, [((self.player.position[0]+1)*cell_size), ((self.player.position[1]+1)*cell_size)], cell_size/2, 0)
+        
+        # Serpent - corps
+        for body in self.snakeBodies:
+            pygame.draw.circle(self.fenetre, self.player.color.value, [((body.position[0]+1)*cell_size), ((body.position[1]+1)*cell_size)], (cell_size/2)-2, 0)
+        
+        # Fruits
+        for fruit in self.fruits:
+            pygame.draw.circle(self.fenetre, Colors.MAGENTA.value, [((fruit.position[0]+1)*cell_size), ((fruit.position[1]+1)*cell_size)], (cell_size/2), 0)
+        
+        # Ennemis
+        for enemy in self.enemies:
+            pygame.draw.circle(self.fenetre, enemy.color.value, [((enemy.position[0]+1)*cell_size), ((enemy.position[1]+1)*cell_size)], cell_size/2, 0)
+        # Ennemis - corps
+        for body in self.enemyBodies:
+            pygame.draw.circle(self.fenetre, Colors.RED.value, [((body.position[0]+1)*cell_size), ((body.position[1]+1)*cell_size)], (cell_size/2)-2, 0)
+        
+        # Murs
+        for wall in self.walls:
+            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect((wall.position[1]+1)*cell_size, (wall.position[0]+1)*cell_size, cell_size, cell_size))
+        
     # TODO
     # Lancement de la boucle de jeu
     def go(self):
@@ -446,12 +478,13 @@ class Jeu :
 if __name__ == "__main__":
     pygame.init()
     game = Jeu()
-    game.JSONtoPython("./FourchLang/packages/cli/src/generated.json")
+    game.JSONtoPython("/home/jchaidro/DSL/snack_game/FourchLang/examples/variant-4/json/output.json")
     print(game.grid)
     game.draw()
     
     running = True
     while running:
+        pygame.display.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
