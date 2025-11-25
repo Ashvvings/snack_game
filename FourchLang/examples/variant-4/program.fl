@@ -1,5 +1,7 @@
 grid size 29*28
 
+game mode pacman
+
 player cloud at (16, 13) with speed 1
 
 border horizontally crossable

@@ -32,7 +32,7 @@ class Jeu :
     class Player:
         def __init__(self, id : str, x : int, y : int, size : int, speed : int, color : Colors, initial_fruit_number : int = 1, fils : str = None, snake_bodies : list = [] ) :
             self.id = id
-            self.position = (x,y)
+            self.position = (y,x)
             self.size = size
             self.speed = speed
             if color == "undefined":
@@ -45,7 +45,7 @@ class Jeu :
     
     class Fruit:
         def __init__(self, x : int, y : int, points : int) :
-            self.position = (x,y)
+            self.position = (y,x)
             self.points = points
 
     class FruitConfig:
@@ -57,7 +57,7 @@ class Jeu :
     class Enemy:
         def __init__(self, id : str, x : int, y : int, size : int, speed : int, color : Colors, fils : str = None, enemy_bodies : list = [] ) :
             self.id = id
-            self.position = (x,y)
+            self.position = (y,x)
             self.size = size
             self.speed = speed
             self.color = color
@@ -74,17 +74,17 @@ class Jeu :
     class SnakeBody:
         def __init__(self, id : str, x : int, y : int, parent_id : str) :
             self.id = id
-            self.position = (x,y)
+            self.position = (y,x)
             self.parent_id = parent_id
     
     class Wall:
         def __init__(self, x : int, y : int) :
-            self.position = (x,y)
+            self.position = (y,x)
     
     class EnemyBody:
         def __init__(self, id : str, x : int, y : int, parent_id : str) :
             self.id = id
-            self.position = (x,y)
+            self.position = (y,x)
             self.parent_id = parent_id
 
     class GameMode:
@@ -112,7 +112,14 @@ class Jeu :
         with open(file_path, "r") as f:
             game = json.load(f)
         
-        self.gameMode = self.GameMode(game["game-mode"])
+        match game["game-mode"]:
+            case "snake":
+                self.gameMode = self.GameMode(Mode.SNAKE)
+            case "pacman":
+                self.gameMode = self.GameMode(Mode.PACMAN)
+            case "adder":
+                self.gameMode = self.GameMode(Mode.ADDER)
+        
         self.player = self.Player(
             game["player"]["id"],
             game["player"]["position"]["x"],
@@ -404,43 +411,46 @@ class Jeu :
         # Droite
         if self.grid.horizontally:
             pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect((self.grid.y + 1) * cell_size, 0, cell_size, (self.grid.x + 2) * cell_size))
-        print(self.gameMode.gameMode)
-        if self.gameMode.gameMode==Mode.PACMAN:
-            # Ouvertures bordures
-            # Haut
-            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect(((self.grid.y+2)//2)*cell_size, 0, cell_size, cell_size))
-            # Bas
-            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect(((self.grid.y+2)//2)*cell_size, (self.grid.x + 1) * cell_size, cell_size, cell_size))
-            # Gauche
-            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect(0, ((self.grid.x + 2)//2)*cell_size, cell_size, cell_size))
-            # Droite
-            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect((self.grid.y + 1) * cell_size, ((self.grid.x + 2)//2)*cell_size, cell_size, cell_size))
 
+        # Si mode Pacman : 
+        if self.gameMode.gameMode==Mode.PACMAN:
+            # Haut
+            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect(cell_size, 0, (self.grid.y*cell_size), cell_size))
+            # Bas
+            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect(cell_size, (self.grid.x + 1) * cell_size, (self.grid.y*cell_size), cell_size))
+            
         # Serpent
-        pygame.draw.circle(self.fenetre, self.player.color.value, [((self.player.position[0]+1)*cell_size), ((self.player.position[1]+1)*cell_size)], cell_size/2, 0)
+        pygame.draw.circle(self.fenetre, self.player.color.value, [((self.player.position[0]+1.5)*cell_size), ((self.player.position[1]+1.5)*cell_size)], cell_size/2, 0)
         
         # Serpent - corps
         for body in self.snakeBodies:
-            pygame.draw.circle(self.fenetre, self.player.color.value, [((body.position[0]+1)*cell_size), ((body.position[1]+1)*cell_size)], (cell_size/2)-2, 0)
+            pygame.draw.circle(self.fenetre, self.player.color.value, [((body.position[0]+1.5)*cell_size), ((body.position[1]+1.5)*cell_size)], (cell_size/2)-2, 0)
         
         # Fruits
         for fruit in self.fruits:
-            pygame.draw.circle(self.fenetre, Colors.MAGENTA.value, [((fruit.position[0]+1)*cell_size), ((fruit.position[1]+1)*cell_size)], (cell_size/2), 0)
+            pygame.draw.circle(self.fenetre, Colors.MAGENTA.value, [((fruit.position[0]+1.5)*cell_size), ((fruit.position[1]+1.5)*cell_size)], (cell_size/2), 0)
         
         # Ennemis
         for enemy in self.enemies:
-            pygame.draw.circle(self.fenetre, enemy.color.value, [((enemy.position[0]+1)*cell_size), ((enemy.position[1]+1)*cell_size)], cell_size/2, 0)
+            pygame.draw.circle(self.fenetre, enemy.color.value, [((enemy.position[0]+1.5)*cell_size), ((enemy.position[1]+1.5)*cell_size)], cell_size/2, 0)
         # Ennemis - corps
         for body in self.enemyBodies:
-            pygame.draw.circle(self.fenetre, Colors.RED.value, [((body.position[0]+1)*cell_size), ((body.position[1]+1)*cell_size)], (cell_size/2)-2, 0)
+            pygame.draw.circle(self.fenetre, Colors.RED.value, [((body.position[0]+1.5)*cell_size), ((body.position[1]+1.5)*cell_size)], (cell_size/2)-2, 0)
         
         # Murs
         for wall in self.walls:
-            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect((wall.position[1]+1)*cell_size, (wall.position[0]+1)*cell_size, cell_size, cell_size))
+            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect((wall.position[0]+1)*cell_size, (wall.position[1]+1)*cell_size, cell_size, cell_size))
         
     # TODO
     # Lancement de la boucle de jeu
     def go(self):
+        running = True
+        while running:
+            game.draw()
+            pygame.display.update()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
         """ while True:
             direction = attendre_direction()
             print(f'Touche détectée : {direction}') """
@@ -479,15 +489,8 @@ if __name__ == "__main__":
     pygame.init()
     game = Jeu()
     game.JSONtoPython("/home/jchaidro/DSL/snack_game/FourchLang/examples/variant-4/json/output.json")
-    print(game.grid)
-    game.draw()
+    game.go()
     
-    running = True
-    while running:
-        pygame.display.update()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
     
     
     

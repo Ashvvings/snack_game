@@ -3,7 +3,7 @@
         "x": 29,
         "y": 28
     },
-    "game-mode": "undefined",
+    "game-mode": "pacman",
     "border-rules": [
         {
             "horizontally": true
@@ -2135,6 +2135,54 @@
         },
         {
             "position": {
+                "x": 17,
+                "y": 10
+            }
+        },
+        {
+            "position": {
+                "x": 17,
+                "y": 11
+            }
+        },
+        {
+            "position": {
+                "x": 17,
+                "y": 12
+            }
+        },
+        {
+            "position": {
+                "x": 17,
+                "y": 13
+            }
+        },
+        {
+            "position": {
+                "x": 17,
+                "y": 14
+            }
+        },
+        {
+            "position": {
+                "x": 17,
+                "y": 15
+            }
+        },
+        {
+            "position": {
+                "x": 17,
+                "y": 16
+            }
+        },
+        {
+            "position": {
+                "x": 17,
+                "y": 17
+            }
+        },
+        {
+            "position": {
                 "x": 18,
                 "y": 10
             }
@@ -2184,24 +2232,6 @@
         {
             "position": {
                 "x": 19,
-                "y": 10
-            }
-        },
-        {
-            "position": {
-                "x": 19,
-                "y": 11
-            }
-        },
-        {
-            "position": {
-                "x": 19,
-                "y": 12
-            }
-        },
-        {
-            "position": {
-                "x": 19,
                 "y": 13
             }
         },
@@ -2209,24 +2239,6 @@
             "position": {
                 "x": 19,
                 "y": 14
-            }
-        },
-        {
-            "position": {
-                "x": 19,
-                "y": 15
-            }
-        },
-        {
-            "position": {
-                "x": 19,
-                "y": 16
-            }
-        },
-        {
-            "position": {
-                "x": 19,
-                "y": 17
             }
         },
         {
@@ -2250,18 +2262,6 @@
         {
             "position": {
                 "x": 21,
-                "y": 14
-            }
-        },
-        {
-            "position": {
-                "x": 22,
-                "y": 13
-            }
-        },
-        {
-            "position": {
-                "x": 22,
                 "y": 14
             }
         },
@@ -3790,13 +3790,6 @@
         },
         {
             "position": {
-                "x": 13,
-                "y": 26
-            },
-            "points": 10
-        },
-        {
-            "position": {
                 "x": 19,
                 "y": 1
             },
@@ -3855,48 +3848,6 @@
             "position": {
                 "x": 19,
                 "y": 9
-            },
-            "points": 10
-        },
-        {
-            "position": {
-                "x": 19,
-                "y": 10
-            },
-            "points": 10
-        },
-        {
-            "position": {
-                "x": 19,
-                "y": 11
-            },
-            "points": 10
-        },
-        {
-            "position": {
-                "x": 19,
-                "y": 12
-            },
-            "points": 10
-        },
-        {
-            "position": {
-                "x": 19,
-                "y": 15
-            },
-            "points": 10
-        },
-        {
-            "position": {
-                "x": 19,
-                "y": 16
-            },
-            "points": 10
-        },
-        {
-            "position": {
-                "x": 19,
-                "y": 17
             },
             "points": 10
         },
@@ -4030,20 +3981,6 @@
             "position": {
                 "x": 22,
                 "y": 12
-            },
-            "points": 10
-        },
-        {
-            "position": {
-                "x": 22,
-                "y": 13
-            },
-            "points": 10
-        },
-        {
-            "position": {
-                "x": 22,
-                "y": 14
             },
             "points": 10
         },
