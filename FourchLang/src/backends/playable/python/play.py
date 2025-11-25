@@ -1,6 +1,5 @@
 from enum import Enum
-import json
-import pygame
+import pygame, json, sys
 
 """ from math import *
 from random import *
@@ -29,6 +28,10 @@ class Mode(Enum) :
     ADDER = 3
     
 class Jeu :
+
+    FPS = 5
+    fpsClock = pygame.time.Clock()
+
     class Player:
         def __init__(self, id : str, x : int, y : int, size : int, speed : int, color : Colors, initial_fruit_number : int = 1, fils : str = None, snake_bodies : list = [] ) :
             self.id = id
@@ -106,6 +109,7 @@ class Jeu :
     game_over_conditions = []
     direction = Direction.GAUCHE
     fenetre = None
+    is_game_over = False
     
     
     def JSONtoPython(self, file_path : str):
@@ -115,10 +119,17 @@ class Jeu :
         match game["game-mode"]:
             case "snake":
                 self.gameMode = self.GameMode(Mode.SNAKE)
+                pygame.display.set_caption("Snake Game - Mode Snake")
             case "pacman":
                 self.gameMode = self.GameMode(Mode.PACMAN)
+                pygame.display.set_caption("Snake Game - Mode Pacman")
             case "adder":
                 self.gameMode = self.GameMode(Mode.ADDER)
+                pygame.display.set_caption("Snake Game - Mode Adder")
+            case _:
+                print("Mode de jeu non renseigné, mode Snake par défault.")
+                self.gameMode = self.GameMode(Mode.SNAKE)
+                pygame.display.set_caption("Snake Game - Mode Snake")
         
         self.player = self.Player(
             game["player"]["id"],
@@ -167,6 +178,7 @@ class Jeu :
             if not found:
                 break
         self.snakeBodies = ordered_bodies
+        self.player.snake_bodies = self.snakeBodies
     
         self.enemyBodies = []
         for enemyBody in game["enemy-bodies"]:
@@ -235,53 +247,85 @@ class Jeu :
 
     # Met à jour la direction en fonction des touches appuyées
     # DONE
-    def take_direction(self):
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN:
-                    # Flèches directionnelles
-                    if event.key == pygame.K_UP or event.key == pygame.K_z:
-                        if len(self.player)>1:
-                            if (self.player.position[0]-1,self.player.position[1])==self.player.fils.position:
-                                pass
-                        self.direction=Direction.HAUT
+    def take_direction(self, event):
+        if event.type == pygame.KEYDOWN:
+        # Flèches directionnelles
+            if event.key == pygame.K_UP or event.key == pygame.K_z:
+                if self.player.size>1:
+                    if (self.player.position[0],self.player.position[1]-1)==self.player.fils.position:
                         return
-                    if event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                        if len(self.player)>1:
-                            if (self.player.position[0]+1,self.player.position[1])==self.player.fils.position:
-                                pass
-                        self.direction=Direction.BAS
-                    if event.key == pygame.K_LEFT or event.key == pygame.K_q:
-                        if len(self.player)>1:
-                            if (self.player.position[0],self.player.position[1]-1)==self.player.fils.position:
-                                pass
-                        self.direction=Direction.GAUCHE
-                    if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                        if len(self.player)>1:
-                            if (self.player.position[0],self.player.position[1]+1)==self.player.fils.position:
-                                pass
-                        self.direction=Direction.DROITE
+                self.direction=Direction.HAUT
+                return
+            if event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                if self.player.size>1:
+                    if (self.player.position[0],self.player.position[1]+1)==self.player.fils.position:
+                        return
+                self.direction=Direction.BAS
+                return
+            if event.key == pygame.K_LEFT or event.key == pygame.K_q:
+                if self.player.size>1:
+                    if (self.player.position[0]-1,self.player.position[1])==self.player.fils.position:
+                        return
+                self.direction=Direction.GAUCHE
+                return
+            if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                if self.player.size>1:
+                    if (self.player.position[0]+1,self.player.position[1])==self.player.fils.position:
+                        return
+                self.direction=Direction.DROITE
+                return
 
     
 
     # Déplace le joueur dans la direction actuelle
     # DONE
     def player_forward(self):
-        for body in self.player.snake_bodies.reverse():
+        previous_position = self.player.position
+        if self.direction==Direction.HAUT:
+            if not self.verif_over(Direction.HAUT):
+                if not self.verif_wall(Direction.HAUT): 
+                    if not (self.player.position[1]==-1):
+                        self.player.position = (self.player.position[0],self.player.position[1]-1)
+                    else:
+                        self.player.position = (self.player.position[0],self.grid.x)
+            else:
+                self.is_game_over = True
+        if self.direction==Direction.BAS:
+            if not self.verif_over(Direction.BAS):
+                if not self.verif_wall(Direction.BAS): 
+                    if not (self.player.position[1]==self.grid.x):
+                        self.player.position = (self.player.position[0],self.player.position[1]+1)
+                    else:
+                        self.player.position = (self.player.position[0],-1)
+            else:
+                self.is_game_over = True
+        if self.direction==Direction.GAUCHE:
+            if not self.verif_over(Direction.GAUCHE):
+                if not self.verif_wall(Direction.GAUCHE): 
+                    if not (self.player.position[0]==-1):
+                        self.player.position = (self.player.position[0]-1,self.player.position[1])
+                    else:
+                        self.player.position = (self.grid.y,self.player.position[1])
+            else:
+                self.is_game_over = True
+        if self.direction==Direction.DROITE:
+            if not self.verif_over(Direction.DROITE):
+                if not self.verif_wall(Direction.DROITE): 
+                    if not (self.player.position[0]==self.grid.y):
+                        self.player.position = (self.player.position[0]+1,self.player.position[1])
+                    else:
+                        self.player.position = (-1,self.player.position[1])
+            else:
+                self.is_game_over = True
+        for body in self.player.snake_bodies:
             if body.parent_id==self.player.id:
-                body.position=self.player.position
+                body.position=previous_position
             else:
                 for b in self.snakeBodies:
                     if body.parent_id==b.id:
                         body.position=b.position
-        if self.direction==Direction.HAUT:
-            self.player.position = (self.player.position[0]-1,self.player.position[1])
-        if self.direction==Direction.BAS:
-            self.player.position = (self.player.position[0]+1,self.player.position[1])
-        if self.direction==Direction.GAUCHE:
-            self.player.position = (self.player.position[0],self.player.position[1]-1)
-        if self.direction==Direction.DROITE:
-            self.player.position = (self.player.position[0],self.player.position[1]+1)
+            
+        
 
     # TODO Dorian
     def enemy_forward(self, enemyID):
@@ -289,24 +333,24 @@ class Jeu :
             pass
         
         if self.direction==Direction.HAUT:
-            self.player.position = (self.player.position[0]-1,self.player.position[1])
-        if self.direction==Direction.BAS:
-            self.player.position = (self.player.position[0]+1,self.player.position[1])
-        if self.direction==Direction.GAUCHE:
             self.player.position = (self.player.position[0],self.player.position[1]-1)
-        if self.direction==Direction.DROITE:
+        if self.direction==Direction.BAS:
             self.player.position = (self.player.position[0],self.player.position[1]+1)
+        if self.direction==Direction.GAUCHE:
+            self.player.position = (self.player.position[0]-1,self.player.position[1])
+        if self.direction==Direction.DROITE:
+            self.player.position = (self.player.position[0]+1,self.player.position[1])
     
     # TODO Jules
     def verif_over(self, d):
         if d==Direction.HAUT:
-            pos_fut=(self.player.position[0]-1, self.player.position[1])
-        if d==Direction.BAS:
-            pos_fut=(self.player.position[0]+1, self.player.position[1])
-        if d==Direction.GAUCHE:
             pos_fut=(self.player.position[0], self.player.position[1]-1)
-        if d==Direction.GAUCHE:
+        if d==Direction.BAS:
             pos_fut=(self.player.position[0], self.player.position[1]+1)
+        if d==Direction.GAUCHE:
+            pos_fut=(self.player.position[0]-1, self.player.position[1])
+        if d==Direction.GAUCHE:
+            pos_fut=(self.player.position[0]+1, self.player.position[1])
         for goc in self.game_over_conditions :
             match goc :
                 case "border" :
@@ -327,6 +371,22 @@ class Jeu :
                     for wall in self.walls :
                         if pos_fut == wall.position : return True
                     return False
+    
+    def verif_wall(self, d):
+        if d==Direction.HAUT:
+            pos_fut=(self.player.position[0], self.player.position[1]-1)
+        if d==Direction.BAS:
+            pos_fut=(self.player.position[0], self.player.position[1]+1)
+        if d==Direction.GAUCHE:
+            pos_fut=(self.player.position[0]-1, self.player.position[1])
+        if d==Direction.DROITE:
+            pos_fut=(self.player.position[0]+1, self.player.position[1])
+        for wall in self.walls :
+            if pos_fut == wall.position : return True
+        if self.gameMode.gameMode==Mode.PACMAN:
+            if (pos_fut[1]<0 or pos_fut[1]>self.grid.x-1):
+                return True
+        return False
 
     # TODO Jules
     def check_tile_is_empty(self, x : int, y : int):
@@ -349,15 +409,17 @@ class Jeu :
     # Supprime le fruit mangé et augmente la taille du serpent
     # DONE
     def fruit_eat(self):
-        for a in len(self.fruits):
+        for a in range(len(self.fruits)):
             if self.player.position==self.fruits[a].position:
-                self.player.size+=1
+                if not self.gameMode.gameMode==Mode.PACMAN:
+                    self.player.size+=1
                 self.fruits.remove(self.fruits[a])
+                break
     
     # TODO Axelle
     def reappear_fruit(self):
         if self.gameMode.gameMode==Mode.SNAKE or self.gameMode.gameMode==Mode.ADDER:
-            if self.fruits_config.respaw_time==0 and self.fruits_config.reappear:
+            if self.fruits_config.respawn==0 and self.fruits_config.reappear:
                 # on est dans le mode : nb de fruits fixe, dès qu'un fruit disparaît il réapparaît
                 if len(self.fruits)==self.fruit.initial_number:
                     pass
@@ -369,14 +431,12 @@ class Jeu :
                     # on appelle la fonction check_tile_is_empty et tant que c'est faux on crée une autre position aléatoire
                     # TODO
                     pass
-            elif self.fruits_config.respaw_time!=0 and self.fruits_config.reappear:
+            elif self.fruits_config.respawn!=0 and self.fruits_config.reappear:
                 # on attend le nombre de secondes spécifié dans self.fruits_config.respaw_time
                 # TODO
                 # on fait apparaître un fruit de manière aléatiore en vérifiant qu'il n'y a rien sur la case
                 # on appelle la fonction check_tile_is_empty et tant que c'est faux on crée une autre position aléatoire
                 pass
-
-                    
 
         """
         if len(fruits)==2:
@@ -387,6 +447,8 @@ class Jeu :
             fruit.append(new_apple)
         return(apple)
     """
+                    
+
     # TODO ALice
     # Dessine le serpent, les fruits, les ennemis et les murs dans une fenêtre    
     def draw(self):
@@ -448,9 +510,18 @@ class Jeu :
         while running:
             game.draw()
             pygame.display.update()
+            self.fpsClock.tick(self.FPS)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+                else:
+                    self.take_direction(event)
+            self.player_forward()
+            if self.is_game_over:
+                running = False
+            self.fruit_eat()
+            self.reappear_fruit()
+        print("Game Over")
         """ while True:
             direction = attendre_direction()
             print(f'Touche détectée : {direction}') """
@@ -488,7 +559,7 @@ class Jeu :
 if __name__ == "__main__":
     pygame.init()
     game = Jeu()
-    game.JSONtoPython("/home/jchaidro/DSL/snack_game/FourchLang/examples/variant-4/json/output.json")
+    game.JSONtoPython("/home/jchaidro/DSL/snack_game/FourchLang/examples/variant-2/json/output.json")
     game.go()
     
     
