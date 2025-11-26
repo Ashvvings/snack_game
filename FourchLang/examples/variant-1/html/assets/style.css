@@ -18,7 +18,7 @@ body {
 .enemy-body { color: darkred; }
 .snake-body { color: var(--player-color); }
 .fruit      { color: magenta; }
-.wall       { color: black; font-weight: bold; }
+.wall       { color: gold; font-weight: bold; }
 .empty      { color: rgb(120, 160, 255); }
 
 #grid {

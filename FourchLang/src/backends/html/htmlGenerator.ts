@@ -7,8 +7,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export function generateHtml(model: Model, destination: string) {
 
-    const width = Number(model.grid[0].y);
-    const height = Number(model.grid[0].x);
+    const width = Number(model.grid[0].x);
+    const height = Number(model.grid[0].y);
 
     // grid[y][x]
     const grid = Array.from({ length: height }, () =>

@@ -35,8 +35,8 @@ export function generateAscii(model: Model, destination: string): string {
     let grid = "";
     let consoleGrid = "";
 
-    const width = Number(model.grid[0].y);
-    const height = Number(model.grid[0].x);
+    const width = Number(model.grid[0].x);
+    const height = Number(model.grid[0].y);
 
     // Bordure du haut
     for (let s = 0; s < width + 2; s++) {
@@ -51,9 +51,9 @@ export function generateAscii(model: Model, destination: string): string {
         consoleGrid += `${ansiStyles.white.open} # ${ansiStyles.white.close}`;
 
         for (let j = 0; j < width; j++) {
-            const coord = `(${i},${j})`;
+            const coord = `(${j},${i})`;
 
-            if (+model.player[0].x === i && +model.player[0].y === j) {
+            if (+model.player[0].x === j && +model.player[0].y === i) {
                 grid += " O ";
                 consoleGrid += usingColor(model.player[0].color ?? "", " O ");
             } else if (snakeBodyParts.includes(coord)) {

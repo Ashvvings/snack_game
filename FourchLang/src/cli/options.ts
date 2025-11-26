@@ -1,6 +1,7 @@
 export interface FourchGenerateOptions {
-    target?: string;              // ascii | html | playable ...
-    ai?: string;                  // random | greedy | minimax:2
+    target: "ascii" | "html" | "json" | "playable";
+    playable: boolean;
+    ai?: string;
     seed?: number;
     headless?: boolean;
 }

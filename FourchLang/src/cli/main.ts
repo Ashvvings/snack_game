@@ -22,6 +22,7 @@ export default function cli(): void {
         .option("--ai <ai>", "random | greedy | minimax:2")
         .option("--seed <seed>", "Seed integer", v => parseInt(v, 10))
         .option("--headless", "Run without UI", false)
+        .option("--playable", "Generate also a playable version", false)
         .description("Generate output using the selected backend.")
         .action(async (source, destinationOrOut, opts) => {
             try {
@@ -30,7 +31,7 @@ export default function cli(): void {
                     destinationOrOut,
                     opts as Partial<FourchGenerateOptions>
                 );
-                console.log(`✔ Generated (${opts.target})`);
+                console.log(`✔ Generated (${opts.target}${opts.playable ? " + playable" : ""})`);
             } catch (err) {
                 console.error("❌ Generation failed:", err);
                 process.exit(1);
@@ -44,6 +45,7 @@ export default function cli(): void {
         .command("auto")
         .requiredOption("--variant <number>", "Variant number (1–5)")
         .requiredOption("--backend <backend>", "ascii | html | json")
+        .option("--playable", "Generate the playable version", false)
         .description("Auto-generate code from `examples/variant-X`.")
         .action(async (opts) => {
 
@@ -80,12 +82,59 @@ export default function cli(): void {
                 await generateCommandHandler(
                     source,
                     destination,
-                    { target: backend }
+                    { target: backend, playable: opts.playable }
                 );
                 console.log(`✔ Auto-generated (${backend}) → ${destination}`);
             } catch (err) {
                 console.error("❌ Automatic generation failed:", err);
                 process.exit(1);
+            }
+        });
+
+    // ---------------------------------------------------------
+    //   COMMANDE 3 — generate:all
+    // ---------------------------------------------------------
+    program
+        .command("auto:all")
+        .requiredOption("--backend <backend>", "ascii | html | json | playable")
+        .option("--playable", "Generate playable version", false)
+        .description("Generate all variants (1–5).")
+        .action(async (opts) => {
+            const backend = opts.backend.toLowerCase();
+            const playable = !!opts.playable;
+
+            for (let variant = 1; variant <= 5; variant++) {
+                const base = `examples/variant-${variant}`;
+                const source = `${base}/program.fl`;
+
+                if (!fs.existsSync(source)) {
+                    console.error(`❌ Missing file: ${source}`);
+                    continue;
+                }
+
+                const outputDir = `${base}/${backend}`;
+                if (!fs.existsSync(outputDir)) {
+                    fs.mkdirSync(outputDir, { recursive: true });
+                }
+
+                const extension =
+                    backend === "ascii" ? "txt" :
+                        backend === "html" ? "html" :
+                            backend === "json" ? "json" :
+                                "html"; // playable = html
+
+                const destination = `${outputDir}/output.${extension}`;
+
+                try {
+                    await generateCommandHandler(
+                        source,
+                        destination,
+                        { target: backend, playable }
+                    );
+                    console.log(`✔ Variant ${variant} generated (${backend}) → ${destination}`);
+                } catch (err) {
+                    console.error(`❌ Variant ${variant} failed:`, err);
+                }
             }
         });
 

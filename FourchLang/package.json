@@ -30,17 +30,17 @@
       "clean": "shx rm -rf dist .generated *.tsbuildinfo",
       "watch": "tsc -w",
 
-      "build": "tsc -p tsconfig.json && npm run copy:assets && npm run copy:playable && npm run copy:playable-runtime",
+      "build": "tsc -p tsconfig.json && npm run copy:assets && npm run copy:playable",
       "build:clean": "npm run clean && npm run build",
       "copy:assets": "shx mkdir -p dist/src/backends/html/assets && shx cp -r src/backends/html/assets/* dist/src/backends/html/assets/",
-      "copy:playable": "shx cp -r src/backends/playable/assets dist/src/backends/playable/",
-      "copy:playable-runtime": "shx mkdir -p dist/src/backends/playable/assets/runtime && shx cp -r src/runtime dist/src/backends/playable/assets/",
+      "copy:playable": "shx cp -r src/backends/playable/html dist/src/backends/playable/",
 
       "langium:generate": "langium generate",
       "langium:watch": "langium generate --watch",
 
       "generate": "npm run build && node ./dist/src/cli/main.js generate",
-      "generate:auto": "npm run build && node ./dist/src/cli/main.js auto",
+      "generate:auto": "npm run build:clean && node ./dist/src/cli/main.js auto",
+      "generate:all": "npm run build:clean && node ./dist/src/cli/main.js auto:all",
 
       "test": "vitest run",
       "test:oracle": "vitest run oracle.test.ts",
