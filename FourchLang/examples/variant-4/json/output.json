@@ -5080,9 +5080,6 @@
     "game-over-conditions": [
         {
             "target": "enemy"
-        },
-        {
-            "target": "wall"
         }
     ]
 }

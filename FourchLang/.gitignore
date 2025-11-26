@@ -3,6 +3,7 @@
 !.vscode/launch.json
 !.vscode/tasks.json
 node_modules/
+FourchLang/node_modules/
 dist/
 out/
 **/src/generated

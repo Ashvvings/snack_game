@@ -1,5 +1,6 @@
 from enum import Enum
 import pygame, json, sys
+import random, time
 
 """ from math import *
 from random import *
@@ -33,7 +34,7 @@ class Jeu :
     fpsClock = pygame.time.Clock()
 
     class Player:
-        def __init__(self, id : str, x : int, y : int, size : int, speed : int, color : Colors, initial_fruit_number : int = 1, fils : str = None, snake_bodies : list = [] ) :
+        def __init__(self, id : str, x : int, y : int, size : int, speed : int, color : Colors, fils : str = None, snake_bodies : list = [] ) :
             self.id = id
             self.position = (y,x)
             self.size = size
@@ -43,7 +44,6 @@ class Jeu :
             else:
                 self.color = color
             self.fils = fils
-            self.initial_fruit_number = initial_fruit_number
             self.snake_bodies = snake_bodies
     
     class Fruit:
@@ -52,10 +52,12 @@ class Jeu :
             self.points = points
 
     class FruitConfig:
-        def __init__(self, reappear : bool, respawn_time : int, snake_growth : int):
+        def __init__(self, reappear : bool, respawn_time : int, snake_growth : int, initial_fruit_number : int, default_points : int = 1) :
             self.reappear = reappear
             self.respawn = respawn_time
             self.snake_growth = snake_growth
+            self.initial_fruit_number = initial_fruit_number
+            self.default_points=default_points
     
     class Enemy:
         def __init__(self, id : str, x : int, y : int, size : int, speed : int, color : Colors, fils : str = None, enemy_bodies : list = [] ) :
@@ -107,7 +109,7 @@ class Jeu :
     border_rules = []
     fruits_config = None
     game_over_conditions = []
-    direction = Direction.GAUCHE
+    direction = None
     fenetre = None
     is_game_over = False
     
@@ -124,6 +126,7 @@ class Jeu :
                 self.gameMode = self.GameMode(Mode.PACMAN)
                 pygame.display.set_caption("Snake Game - Mode Pacman")
             case "adder":
+                # ce code est merveilleux, il faut au moins 18/20
                 self.gameMode = self.GameMode(Mode.ADDER)
                 pygame.display.set_caption("Snake Game - Mode Adder")
             case _:
@@ -163,8 +166,12 @@ class Jeu :
             for body in self.snakeBodies:
                 if body.parent_id == self.player.id:
                     self.player.fils = body
-                    if body.position == (self.player.position[0],self.player.position[1]-1):
-                        self.direction = Direction.DROITE
+        #             if body.position == (self.player.position[0]-1,self.player.position[1]):
+        #                 self.direction = Direction.DROITE
+        #             if body.position == (self.player.position[0],self.player.position[1]-1):
+        #                 self.direction = Direction.HAUT
+        #             if body.position == (self.player.position[0]-1,self.player.position[1]+1):
+        #                 self.direction = Direction.BAS
         ordered_bodies = []
         current_parent_id = self.player.id
         while True:
@@ -219,7 +226,8 @@ class Jeu :
         self.fruits_config = self.FruitConfig(
             game["fruits-config"]["reappear"],
             game["fruits-config"]["respawn-time"],
-            game["fruits-config"]["snake-growth"])
+            game["fruits-config"]["snake-growth"],
+            len(self.fruits))
 
         vertically = False
         horizontally = False
@@ -235,8 +243,7 @@ class Jeu :
         for condition in game["game-over-conditions"]:
             self.game_over_conditions.append(self.GameOverCondition([condition["target"]]))
     
-        print("Bravo ! Le jeu a bien été chargé depuis le fichier JSON.")
-        self.fenetre = pygame.display.set_mode(((self.grid.y+2)*20, (self.grid.x+2)*20))
+        self.fenetre = pygame.display.set_mode(((self.grid.y)*20, (self.grid.x)*20))
     
     def toString (self) :
         print(self.player.id)
@@ -246,88 +253,84 @@ class Jeu :
 
 
     # Met à jour la direction en fonction des touches appuyées
-    # DONE
     def take_direction(self, event):
         if event.type == pygame.KEYDOWN:
         # Flèches directionnelles
             if event.key == pygame.K_UP or event.key == pygame.K_z:
                 if self.player.size>1:
-                    if (self.player.position[0],self.player.position[1]-1)==self.player.fils.position:
-                        return
+                    if (self.player.position[0],self.player.position[1]-1)==self.player.fils.position : return
+                    if (self.player.position[0],self.grid.y)==self.player.fils.position : return
                 self.direction=Direction.HAUT
                 return
             if event.key == pygame.K_DOWN or event.key == pygame.K_s:
                 if self.player.size>1:
-                    if (self.player.position[0],self.player.position[1]+1)==self.player.fils.position:
-                        return
+                    if (self.player.position[0],self.player.position[1]+1)==self.player.fils.position : return
+                    if (self.player.position[0],0)==self.player.fils.position : return
                 self.direction=Direction.BAS
                 return
             if event.key == pygame.K_LEFT or event.key == pygame.K_q:
                 if self.player.size>1:
-                    if (self.player.position[0]-1,self.player.position[1])==self.player.fils.position:
-                        return
+                    if (self.player.position[0]-1,self.player.position[1])==self.player.fils.position : return
+                    if (self.grid.x,self.player.position[1])==self.player.fils.position : return
                 self.direction=Direction.GAUCHE
                 return
             if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
                 if self.player.size>1:
-                    if (self.player.position[0]+1,self.player.position[1])==self.player.fils.position:
-                        return
+                    if (self.player.position[0]+1,self.player.position[1])==self.player.fils.position : return
+                    if (0,self.player.position[1])==self.player.fils.position : return
                 self.direction=Direction.DROITE
                 return
 
-    
 
-    # Déplace le joueur dans la direction actuelle
-    # DONE
+    # Déplace lae joueureuse dans la direction actuelle
+    # Super méthode, on va avoir pas moins de 18/20
     def player_forward(self):
         previous_position = self.player.position
         if self.direction==Direction.HAUT:
             if not self.verif_over(Direction.HAUT):
                 if not self.verif_wall(Direction.HAUT): 
-                    if not (self.player.position[1]==-1):
+                    if not (self.player.position[1]==0):
                         self.player.position = (self.player.position[0],self.player.position[1]-1)
                     else:
-                        self.player.position = (self.player.position[0],self.grid.x)
+                        self.player.position = (self.player.position[0],self.grid.x-1)
             else:
                 self.is_game_over = True
         if self.direction==Direction.BAS:
             if not self.verif_over(Direction.BAS):
                 if not self.verif_wall(Direction.BAS): 
-                    if not (self.player.position[1]==self.grid.x):
+                    if not (self.player.position[1]==self.grid.x-1):
                         self.player.position = (self.player.position[0],self.player.position[1]+1)
                     else:
-                        self.player.position = (self.player.position[0],-1)
+                        self.player.position = (self.player.position[0],0)
             else:
                 self.is_game_over = True
         if self.direction==Direction.GAUCHE:
             if not self.verif_over(Direction.GAUCHE):
                 if not self.verif_wall(Direction.GAUCHE): 
-                    if not (self.player.position[0]==-1):
+                    if not (self.player.position[0]==0):
                         self.player.position = (self.player.position[0]-1,self.player.position[1])
                     else:
-                        self.player.position = (self.grid.y,self.player.position[1])
+                        self.player.position = (self.grid.y-1,self.player.position[1])
             else:
                 self.is_game_over = True
         if self.direction==Direction.DROITE:
             if not self.verif_over(Direction.DROITE):
                 if not self.verif_wall(Direction.DROITE): 
-                    if not (self.player.position[0]==self.grid.y):
+                    if not (self.player.position[0]==self.grid.y-1):
                         self.player.position = (self.player.position[0]+1,self.player.position[1])
                     else:
-                        self.player.position = (-1,self.player.position[1])
+                        self.player.position = (0,self.player.position[1])
             else:
                 self.is_game_over = True
-        for body in self.player.snake_bodies:
-            if body.parent_id==self.player.id:
-                body.position=previous_position
-            else:
-                for b in self.snakeBodies:
-                    if body.parent_id==b.id:
-                        body.position=b.position
-            
-        
+        if self.player.position != previous_position:
+            for body in self.player.snake_bodies[::-1]:
+                if body.parent_id==self.player.id:
+                    body.position=previous_position
+                else:
+                    for b in self.snakeBodies:
+                        if body.parent_id==b.id:
+                            body.position=b.position
 
-    # TODO Dorian
     def enemy_forward(self, enemyID):
         for enemy in self.enemies:
             pass
@@ -341,7 +344,6 @@ class Jeu :
         if self.direction==Direction.DROITE:
             self.player.position = (self.player.position[0]+1,self.player.position[1])
     
-    # TODO Jules
     def verif_over(self, d):
         if d==Direction.HAUT:
             pos_fut=(self.player.position[0], self.player.position[1]-1)
@@ -349,14 +351,10 @@ class Jeu :
             pos_fut=(self.player.position[0], self.player.position[1]+1)
         if d==Direction.GAUCHE:
             pos_fut=(self.player.position[0]-1, self.player.position[1])
-        if d==Direction.GAUCHE:
+        if d==Direction.DROITE:
             pos_fut=(self.player.position[0]+1, self.player.position[1])
         for goc in self.game_over_conditions :
             match goc :
-                case "border" :
-                    return (
-                        ((not self.grid.horizontally) and (pos_fut[1] < 0 or pos_fut[1] > self.grid.y)) 
-                        or ((not self.grid.vertically) and (pos_fut[0] < 0 or pos_fut[0] > self.grid.x)))
                 case "snake_body" :
                     for body in self.snakeBodies :
                         if pos_fut == body.position : return True
@@ -370,7 +368,11 @@ class Jeu :
                 case "wall" :
                     for wall in self.walls :
                         if pos_fut == wall.position : return True
-                    return False
+                case "border" :
+                    return (
+                        ((not self.grid.horizontally) and (pos_fut[1] < 0 or pos_fut[1] > self.grid.y)) 
+                        or ((not self.grid.vertically) and (pos_fut[0] < 0 or pos_fut[0] > self.grid.x)))
+        return False
     
     def verif_wall(self, d):
         if d==Direction.HAUT:
@@ -388,68 +390,106 @@ class Jeu :
                 return True
         return False
 
-    # TODO Jules
+
     def check_tile_is_empty(self, x : int, y : int):
+        print("check tile for position : (",x,",",y,")")
         input_position = (x,y)
-        if ((x < 0 or x > self.grid.x) or (y < 0 or y > self.grid.y)) : return False
-        if self.player.position == input_position : return False
+        if ((x < 0 or x > self.grid.x-1) or (y < 0 or y > self.grid.y-1)) : 
+            print("Nope, out of borders.")
+            return False
+        if self.player.position == input_position :
+            print("Nope, player there.")
+            return False
         for enemy in self.enemies:
-            if enemy.position == input_position : return False
+            if enemy.position == input_position : 
+                print("Nope, enemy there.")
+                return False
         for body in self.enemyBodies:
-            if body.position == input_position : return False
+            if body.position == input_position : 
+                print("Nope, enemy body there.")
+                return False
         for body in self.snakeBodies:
-            if body.position == input_position : return False
+            if body.position == input_position :
+                print("Nope, player body there.") 
+                return False
         for fruit in self.fruits:
-            if fruit.position == input_position : return False
+            if fruit.position == input_position : 
+                print("Nope, fruit already there.")
+                return False
         for wall in self.walls:
-            if wall.position == input_position : return False
+            if wall.position == input_position : 
+                print("Nope, wall there.")
+                return False
         return True
         
         
     # Supprime le fruit mangé et augmente la taille du serpent
-    # DONE
     def fruit_eat(self):
         for a in range(len(self.fruits)):
             if self.player.position==self.fruits[a].position:
                 if not self.gameMode.gameMode==Mode.PACMAN:
                     self.player.size+=1
                 self.fruits.remove(self.fruits[a])
-                break
-    
-    # TODO Axelle
-    def reappear_fruit(self):
-        if self.gameMode.gameMode==Mode.SNAKE or self.gameMode.gameMode==Mode.ADDER:
-            if self.fruits_config.respawn==0 and self.fruits_config.reappear:
-                # on est dans le mode : nb de fruits fixe, dès qu'un fruit disparaît il réapparaît
-                if len(self.fruits)==self.fruit.initial_number:
-                    pass
-                #elif len(self.fruits)>self.fruit.initial_number:
-                    # Ajouter un message d'erreur
-                    #pass
-                else :
-                    # on fait réapparaître un fruit de manière aléatiore en vérifiant qu'il n'y a rien sur la case
-                    # on appelle la fonction check_tile_is_empty et tant que c'est faux on crée une autre position aléatoire
-                    # TODO
-                    pass
-            elif self.fruits_config.respawn!=0 and self.fruits_config.reappear:
-                # on attend le nombre de secondes spécifié dans self.fruits_config.respaw_time
-                # TODO
-                # on fait apparaître un fruit de manière aléatiore en vérifiant qu'il n'y a rien sur la case
-                # on appelle la fonction check_tile_is_empty et tant que c'est faux on crée une autre position aléatoire
-                pass
+                # on lance le timer
+                if not hasattr(self, "last_fruit_disappear_time"):
+                    self.last_fruit_disappear_time = 0
+                else:
+                    self.last_fruit_disappear_time = 0
 
-        """
-        if len(fruits)==2:
-            new_apple=snake[0]
-            while new_apple in snake:
-                new_apple=(randint(0,31),randint(0,19))
-            cercle(new_apple,red)
-            fruit.append(new_apple)
-        return(apple)
-    """
+                # On déclenche la logique de réapparition
+                self.reappear_fruit()
+                break
+
+    def reappear_fruit(self):
+        if self.gameMode.gameMode == Mode.SNAKE or self.gameMode.gameMode == Mode.ADDER:
+            # Mode 1 : réapparition immédiate, nombre de fruits fixe
+            if self.fruits_config.reappear and self.fruits_config.respawn == 0:
+                # Si on a déjà au moins le nombre initial de fruits, on ne fait rien
+                if len(self.fruits) >= self.fruits_config.initial_fruit_number:
+                    return
+                # Sinon on recrée des fruits jusqu'à atteindre le nombre initial
+                print("1 - Starting loop")
+                while len(self.fruits) < self.fruits_config.initial_fruit_number:
+                    # Recherche aléatoire d'une case vide
+                    print("1 - iterating until initial number of fruits is met...")
+                    while True:
+                        x = random.randint(0, self.grid.y-1)
+                        y = random.randint(0, self.grid.x-1)
+                        print("1 - testing position : (",x,",",y,")")
+                        if self.check_tile_is_empty(x, y):
+                            break
+                    # On crée un fruit avec un nombre de points par défaut (1)
+                    print("1 - New fruit in (",x,", ",y,")")
+                    self.fruits.append(self.Fruit(x, y, self.fruits_config.default_points))
+
+            # Mode 2 : réapparition différée après un certain temps
+            elif self.fruits_config.reappear and self.fruits_config.respawn != 0:
+                # Initialisation de l'attribut de temps si nécessaire
+                if not hasattr(self, "last_fruit_disappear_time"):
+                    self.last_fruit_disappear_time = None
+                # Si un fruit manque et qu'aucun timer n'est lancé, on mémorise le moment
+                if len(self.fruits) < self.fruits_config.initial_fruit_number and self.last_fruit_disappear_time is None:
+                    self.last_fruit_disappear_time = time.time()
+                # Si on attend depuis assez longtemps, on fait réapparaître un fruit
+                if (
+                    self.last_fruit_disappear_time is not None
+                    and time.time() - self.last_fruit_disappear_time >= self.fruits_config.respawn
+                ):
+                    print("2 - Starting loop")
+                    while True:
+                        x = random.randint(0, self.grid.y-1)
+                        y = random.randint(0, self.grid.x-1)
+                        print("2 - testing position : (",x,",",y,")")
+                        if self.check_tile_is_empty(x, y):
+                            print(" --- Position found !! --- ")
+                            break
+                        print(" ---- INVALID POSITION, TRYING AGAIN ---- ")
+                    print("2 - New fruit in (",x,", ",y,")")
+                    self.fruits.append(self.Fruit(x, y, 1))
+                    # Réinitialisation du timer
+                    self.last_fruit_disappear_time = None
                     
 
-    # TODO ALice
     # Dessine le serpent, les fruits, les ennemis et les murs dans une fenêtre    
     def draw(self):
         # Taille fenêtre (définie dans JSONtoPython)
@@ -459,51 +499,30 @@ class Jeu :
         
         # Fond
         self.fenetre.fill(Colors.BLACK.value)
-        
-        # Bordures
-        # Haut
-        if self.grid.vertically:
-            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect(0, 0, (self.grid.y+2)*cell_size, cell_size))
-        # Bas
-        if self.grid.vertically:
-            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect(0, (self.grid.x + 1) * cell_size, (self.grid.y + 2) * cell_size, cell_size))
-        # Gauche
-        if self.grid.horizontally:
-            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect(0, 0, cell_size, (self.grid.x + 2) * cell_size))
-        # Droite
-        if self.grid.horizontally:
-            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect((self.grid.y + 1) * cell_size, 0, cell_size, (self.grid.x + 2) * cell_size))
-
-        # Si mode Pacman : 
-        if self.gameMode.gameMode==Mode.PACMAN:
-            # Haut
-            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect(cell_size, 0, (self.grid.y*cell_size), cell_size))
-            # Bas
-            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect(cell_size, (self.grid.x + 1) * cell_size, (self.grid.y*cell_size), cell_size))
             
         # Serpent
-        pygame.draw.circle(self.fenetre, self.player.color.value, [((self.player.position[0]+1.5)*cell_size), ((self.player.position[1]+1.5)*cell_size)], cell_size/2, 0)
+        pygame.draw.circle(self.fenetre, self.player.color.value, [((self.player.position[0]+0.5)*cell_size), ((self.player.position[1]+0.5)*cell_size)], cell_size/2, 0)
         
         # Serpent - corps
         for body in self.snakeBodies:
-            pygame.draw.circle(self.fenetre, self.player.color.value, [((body.position[0]+1.5)*cell_size), ((body.position[1]+1.5)*cell_size)], (cell_size/2)-2, 0)
+            pygame.draw.circle(self.fenetre, self.player.color.value, [((body.position[0]+0.5)*cell_size), ((body.position[1]+0.5)*cell_size)], (cell_size/2)-2, 0)
         
         # Fruits
         for fruit in self.fruits:
-            pygame.draw.circle(self.fenetre, Colors.MAGENTA.value, [((fruit.position[0]+1.5)*cell_size), ((fruit.position[1]+1.5)*cell_size)], (cell_size/2), 0)
+            pygame.draw.circle(self.fenetre, Colors.MAGENTA.value, [((fruit.position[0]+0.5)*cell_size), ((fruit.position[1]+0.5)*cell_size)], (cell_size/2), 0)
         
         # Ennemis
         for enemy in self.enemies:
-            pygame.draw.circle(self.fenetre, enemy.color.value, [((enemy.position[0]+1.5)*cell_size), ((enemy.position[1]+1.5)*cell_size)], cell_size/2, 0)
+            pygame.draw.circle(self.fenetre, enemy.color.value, [((enemy.position[0]+0.5)*cell_size), ((enemy.position[1]+0.5)*cell_size)], cell_size/2, 0)
         # Ennemis - corps
         for body in self.enemyBodies:
-            pygame.draw.circle(self.fenetre, Colors.RED.value, [((body.position[0]+1.5)*cell_size), ((body.position[1]+1.5)*cell_size)], (cell_size/2)-2, 0)
+            pygame.draw.circle(self.fenetre, Colors.RED.value, [((body.position[0]+0.5)*cell_size), ((body.position[1]+0.5)*cell_size)], (cell_size/2)-2, 0)
         
         # Murs
         for wall in self.walls:
-            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect((wall.position[0]+1)*cell_size, (wall.position[1]+1)*cell_size, cell_size, cell_size))
-        
-    # TODO
+            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect((wall.position[0])*cell_size, (wall.position[1])*cell_size, cell_size, cell_size))
+
+
     # Lancement de la boucle de jeu
     def go(self):
         running = True
@@ -522,44 +541,14 @@ class Jeu :
             self.fruit_eat()
             self.reappear_fruit()
         print("Game Over")
-        """ while True:
-            direction = attendre_direction()
-            print(f'Touche détectée : {direction}') """
-
-        """ snake=[(15,10)]
-        snake_length=1
-        score=0
-        game_over=False
-        direction=1
-        cercle(snake[0],green)
-        cercle(apple[0],red)
-        cercle(apple[1],red)
-        cercle(apple[2],red)
-        while game_over!=True:
-            for i in range(10):
-                direction=take_direction(direction,snake)
-                score+=(0.001+0.004*(1/round(sqrt(snake_length),4)))*snake_length
-                sleep(self.0.001+0.004*(1/roundsnake_length),4)
-            game_over=verif_over(direction,snake)
-            if game_over:
-                break
-            snake=pllayer_forward(direction,snake,snake_length)
-            fruit_eat(apple,snake)
-            apple=apple_new(apple,snake)
-            draw_string(str(snake_length),280,1)
-            draw_string(str(int(score)),150,1)
-        l=["GAME OVER !","Pas mal !","Tu geres !","Dommage !","Retente ta chance !","Bravo !"]
-        draw_string(l[randint(0,4)],0,1) """
     
 
 
-
-
-
 if __name__ == "__main__":
+    path = sys.argv[1]
     pygame.init()
     game = Jeu()
-    game.JSONtoPython("/home/jchaidro/DSL/snack_game/FourchLang/examples/variant-2/json/output.json")
+    game.JSONtoPython(path)
     game.go()
     
     
