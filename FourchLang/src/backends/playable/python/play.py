@@ -424,106 +424,96 @@ class Jeu :
         return False
 
 
-    def check_tile_is_empty(self, x : int, y : int):
-        print("check tile for position : (",x,",",y,")")
-        input_position = (x,y)
-        if ((x < 0 or x > self.grid.x-1) or (y < 0 or y > self.grid.y-1)) : 
-            print("Nope, out of borders.")
+    def check_tile_is_empty(self, pos0 : int, pos1 : int, verbose : bool = False):
+        # pos0 et pos1 correspondent à position[0] et position[1]
+        # Le dessin utilise position[0] pour X (0 à grid.y-1) et position[1] pour Y (0 à grid.x-1)
+        input_position = (pos0, pos1)
+        if ((pos0 < 0 or pos0 > self.grid.y-1) or (pos1 < 0 or pos1 > self.grid.x-1)) : 
             return False
         if self.player.position == input_position :
-            print("Nope, player there.")
             return False
         for enemy in self.enemies:
             if enemy.position == input_position : 
-                print("Nope, enemy there.")
                 return False
         for body in self.enemyBodies:
             if body.position == input_position : 
-                print("Nope, enemy body there.")
                 return False
         for body in self.snakeBodies:
             if body.position == input_position :
-                print("Nope, player body there.") 
                 return False
         for fruit in self.fruits:
             if fruit.position == input_position : 
-                print("Nope, fruit already there.")
                 return False
         for wall in self.walls:
             if wall.position == input_position : 
-                print("Nope, wall there.")
                 return False
         return True
+
+    def get_empty_tiles(self):
+        """Retourne une liste de toutes les cases vides (pos0, pos1)"""
+        empty_tiles = []
+        for pos0 in range(self.grid.y):  # position[0] va de 0 à grid.y-1
+            for pos1 in range(self.grid.x):  # position[1] va de 0 à grid.x-1
+                if self.check_tile_is_empty(pos0, pos1):
+                    empty_tiles.append((pos0, pos1))
+        return empty_tiles
         
         
     # Supprime le fruit mangé et augmente la taille du serpent
     def fruit_eat(self):
         for a in range(len(self.fruits)):
             if self.player.position==self.fruits[a].position:
+                print(f"[DEBUG] Fruit mangé à position {self.fruits[a].position}")
                 # Augmenter la taille et planifier la croissance
                 if not self.gameMode.gameMode==Mode.PACMAN:
                     self.player.size += self.fruits_config.snake_growth
                     self.pending_growth += self.fruits_config.snake_growth
                 
                 self.fruits.remove(self.fruits[a])
-                # on lance le timer
-                if not hasattr(self, "last_fruit_disappear_time"):
-                    self.last_fruit_disappear_time = 0
-                else:
-                    self.last_fruit_disappear_time = 0
-
-                # On déclenche la logique de réapparition
+                print(f"[DEBUG] Nombre de fruits après suppression: {len(self.fruits)}")
+                print(f"[DEBUG] Nombre initial de fruits attendu: {self.fruits_config.initial_fruit_number}")
+                # Le timer sera géré par reappear_fruit() appelé dans la boucle de jeu
+                # On déclenche la logique de réapparition pour le mode 1 (immédiat)
                 self.reappear_fruit()
+                print(f"[DEBUG] Nombre de fruits après reappear_fruit: {len(self.fruits)}")
                 break
 
     def reappear_fruit(self):
+        print(f"[DEBUG] reappear_fruit appelé - gameMode: {self.gameMode.gameMode}")
+        print(f"[DEBUG] fruits_config.reappear: {self.fruits_config.reappear}")
         if self.gameMode.gameMode == Mode.SNAKE or self.gameMode.gameMode == Mode.ADDER:
-            # Mode 1 : réapparition immédiate, nombre de fruits fixe
-            if self.fruits_config.reappear and self.fruits_config.respawn == 0:
+            # Réapparition immédiate si configuré
+            if self.fruits_config.reappear:
                 # Si on a déjà au moins le nombre initial de fruits, on ne fait rien
                 if len(self.fruits) >= self.fruits_config.initial_fruit_number:
+                    print(f"[DEBUG] Assez de fruits ({len(self.fruits)} >= {self.fruits_config.initial_fruit_number}), pas de réapparition")
                     return
                 # Sinon on recrée des fruits jusqu'à atteindre le nombre initial
-                print("1 - Starting loop")
+                print(f"[DEBUG] Besoin de créer des fruits: {len(self.fruits)} < {self.fruits_config.initial_fruit_number}")
+                
+                # Afficher les positions du serpent
+                print(f"[DEBUG] Position tête serpent: {self.player.position}")
+                print(f"[DEBUG] Positions corps serpent: {[body.position for body in self.snakeBodies]}")
+                print(f"[DEBUG] Positions fruits existants: {[fruit.position for fruit in self.fruits]}")
+                
                 while len(self.fruits) < self.fruits_config.initial_fruit_number:
-                    # Recherche aléatoire d'une case vide
-                    print("1 - iterating until initial number of fruits is met...")
-                    while True:
-                        x = random.randint(0, self.grid.y-1)
-                        y = random.randint(0, self.grid.x-1)
-                        print("1 - testing position : (",x,",",y,")")
-                        if self.check_tile_is_empty(x, y):
-                            break
-                    # On crée un fruit avec un nombre de points par défaut (1)
-                    print("1 - New fruit in (",x,", ",y,")")
-                    self.fruits.append(self.Fruit(x, y, self.fruits_config.default_points))
-
-            # Mode 2 : réapparition différée après un certain temps
-            elif self.fruits_config.reappear and self.fruits_config.respawn != 0:
-                # Initialisation de l'attribut de temps si nécessaire
-                if not hasattr(self, "last_fruit_disappear_time"):
-                    self.last_fruit_disappear_time = None
-                # Si un fruit manque et qu'aucun timer n'est lancé, on mémorise le moment
-                if len(self.fruits) < self.fruits_config.initial_fruit_number and self.last_fruit_disappear_time is None:
-                    self.last_fruit_disappear_time = time.time()
-                # Si on attend depuis assez longtemps, on fait réapparaître un fruit
-                if (
-                    self.last_fruit_disappear_time is not None
-                    and time.time() - self.last_fruit_disappear_time >= self.fruits_config.respawn
-                ):
-                    print("2 - Starting loop")
-                    while True:
-                        x = random.randint(0, self.grid.y-1)
-                        y = random.randint(0, self.grid.x-1)
-                        print("2 - testing position : (",x,",",y,")")
-                        if self.check_tile_is_empty(x, y):
-                            print(" --- Position found !! --- ")
-                            break
-                        print(" ---- INVALID POSITION, TRYING AGAIN ---- ")
-                    print("2 - New fruit in (",x,", ",y,")")
-                    self.fruits.append(self.Fruit(x, y, 1))
-                    # Réinitialisation du timer
-                    self.last_fruit_disappear_time = None
+                    empty_tiles = self.get_empty_tiles()
+                    print(f"[DEBUG] Cases vides disponibles: {len(empty_tiles)}")
+                    if empty_tiles:
+                        pos0, pos1 = random.choice(empty_tiles)
+                        print(f"[DEBUG] Nouveau fruit créé à pos0={pos0}, pos1={pos1}")
+                        # Fruit(x, y) stocke position = (y, x)
+                        # Pour avoir position = (pos0, pos1), on appelle Fruit(pos1, pos0)
+                        new_fruit = self.Fruit(pos1, pos0, self.fruits_config.default_points)
+                        print(f"[DEBUG] Position du nouveau fruit (stockée): {new_fruit.position}")
+                        self.fruits.append(new_fruit)
+                    else:
+                        print("[DEBUG] Aucune case vide disponible!")
+                        break
+            else:
+                print("[DEBUG] fruits_config.reappear est False")
+        else:
+            print(f"[DEBUG] Mode de jeu non géré: {self.gameMode.gameMode}")
                     
 
     # Dessine le serpent, les fruits, les ennemis et les murs dans une fenêtre    
