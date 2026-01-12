@@ -386,25 +386,30 @@ class Jeu :
             pos_fut=(self.player.position[0]-1, self.player.position[1])
         if d==Direction.DROITE:
             pos_fut=(self.player.position[0]+1, self.player.position[1])
+        
+        # Toujours vérifier la collision avec le corps du serpent
+        for body in self.snakeBodies:
+            if pos_fut == body.position:
+                return True
+        
         for goc in self.game_over_conditions :
-            match goc :
-                case "snake_body" :
-                    for body in self.snakeBodies :
-                        if pos_fut == body.position : return True
-                    return False
-                case "enemy" :
-                    for enemy in self.enemies :
-                        if pos_fut == enemy.position : return True
-                    for body in self.enemyBodies :
-                        if pos_fut == body.position : return True
-                    return False
-                case "wall" :
-                    for wall in self.walls :
-                        if pos_fut == wall.position : return True
-                case "border" :
-                    return (
-                        ((not self.grid.horizontally) and (pos_fut[1] < 0 or pos_fut[1] > self.grid.y)) 
-                        or ((not self.grid.vertically) and (pos_fut[0] < 0 or pos_fut[0] > self.grid.x)))
+            for target in goc.type:
+                match target :
+                    case "snake_body" :
+                        for body in self.snakeBodies :
+                            if pos_fut == body.position : return True
+                    case "enemy" :
+                        for enemy in self.enemies :
+                            if pos_fut == enemy.position : return True
+                        for body in self.enemyBodies :
+                            if pos_fut == body.position : return True
+                    case "wall" :
+                        for wall in self.walls :
+                            if pos_fut == wall.position : return True
+                    case "border" :
+                        if (((not self.grid.horizontally) and (pos_fut[1] < 0 or pos_fut[1] >= self.grid.x)) 
+                            or ((not self.grid.vertically) and (pos_fut[0] < 0 or pos_fut[0] >= self.grid.y))):
+                            return True
         return False
     
     def verif_wall(self, d):
@@ -463,57 +468,33 @@ class Jeu :
     def fruit_eat(self):
         for a in range(len(self.fruits)):
             if self.player.position==self.fruits[a].position:
-                print(f"[DEBUG] Fruit mangé à position {self.fruits[a].position}")
                 # Augmenter la taille et planifier la croissance
                 if not self.gameMode.gameMode==Mode.PACMAN:
                     self.player.size += self.fruits_config.snake_growth
                     self.pending_growth += self.fruits_config.snake_growth
                 
                 self.fruits.remove(self.fruits[a])
-                print(f"[DEBUG] Nombre de fruits après suppression: {len(self.fruits)}")
-                print(f"[DEBUG] Nombre initial de fruits attendu: {self.fruits_config.initial_fruit_number}")
-                # Le timer sera géré par reappear_fruit() appelé dans la boucle de jeu
-                # On déclenche la logique de réapparition pour le mode 1 (immédiat)
                 self.reappear_fruit()
-                print(f"[DEBUG] Nombre de fruits après reappear_fruit: {len(self.fruits)}")
                 break
 
     def reappear_fruit(self):
-        print(f"[DEBUG] reappear_fruit appelé - gameMode: {self.gameMode.gameMode}")
-        print(f"[DEBUG] fruits_config.reappear: {self.fruits_config.reappear}")
         if self.gameMode.gameMode == Mode.SNAKE or self.gameMode.gameMode == Mode.ADDER:
             # Réapparition immédiate si configuré
             if self.fruits_config.reappear:
                 # Si on a déjà au moins le nombre initial de fruits, on ne fait rien
                 if len(self.fruits) >= self.fruits_config.initial_fruit_number:
-                    print(f"[DEBUG] Assez de fruits ({len(self.fruits)} >= {self.fruits_config.initial_fruit_number}), pas de réapparition")
                     return
                 # Sinon on recrée des fruits jusqu'à atteindre le nombre initial
-                print(f"[DEBUG] Besoin de créer des fruits: {len(self.fruits)} < {self.fruits_config.initial_fruit_number}")
-                
-                # Afficher les positions du serpent
-                print(f"[DEBUG] Position tête serpent: {self.player.position}")
-                print(f"[DEBUG] Positions corps serpent: {[body.position for body in self.snakeBodies]}")
-                print(f"[DEBUG] Positions fruits existants: {[fruit.position for fruit in self.fruits]}")
-                
                 while len(self.fruits) < self.fruits_config.initial_fruit_number:
                     empty_tiles = self.get_empty_tiles()
-                    print(f"[DEBUG] Cases vides disponibles: {len(empty_tiles)}")
                     if empty_tiles:
                         pos0, pos1 = random.choice(empty_tiles)
-                        print(f"[DEBUG] Nouveau fruit créé à pos0={pos0}, pos1={pos1}")
                         # Fruit(x, y) stocke position = (y, x)
                         # Pour avoir position = (pos0, pos1), on appelle Fruit(pos1, pos0)
                         new_fruit = self.Fruit(pos1, pos0, self.fruits_config.default_points)
-                        print(f"[DEBUG] Position du nouveau fruit (stockée): {new_fruit.position}")
                         self.fruits.append(new_fruit)
                     else:
-                        print("[DEBUG] Aucune case vide disponible!")
                         break
-            else:
-                print("[DEBUG] fruits_config.reappear est False")
-        else:
-            print(f"[DEBUG] Mode de jeu non géré: {self.gameMode.gameMode}")
                     
 
     # Dessine le serpent, les fruits, les ennemis et les murs dans une fenêtre    
