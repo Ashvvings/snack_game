@@ -2,10 +2,6 @@ from enum import Enum
 import pygame, json, sys
 import random, time
 
-""" from math import *
-from random import *
-from time import *"""
-
 class Direction(Enum) :
     HAUT = 1
     GAUCHE = 2
@@ -112,6 +108,8 @@ class Jeu :
     direction = None
     fenetre = None
     is_game_over = False
+    body_counter = 0
+    pending_growth = 0 
     
     
     def JSONtoPython(self, file_path : str):
@@ -126,7 +124,6 @@ class Jeu :
                 self.gameMode = self.GameMode(Mode.PACMAN)
                 pygame.display.set_caption("Snake Game - Mode Pacman")
             case "adder":
-                # ce code est merveilleux, il faut au moins 18/20
                 self.gameMode = self.GameMode(Mode.ADDER)
                 pygame.display.set_caption("Snake Game - Mode Adder")
             case _:
@@ -162,16 +159,19 @@ class Jeu :
                 snakeBody["position"]["y"],
                 snakeBody["follows"]
             ))
+            # Mettre à jour le compteur avec l'ID max
+            if snakeBody["id"].startswith("body_"):
+                try:
+                    num = int(snakeBody["id"].split("_")[1])
+                    self.body_counter = max(self.body_counter, num)
+                except:
+                    pass
+                    
         if self.snakeBodies!=[]:
             for body in self.snakeBodies:
                 if body.parent_id == self.player.id:
                     self.player.fils = body
-        #             if body.position == (self.player.position[0]-1,self.player.position[1]):
-        #                 self.direction = Direction.DROITE
-        #             if body.position == (self.player.position[0],self.player.position[1]-1):
-        #                 self.direction = Direction.HAUT
-        #             if body.position == (self.player.position[0]-1,self.player.position[1]+1):
-        #                 self.direction = Direction.BAS
+        
         ordered_bodies = []
         current_parent_id = self.player.id
         while True:
@@ -322,14 +322,47 @@ class Jeu :
                         self.player.position = (0,self.player.position[1])
             else:
                 self.is_game_over = True
+        
+        # Déplacer le corps
         if self.player.position != previous_position:
-            for body in self.player.snake_bodies[::-1]:
-                if body.parent_id==self.player.id:
-                    body.position=previous_position
+            # Si croissance en attente, ajouter un segment
+            if self.pending_growth > 0:
+                self.add_body_segment()
+                self.pending_growth -= 1
+            
+            # Déplacer tous les segments
+            for i in range(len(self.player.snake_bodies)-1, -1, -1):
+                body = self.player.snake_bodies[i]
+                if i == 0:
+                    # Premier segment suit la tête
+                    body.position = previous_position
                 else:
-                    for b in self.snakeBodies:
-                        if body.parent_id==b.id:
-                            body.position=b.position
+                    # Les autres segments suivent le segment précédent
+                    body.position = self.player.snake_bodies[i-1].position
+
+    def add_body_segment(self):
+        """Ajoute un nouveau segment au corps du serpent"""
+        self.body_counter += 1
+        new_id = f"body_{self.body_counter}"
+        
+        # Déterminer la position et le parent du nouveau segment
+        if len(self.player.snake_bodies) == 0:
+            # Premier segment : suit la tête
+            parent_id = self.player.id
+            position = self.player.position
+        else:
+            # Nouveau segment : suit le dernier segment
+            last_body = self.player.snake_bodies[-1]
+            parent_id = last_body.id
+            position = last_body.position
+        
+        new_body = self.SnakeBody(new_id, position[0], position[1], parent_id)
+        self.player.snake_bodies.append(new_body)
+        self.snakeBodies.append(new_body)
+        
+        # Mettre à jour le fils du joueur si c'est le premier segment
+        if len(self.player.snake_bodies) == 1:
+            self.player.fils = new_body
 
     def enemy_forward(self, enemyID):
         for enemy in self.enemies:
@@ -427,8 +460,11 @@ class Jeu :
     def fruit_eat(self):
         for a in range(len(self.fruits)):
             if self.player.position==self.fruits[a].position:
+                # Augmenter la taille et planifier la croissance
                 if not self.gameMode.gameMode==Mode.PACMAN:
-                    self.player.size+=1
+                    self.player.size += self.fruits_config.snake_growth
+                    self.pending_growth += self.fruits_config.snake_growth
+                
                 self.fruits.remove(self.fruits[a])
                 # on lance le timer
                 if not hasattr(self, "last_fruit_disappear_time"):
@@ -500,7 +536,7 @@ class Jeu :
         # Fond
         self.fenetre.fill(Colors.BLACK.value)
             
-        # Serpent
+        # Serpent - tête
         pygame.draw.circle(self.fenetre, self.player.color.value, [((self.player.position[0]+0.5)*cell_size), ((self.player.position[1]+0.5)*cell_size)], cell_size/2, 0)
         
         # Serpent - corps
