@@ -109,7 +109,8 @@ class Jeu :
     fenetre = None
     is_game_over = False
     body_counter = 0
-    pending_growth = 0 
+    pending_growth = 0
+    fruit_timers = []
     
     
     def JSONtoPython(self, file_path : str):
@@ -159,13 +160,9 @@ class Jeu :
                 snakeBody["position"]["y"],
                 snakeBody["follows"]
             ))
-            # Mettre à jour le compteur avec l'ID max
-            if snakeBody["id"].startswith("body_"):
-                try:
-                    num = int(snakeBody["id"].split("_")[1])
-                    self.body_counter = max(self.body_counter, num)
-                except:
-                    pass
+        
+        # Initialiser le compteur avec le nombre total de segments de corps
+        self.body_counter = len(self.snakeBodies)
                     
         if self.snakeBodies!=[]:
             for body in self.snakeBodies:
@@ -478,6 +475,8 @@ class Jeu :
                     self.add_body_segment(growth)
                 
                 self.fruits.remove(self.fruits[a])
+                if(self.fruits_config.respawn != None):
+                    self.fruit_timers.append(int(time.time())+self.fruits_config.respawn)
                 self.reappear_fruit()
                 break
 
@@ -489,7 +488,7 @@ class Jeu :
                 if len(self.fruits) >= self.fruits_config.initial_fruit_number:
                     return
                 # Sinon on recrée des fruits jusqu'à atteindre le nombre initial
-                while len(self.fruits) < self.fruits_config.initial_fruit_number:
+                while len(self.fruits) < self.fruits_config.initial_fruit_number-len(self.fruit_timers):
                     empty_tiles = self.get_empty_tiles()
                     if empty_tiles:
                         pos0, pos1 = random.choice(empty_tiles)
@@ -499,6 +498,16 @@ class Jeu :
                         self.fruits.append(new_fruit)
                     else:
                         break
+                for timer in self.fruit_timers:
+                    if int(time.time()) >= timer:
+                        empty_tiles = self.get_empty_tiles()
+                        if empty_tiles:
+                            pos0, pos1 = random.choice(empty_tiles)
+                            new_fruit = self.Fruit(pos1, pos0, self.fruits_config.default_points)
+                            self.fruits.append(new_fruit)
+                            self.fruit_timers.remove(timer)
+                        else:
+                            break
                     
 
     # Dessine le serpent, les fruits, les ennemis et les murs dans une fenêtre    
