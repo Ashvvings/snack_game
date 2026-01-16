@@ -31,31 +31,35 @@ class Mode(Enum) :
     
 class Jeu :
     class Player:
-        def __init__(self, id : str, x : int, y : int, size : int, speed : int, color : Colors, initial_fruit_number : int = 1, fils : str = None, snake_bodies : list = [] ) :
+        def __init__(self, id : str, x : int, y : int, size : int, speed : int, color : Colors, fils : str = None, snake_bodies : list = [] ) :
             self.id = id
-            self.position = (x,y)
+            self.position = (y,x)
             self.size = size
             self.speed = speed
-            self.color = color
+            if color == "undefined":
+                self.color = Colors.GREEN
+            else:
+                self.color = color
             self.fils = fils
-            self.initial_fruit_number = initial_fruit_number
             self.snake_bodies = snake_bodies
     
     class Fruit:
         def __init__(self, x : int, y : int, points : int) :
-            self.position = (x,y)
+            self.position = (y,x)
             self.points = points
 
     class FruitConfig:
-        def __init__(self, reappear : bool, respawn_time : int, snake_growth : int):
+        def __init__(self, reappear : bool, respawn_time : int, snake_growth : int, initial_fruit_number : int, default_points : int = 1) :
             self.reappear = reappear
             self.respawn = respawn_time
             self.snake_growth = snake_growth
+            self.initial_fruit_number = initial_fruit_number
+            self.default_points=default_points
     
     class Enemy:
         def __init__(self, id : str, x : int, y : int, size : int, speed : int, color : Colors, fils : str = None, enemy_bodies : list = [] ) :
             self.id = id
-            self.position = (x,y)
+            self.position = (y,x)
             self.size = size
             self.speed = speed
             self.color = color
@@ -68,21 +72,21 @@ class Jeu :
             self.y = y
             self.vertically = vertically
             self.horizontally = horizontally
-    
+        
     class SnakeBody:
         def __init__(self, id : str, x : int, y : int, parent_id : str) :
             self.id = id
-            self.position = (x,y)
+            self.position = (y,x)
             self.parent_id = parent_id
     
     class Wall:
         def __init__(self, x : int, y : int) :
-            self.position = (x,y)
+            self.position = (y,x)
     
     class EnemyBody:
         def __init__(self, id : str, x : int, y : int, parent_id : str) :
             self.id = id
-            self.position = (x,y)
+            self.position = (y,x)
             self.parent_id = parent_id
 
     class GameMode:
@@ -102,15 +106,33 @@ class Jeu :
     border_rules = []
     fruits_config = None
     game_over_conditions = []
-    direction = Direction.GAUCHE
+    direction = None
     fenetre = None
+    is_game_over = False
+    body_counter = 0
+    pending_growth = 0
+    fruit_timers = []
     
     
     def JSONtoPython(self, file_path : str):
         with open(file_path, "r") as f:
             game = json.load(f)
         
-        self.gameMode = self.GameMode(game["game-mode"])
+        match game["game-mode"]:
+            case "snake":
+                self.gameMode = self.GameMode(Mode.SNAKE)
+                pygame.display.set_caption("Snake Game - Mode Snake")
+            case "pacman":
+                self.gameMode = self.GameMode(Mode.PACMAN)
+                pygame.display.set_caption("Snake Game - Mode Pacman")
+            case "adder":
+                self.gameMode = self.GameMode(Mode.ADDER)
+                pygame.display.set_caption("Snake Game - Mode Adder")
+            case _:
+                print("Mode de jeu non renseigné, mode Snake par défault.")
+                self.gameMode = self.GameMode(Mode.SNAKE)
+                pygame.display.set_caption("Snake Game - Mode Snake")
+        
         self.player = self.Player(
             game["player"]["id"],
             game["player"]["position"]["x"],
@@ -128,7 +150,7 @@ class Jeu :
                 enemy["position"]["y"],
                 enemy["size"],
                 enemy["speed"],
-                enemy["color"]
+                Colors.RED
             ))
     
         self.snakeBodies = []
@@ -139,12 +161,15 @@ class Jeu :
                 snakeBody["position"]["y"],
                 snakeBody["follows"]
             ))
+        
+        # Initialiser le compteur avec le nombre total de segments de corps
+        self.body_counter = len(self.snakeBodies)
+                    
         if self.snakeBodies!=[]:
             for body in self.snakeBodies:
                 if body.parent_id == self.player.id:
                     self.player.fils = body
-                    if body.position == (self.player.position[0],self.player.position[1]-1):
-                        self.direction = Direction.DROITE
+        
         ordered_bodies = []
         current_parent_id = self.player.id
         while True:
@@ -158,6 +183,7 @@ class Jeu :
             if not found:
                 break
         self.snakeBodies = ordered_bodies
+        self.player.snake_bodies = self.snakeBodies
     
         self.enemyBodies = []
         for enemyBody in game["enemy-bodies"]:
@@ -198,15 +224,16 @@ class Jeu :
         self.fruits_config = self.FruitConfig(
             game["fruits-config"]["reappear"],
             game["fruits-config"]["respawn-time"],
-            game["fruits-config"]["snake-growth"])
+            game["fruits-config"]["snake-growth"],
+            len(self.fruits))
 
         vertically = False
         horizontally = False
-        if "vertically" in game["border-rules"]:
-            vertically = True
-        
-        if "horizontally" in game["border-rules"]:
-            horizontally = True
+        for rule in game["border-rules"]:
+            if "vertically" in rule and rule["vertically"]:
+                vertically = True
+            if "horizontally" in rule and rule["horizontally"]:
+                horizontally = True
         
         self.grid = self.Grid(game["grid"]["x"], game["grid"]["y"], vertically, horizontally)
 
@@ -214,8 +241,7 @@ class Jeu :
         for condition in game["game-over-conditions"]:
             self.game_over_conditions.append(self.GameOverCondition([condition["target"]]))
     
-        print("Bravo ! Le jeu a bien été chargé depuis le fichier JSON.")
-        self.fenetre = pygame.display.set_mode(((self.grid.y+2)*20, (self.grid.x+2)*20))
+        self.fenetre = pygame.display.set_mode(((self.grid.y)*20, (self.grid.x)*20))
     
     def toString (self) :
         print(self.player.id)
@@ -255,69 +281,138 @@ class Jeu :
 
     
 
-    # Déplace le joueur dans la direction actuelle
-    # DONE
+    # Déplace lae joueureuse dans la direction actuelle
     def player_forward(self):
-        for body in self.player.snake_bodies.reverse():
-            if body.parent_id==self.player.id:
-                body.position=self.player.position
-            else:
-                for b in self.snakeBodies:
-                    if body.parent_id==b.id:
-                        body.position=b.position
+        previous_position = self.player.position
         if self.direction==Direction.HAUT:
-            self.player.position = (self.player.position[0]-1,self.player.position[1])
+            if not self.verif_over(Direction.HAUT):
+                if not self.verif_wall(Direction.HAUT): 
+                    if not (self.player.position[1]==0):
+                        self.player.position = (self.player.position[0],self.player.position[1]-1)
+                    else:
+                        self.player.position = (self.player.position[0],self.grid.x-1)
+            else:
+                self.is_game_over = True
         if self.direction==Direction.BAS:
-            self.player.position = (self.player.position[0]+1,self.player.position[1])
+            if not self.verif_over(Direction.BAS):
+                if not self.verif_wall(Direction.BAS): 
+                    if not (self.player.position[1]==self.grid.x-1):
+                        self.player.position = (self.player.position[0],self.player.position[1]+1)
+                    else:
+                        self.player.position = (self.player.position[0],0)
+            else:
+                self.is_game_over = True
         if self.direction==Direction.GAUCHE:
-            self.player.position = (self.player.position[0],self.player.position[1]-1)
+            if not self.verif_over(Direction.GAUCHE):
+                if not self.verif_wall(Direction.GAUCHE): 
+                    if not (self.player.position[0]==0):
+                        self.player.position = (self.player.position[0]-1,self.player.position[1])
+                    else:
+                        self.player.position = (self.grid.y-1,self.player.position[1])
+            else:
+                self.is_game_over = True
         if self.direction==Direction.DROITE:
-            self.player.position = (self.player.position[0],self.player.position[1]+1)
+            if not self.verif_over(Direction.DROITE):
+                if not self.verif_wall(Direction.DROITE): 
+                    if not (self.player.position[0]==self.grid.y-1):
+                        self.player.position = (self.player.position[0]+1,self.player.position[1])
+                    else:
+                        self.player.position = (0,self.player.position[1])
+            else:
+                self.is_game_over = True
+        
+        # Déplacer le corps
+        if self.player.position != previous_position:
+            # Déplacer tous les segments
+            for i in range(len(self.player.snake_bodies)-1, -1, -1):
+                body = self.player.snake_bodies[i]
+                if i == 0:
+                    # Premier segment suit la tête
+                    body.position = previous_position
+                else:
+                    # Les autres segments suivent le segment précédent
+                    body.position = self.player.snake_bodies[i-1].position
 
-    # TODO Dorian
+    def add_body_segment(self, count: int = 1):
+        """Ajoute un ou plusieurs nouveaux segments au corps du serpent"""
+        for _ in range(count):
+            self.body_counter += 1
+            new_id = f"body_{self.body_counter}"
+            
+            # Déterminer la position et le parent du nouveau segment
+            if len(self.player.snake_bodies) == 0:
+                # Premier segment : suit la tête
+                parent_id = self.player.id
+                position = self.player.position
+            else:
+                # Nouveau segment : suit le dernier segment
+                last_body = self.player.snake_bodies[-1]
+                parent_id = last_body.id
+                position = last_body.position
+            
+            # Le constructeur SnakeBody attend (x, y) et stocke position = (y, x)
+            # position est déjà au format (y, x), donc on inverse pour passer (x, y)
+            new_body = self.SnakeBody(new_id, position[1], position[0], parent_id)
+            self.player.snake_bodies.append(new_body)
+            self.snakeBodies.append(new_body)
+            
+            # Mettre à jour le fils du joueur si c'est le premier segment
+            if len(self.player.snake_bodies) == 1:
+                self.player.fils = new_body
+
     def enemy_forward(self, enemyID):
         for enemy in self.enemies:
             pass
         
         if self.direction==Direction.HAUT:
-            self.player.position = (self.player.position[0]-1,self.player.position[1])
-        if self.direction==Direction.BAS:
-            self.player.position = (self.player.position[0]+1,self.player.position[1])
-        if self.direction==Direction.GAUCHE:
             self.player.position = (self.player.position[0],self.player.position[1]-1)
-        if self.direction==Direction.DROITE:
+        if self.direction==Direction.BAS:
             self.player.position = (self.player.position[0],self.player.position[1]+1)
+        if self.direction==Direction.GAUCHE:
+            self.player.position = (self.player.position[0]-1,self.player.position[1])
+        if self.direction==Direction.DROITE:
+            self.player.position = (self.player.position[0]+1,self.player.position[1])
     
-    # TODO Jules
     def verif_over(self, d):
         if d==Direction.HAUT:
-            pos_fut=(self.player.position[0]-1, self.player.position[1])
-        if d==Direction.BAS:
-            pos_fut=(self.player.position[0]+1, self.player.position[1])
-        if d==Direction.GAUCHE:
             pos_fut=(self.player.position[0], self.player.position[1]-1)
-        if d==Direction.GAUCHE:
+        if d==Direction.BAS:
             pos_fut=(self.player.position[0], self.player.position[1]+1)
+        if d==Direction.GAUCHE:
+            pos_fut=(self.player.position[0]-1, self.player.position[1])
+        if d==Direction.DROITE:
+            pos_fut=(self.player.position[0]+1, self.player.position[1])
+        
+        # Toujours vérifier la collision avec le corps du serpent
+        for body in self.snakeBodies:
+            if pos_fut == body.position:
+                return True
+        
+        # Vérifier les bordures selon les règles de wrap
+        # Si horizontally est False, toucher le bord vertical (droite/gauche) = game over
+        if not self.grid.vertically:
+            if pos_fut[1] < 0 or pos_fut[1] >= self.grid.x:
+                return True
+        # Si vertically est False, toucher le bord horizontal (haut/bas) = game over
+        if not self.grid.horizontally:
+            if pos_fut[0] < 0 or pos_fut[0] >= self.grid.y:
+                return True
+        
         for goc in self.game_over_conditions :
-            match goc :
-                case "border" :
-                    return (
-                        ((not self.grid.horizontally) and (pos_fut[1] < 0 or pos_fut[1] > self.grid.y)) 
-                        or ((not self.grid.vertically) and (pos_fut[0] < 0 or pos_fut[0] > self.grid.x)))
-                case "snake_body" :
-                    for body in self.snakeBodies :
-                        if pos_fut == body.position : return True
-                    return False
-                case "enemy" :
-                    for enemy in self.enemies :
-                        if pos_fut == enemy.position : return True
-                    for body in self.enemyBodies :
-                        if pos_fut == body.position : return True
-                    return False
-                case "wall" :
-                    for wall in self.walls :
-                        if pos_fut == wall.position : return True
-                    return False
+            for target in goc.type:
+                match target :
+                    case "snake_body" :
+                        for body in self.snakeBodies :
+                            if pos_fut == body.position : return True
+                    case "enemy" :
+                        for enemy in self.enemies :
+                            if pos_fut == enemy.position : return True
+                        for body in self.enemyBodies :
+                            if pos_fut == body.position : return True
+                    case "wall" :
+                        for wall in self.walls :
+                            if pos_fut == wall.position : return True
+        return False
                 
     def verif_wall(self, d):
         if d==Direction.HAUT:
