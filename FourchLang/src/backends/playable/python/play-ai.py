@@ -409,50 +409,110 @@ class Jeu :
 
     # TODO
     # Lancement de la boucle de jeu
-    def go(self):
-        """ while True:
-            direction = attendre_direction()
-            print(f'Touche détectée : {direction}') """
-
-        """ snake=[(15,10)]
-        snake_length=1
-        score=0
-        game_over=False
-        direction=1
-        cercle(snake[0],green)
-        cercle(apple[0],red)
-        cercle(apple[1],red)
-        cercle(apple[2],red)
-        while game_over!=True:
-            for i in range(10):
-                direction=take_direction(direction,snake)
-                score+=(0.001+0.004*(1/round(sqrt(snake_length),4)))*snake_length
-                sleep(self.0.001+0.004*(1/roundsnake_length),4)
-            game_over=verif_over(direction,snake)
-            if game_over:
-                break
-            snake=pllayer_forward(direction,snake,snake_length)
-            fruit_eat(apple,snake)
-            apple=apple_new(apple,snake)
-            draw_string(str(snake_length),280,1)
-            draw_string(str(int(score)),150,1)
-        l=["GAME OVER !","Pas mal !","Tu geres !","Dommage !","Retente ta chance !","Bravo !"]
-        draw_string(l[randint(0,4)],0,1) """
+    def go(self, ai_path : str, grid_path : str, next_move_path : str):
+        next_move = ""
+        running = True
+        while running:
+            self.draw()
+            pygame.display.update()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+            with open(grid_path, "w") as f:
+                f.write(self.game_to_grid_string())
+            # Appeler l'IA externe
+            # TO-DO
+            # Lire le prochain mouvement
+            while not next_move:
+                try:
+                    with open(next_move_path, "r") as f:
+                        next_move = f.read().strip()
+                except FileNotFoundError:
+                    pass
+                print(f"Prochaine direction : {next_move}")
+            with open(next_move_path, "w") as f:
+                f.write("")
+            # Mettre à jour le jeu avec le mouvement
+            self.take_direction(next_move)
+            self.player_forward()
+            next_move = ""
+            # if self.is_game_over:
+            #     running = False
+            self.fruit_eat()
+            self.reappear_fruit()
     
 
+    def take_direction(self, direction):
+        if direction == "UP":
+            if self.player.size>1:
+                if (self.player.position[0],self.player.position[1]-1)==self.player.fils.position : return
+                if (self.player.position[0],self.grid.y)==self.player.fils.position : return
+            self.direction=Direction.HAUT
+            return
+        if direction == "DOWN":
+            if self.player.size>1:
+                if (self.player.position[0],self.player.position[1]+1)==self.player.fils.position : return
+                if (self.player.position[0],0)==self.player.fils.position : return
+            self.direction=Direction.BAS
+            return
+        if direction == "LEFT":
+            if self.player.size>1:
+                if (self.player.position[0]-1,self.player.position[1])==self.player.fils.position : return
+                if (self.grid.x,self.player.position[1])==self.player.fils.position : return
+            self.direction=Direction.GAUCHE
+            return
+        if direction == "RIGHT":
+            if self.player.size>1:
+                if (self.player.position[0]+1,self.player.position[1])==self.player.fils.position : return
+                if (0,self.player.position[1])==self.player.fils.position : return
+            self.direction=Direction.DROITE
+            return
 
-
-
+    def game_to_grid_string(self) -> str:
+        grid_lines = []
+        width = self.grid.y + 2
+        height = self.grid.x + 2
+        
+        # Initialiser la grille avec des espaces vides
+        grid = [[' ' for _ in range(width)] for _ in range(height)]
+        
+        # Placer les murs (bordures)
+        for x in range(width):
+            grid[0][x] = '#'
+            grid[height - 1][x] = '#'
+        for y in range(height):
+            grid[y][0] = '#'
+            grid[y][width - 1] = '#'
+        
+        # Placer le joueur (serpent)
+        px, py = game.player.position
+        grid[px + 1][py + 1] = 'S'
+        
+        # Placer le corps du serpent
+        for body in game.snakeBodies:
+            bx, by = body.position
+            grid[bx + 1][by + 1] = 's'
+        
+        # Placer les fruits
+        for fruit in game.fruits:
+            fx, fy = fruit.position
+            grid[fx + 1][fy + 1] = 'F'
+        
+        # Convertir la grille en chaîne de caractères
+        for row in grid:
+            grid_lines.append(''.join(row))
+        
+        return '\n'.join(grid_lines)
 
 if __name__ == "__main__":
+    path = sys.argv[1] if len(sys.argv) > 1 else None
     pygame.init()
     game = Jeu()
-    game.JSONtoPython("./FourchLang/packages/cli/src/generated.json")
+    game.JSONtoPython(path)
     print(game.grid)
     game.draw()
-
     to_call = ""
-    ai_type = sys.argv[1] if len(sys.argv) > 1 else None
+    ai_type = sys.argv[2] if len(sys.argv) > 2 else None
     if ai_type == "snake-ai":
         to_call = "./Snake-AI-player.py"
     elif ai_type == "llm":
@@ -460,30 +520,10 @@ if __name__ == "__main__":
 
     grid_path = "./grid.txt"
     next_move_path = "./AI_response.txt"
-    next_move = ""
+    game.go(to_call, grid_path, next_move_path)
 
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-        with open(grid_path, "w") as f:
-            f.write(game_to_grid_string(game))
-        # Appeler l'IA externe
-        # TO-DO
-        # Lire le prochain mouvement
-        while not next_move:
-            try:
-                with open(next_move_path, "r") as f:
-                    next_move = f.read().strip()
-            except FileNotFoundError:
-                pass
-            print(f"Prochaine direction : {next_move}")
-        with open(next_move_path, "w") as f:
-            f.write("")
-        # Mettre à jour le jeu avec le mouvement
-        # TO-DO
-        next_move = ""
+    
+    print("Game Over")
 
         
     
