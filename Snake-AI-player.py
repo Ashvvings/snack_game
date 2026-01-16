@@ -1,10 +1,11 @@
 from collections import deque
 import heapq
+import sys
 
 def parse_grid(ascii_grid):
     """Parse la grille ASCII et retourne les positions importantes"""
     lines = [line.strip() for line in ascii_grid.strip().split('\n')]
-    head, body, fruit = None, [], None
+    head, body, fruits, enemies = None, [], [], []
     
     for y, line in enumerate(lines):
         for x, char in enumerate(line.split()):
@@ -13,9 +14,13 @@ def parse_grid(ascii_grid):
             elif char == 'S':
                 body.append((x, y))
             elif char == 'F':
-                fruit = (x, y)
-    
-    return head, body, fruit, len(lines[0].split()), len(lines)
+                fruits.append((x, y))
+            elif char == 'M':
+                enemies.append((x, y))
+            elif char == 'X':
+                enemies.append((x, y))   
+
+    return head, body, fruits, enemies, len(lines[0].split()), len(lines)
 
 def get_neighbors(pos, width, height):
     """Retourne les voisins valides d'une position"""
@@ -29,11 +34,11 @@ def get_neighbors(pos, width, height):
             neighbors.append(((nx, ny), direction))
     return neighbors
 
-def is_safe(pos, body, borders):
+def is_safe(pos, body, enemies, borders):
     """Vérifie si une position est sûre (pas de collision)"""
-    return pos not in body and pos not in borders
+    return pos not in body and pos not in borders and pos not in enemies
 
-def a_star(start, goal, body, width, height):
+def a_star(start, goals, body, enemies, width, height):
     """A* pour trouver le chemin vers le fruit"""
     borders = set()
     for x in range(width):
@@ -44,15 +49,20 @@ def a_star(start, goal, body, width, height):
         borders.add((width - 1, y))
     
     def heuristic(pos):
-        return abs(pos[0] - goal[0]) + abs(pos[1] - goal[1])
-    
+        min_distance = float('inf')
+        for goal in goals:
+            distance = abs(pos[0] - goal[0]) + abs(pos[1] - goal[1])
+            if distance < min_distance:
+                min_distance = distance
+        return min_distance
+
     frontier = [(0, start, [])]
     visited = set()
     
     while frontier:
         _, current, path = heapq.heappop(frontier)
         
-        if current == goal:
+        if current in goals:
             return path
         
         if current in visited:
@@ -60,7 +70,7 @@ def a_star(start, goal, body, width, height):
         visited.add(current)
         
         for next_pos, direction in get_neighbors(current, width, height):
-            if is_safe(next_pos, body, borders) and next_pos not in visited:
+            if is_safe(next_pos, body, enemies, borders) and next_pos not in visited:
                 new_path = path + [direction]
                 priority = len(new_path) + heuristic(next_pos)
                 heapq.heappush(frontier, (priority, next_pos, new_path))
@@ -146,13 +156,13 @@ def get_next_move(ascii_grid):
     Returns:
         string: 'UP', 'DOWN', 'LEFT', ou 'RIGHT'
     """
-    head, body, fruit, width, height = parse_grid(ascii_grid)
+    head, body, fruits, enemies, width, height = parse_grid(ascii_grid)
     
-    if not head or not fruit:
+    if not head or not fruits:
         return 'UP'  # Défaut si parsing échoue
     
     # Cherche un chemin vers le fruit
-    path = a_star(head, fruit, body, width, height)
+    path = a_star(head, fruits, body, enemies, width, height)
     
     if path:
         # Vérifie que le mouvement vers le fruit est sûr
@@ -167,7 +177,7 @@ def get_next_move(ascii_grid):
             next_pos = (head[0] + 1, head[1])
         
         # Si c'est le fruit, vérifie qu'on aura une sortie après
-        if next_pos == fruit:
+        if next_pos in fruits:
             if has_escape_after_eating(next_pos, body, width, height):
                 return path[0]
             # Sinon, cherche un mouvement alternatif
@@ -177,6 +187,51 @@ def get_next_move(ascii_grid):
     # Pas de chemin direct : cherche un mouvement sûr qui maximise l'espace
     safe_move = find_safe_move(head, body, width, height)
     return safe_move if safe_move else 'UP'
+
+def valider_grille(grille_str):
+    """
+    Vérifie si la chaîne représente une grille valide.
+    
+    Format attendu :
+    - Bordures en '#' (haut, bas, gauche, droite)
+    - Intérieur avec '.', 'F', 'S', 'O', 'M', 'X' et espaces
+    - Grille rectangulaire
+    
+    Renvoie:
+        True si valide, False sinon
+    """
+    lignes = grille_str.strip().split('\n')
+    if len(lignes) < 3:
+        return False # Pas de place pour un serpent, donc impossible de jouer
+    
+    # Retirer les espaces inutiles
+    lignes = [ligne.strip().replace(' ', '') for ligne in lignes]
+
+    # Vérifier que toutes les lignes ont la même longueur
+    longueurs = [len(ligne) for ligne in lignes]
+    if len(set(longueurs)) != 1:
+        return False
+    
+    # Vérifier la première et dernière ligne (que des '#' et espaces)
+    for ligne in [lignes[0], lignes[-1]]:
+        if not all(c in ['#', ' '] for c in ligne):
+            return False
+        if ligne.strip().replace('#', '') != '':
+            return False
+    
+    # Vérifier les lignes du milieu
+    caracteres_valides = {'#', '.', 'F', 'S', 'O', 'M', 'X'}
+    for ligne in lignes[1:-1]:
+        # Vérifier que la ligne contient uniquement des caractères valides
+        if not all(c in caracteres_valides for c in ligne):
+            return False
+        
+        # Vérifier que la ligne commence et finit par '#'
+        ligne_stripped = ligne.strip()
+        if not ligne_stripped.startswith('#') or not ligne_stripped.endswith('#'):
+            return False
+    
+    return True
 
 
 # Exemple d'utilisation
@@ -194,6 +249,14 @@ if __name__ == "__main__":
 # . . . . . . . . . . #
 # # # # # # # # # # # # 
 """
+    path_grid = sys.argv[1] if len(sys.argv) > 1 else None
+    with open(path_grid, 'r') as fichier:
+        param_grid = fichier.read()
+        if valider_grille(param_grid):
+            grid = param_grid
     
     next_move = get_next_move(grid)
     print(f"Prochaine direction : {next_move}")
+    
+    with open("AI_response.txt", "w") as f:
+        f.write(next_move + "\n")
