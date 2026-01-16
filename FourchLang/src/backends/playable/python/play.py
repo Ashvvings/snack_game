@@ -283,7 +283,6 @@ class Jeu :
 
 
     # Déplace lae joueureuse dans la direction actuelle
-    # Super méthode, on va avoir pas moins de 18/20
     def player_forward(self):
         previous_position = self.player.position
         if self.direction==Direction.HAUT:
@@ -325,11 +324,6 @@ class Jeu :
         
         # Déplacer le corps
         if self.player.position != previous_position:
-            # Si croissance en attente, ajouter un segment
-            if self.pending_growth > 0:
-                self.add_body_segment()
-                self.pending_growth -= 1
-            
             # Déplacer tous les segments
             for i in range(len(self.player.snake_bodies)-1, -1, -1):
                 body = self.player.snake_bodies[i]
@@ -340,29 +334,32 @@ class Jeu :
                     # Les autres segments suivent le segment précédent
                     body.position = self.player.snake_bodies[i-1].position
 
-    def add_body_segment(self):
-        """Ajoute un nouveau segment au corps du serpent"""
-        self.body_counter += 1
-        new_id = f"body_{self.body_counter}"
-        
-        # Déterminer la position et le parent du nouveau segment
-        if len(self.player.snake_bodies) == 0:
-            # Premier segment : suit la tête
-            parent_id = self.player.id
-            position = self.player.position
-        else:
-            # Nouveau segment : suit le dernier segment
-            last_body = self.player.snake_bodies[-1]
-            parent_id = last_body.id
-            position = last_body.position
-        
-        new_body = self.SnakeBody(new_id, position[0], position[1], parent_id)
-        self.player.snake_bodies.append(new_body)
-        self.snakeBodies.append(new_body)
-        
-        # Mettre à jour le fils du joueur si c'est le premier segment
-        if len(self.player.snake_bodies) == 1:
-            self.player.fils = new_body
+    def add_body_segment(self, count: int = 1):
+        """Ajoute un ou plusieurs nouveaux segments au corps du serpent"""
+        for _ in range(count):
+            self.body_counter += 1
+            new_id = f"body_{self.body_counter}"
+            
+            # Déterminer la position et le parent du nouveau segment
+            if len(self.player.snake_bodies) == 0:
+                # Premier segment : suit la tête
+                parent_id = self.player.id
+                position = self.player.position
+            else:
+                # Nouveau segment : suit le dernier segment
+                last_body = self.player.snake_bodies[-1]
+                parent_id = last_body.id
+                position = last_body.position
+            
+            # Le constructeur SnakeBody attend (x, y) et stocke position = (y, x)
+            # position est déjà au format (y, x), donc on inverse pour passer (x, y)
+            new_body = self.SnakeBody(new_id, position[1], position[0], parent_id)
+            self.player.snake_bodies.append(new_body)
+            self.snakeBodies.append(new_body)
+            
+            # Mettre à jour le fils du joueur si c'est le premier segment
+            if len(self.player.snake_bodies) == 1:
+                self.player.fils = new_body
 
     def enemy_forward(self, enemyID):
         for enemy in self.enemies:
@@ -468,10 +465,11 @@ class Jeu :
     def fruit_eat(self):
         for a in range(len(self.fruits)):
             if self.player.position==self.fruits[a].position:
-                # Augmenter la taille et planifier la croissance
+                # Augmenter la taille et ajouter les segments immédiatement
                 if not self.gameMode.gameMode==Mode.PACMAN:
-                    self.player.size += self.fruits_config.snake_growth
-                    self.pending_growth += self.fruits_config.snake_growth
+                    growth = self.fruits_config.snake_growth
+                    self.player.size += growth
+                    self.add_body_segment(growth)
                 
                 self.fruits.remove(self.fruits[a])
                 self.reappear_fruit()
