@@ -318,96 +318,135 @@ class Jeu :
                     for wall in self.walls :
                         if pos_fut == wall.position : return True
                     return False
-
-    # TODO Jules
-    def check_tile_is_empty(self, x : int, y : int):
-        input_position = (x,y)
-        if ((x < 0 or x > self.grid.x) or (y < 0 or y > self.grid.y)) : return False
-        if self.player.position == input_position : return False
+                
+    def verif_wall(self, d):
+        if d==Direction.HAUT:
+            pos_fut=(self.player.position[0], self.player.position[1]-1)
+        if d==Direction.BAS:
+            pos_fut=(self.player.position[0], self.player.position[1]+1)
+        if d==Direction.GAUCHE:
+            pos_fut=(self.player.position[0]-1, self.player.position[1])
+        if d==Direction.DROITE:
+            pos_fut=(self.player.position[0]+1, self.player.position[1])
+        for wall in self.walls :
+            if pos_fut == wall.position : return True
+        if self.gameMode.gameMode==Mode.PACMAN:
+            if (pos_fut[1]<0 or pos_fut[1]>self.grid.x-1):
+                return True
+        return False
+    
+    def check_tile_is_empty(self, pos0 : int, pos1 : int, verbose : bool = False):
+        # pos0 et pos1 correspondent à position[0] et position[1]
+        # Le dessin utilise position[0] pour X (0 à grid.y-1) et position[1] pour Y (0 à grid.x-1)
+        input_position = (pos0, pos1)
+        if ((pos0 < 0 or pos0 > self.grid.y-1) or (pos1 < 0 or pos1 > self.grid.x-1)) : 
+            return False
+        if self.player.position == input_position :
+            return False
         for enemy in self.enemies:
-            if enemy.position == input_position : return False
+            if enemy.position == input_position : 
+                return False
         for body in self.enemyBodies:
-            if body.position == input_position : return False
+            if body.position == input_position : 
+                return False
         for body in self.snakeBodies:
-            if body.position == input_position : return False
+            if body.position == input_position :
+                return False
         for fruit in self.fruits:
-            if fruit.position == input_position : return False
+            if fruit.position == input_position : 
+                return False
         for wall in self.walls:
-            if wall.position == input_position : return False
+            if wall.position == input_position : 
+                return False
         return True
-        
+    
+    def get_empty_tiles(self):
+        """Retourne une liste de toutes les cases vides (pos0, pos1)"""
+        empty_tiles = []
+        for pos0 in range(self.grid.y):  # position[0] va de 0 à grid.y-1
+            for pos1 in range(self.grid.x):  # position[1] va de 0 à grid.x-1
+                if self.check_tile_is_empty(pos0, pos1):
+                    empty_tiles.append((pos0, pos1))
+        return empty_tiles
         
     # Supprime le fruit mangé et augmente la taille du serpent
-    # DONE
     def fruit_eat(self):
-        for a in len(self.fruits):
+        for a in range(len(self.fruits)):
             if self.player.position==self.fruits[a].position:
-                self.player.size+=1
+                # Augmenter la taille et ajouter les segments immédiatement
+                if not self.gameMode.gameMode==Mode.PACMAN:
+                    growth = self.fruits_config.snake_growth
+                    self.player.size += growth
+                    self.add_body_segment(growth)
+                
                 self.fruits.remove(self.fruits[a])
+                if(self.fruits_config.respawn != None):
+                    self.fruit_timers.append(int(time.time())+self.fruits_config.respawn)
+                self.reappear_fruit()
+                break
     
-    # TODO Axelle
     def reappear_fruit(self):
-        if self.gameMode.gameMode==Mode.SNAKE or self.gameMode.gameMode==Mode.ADDER:
-            if self.fruits_config.respaw_time==0 and self.fruits_config.reappear:
-                # on est dans le mode : nb de fruits fixe, dès qu'un fruit disparaît il réapparaît
-                if len(self.fruits)==self.fruit.initial_number:
-                    pass
-                #elif len(self.fruits)>self.fruit.initial_number:
-                    # Ajouter un message d'erreur
-                    #pass
-                else :
-                    # on fait réapparaître un fruit de manière aléatiore en vérifiant qu'il n'y a rien sur la case
-                    # on appelle la fonction check_tile_is_empty et tant que c'est faux on crée une autre position aléatoire
-                    # TODO
-                    pass
-            elif self.fruits_config.respaw_time!=0 and self.fruits_config.reappear:
-                # on attend le nombre de secondes spécifié dans self.fruits_config.respaw_time
-                # TODO
-                # on fait apparaître un fruit de manière aléatiore en vérifiant qu'il n'y a rien sur la case
-                # on appelle la fonction check_tile_is_empty et tant que c'est faux on crée une autre position aléatoire
-                pass
+        if self.gameMode.gameMode == Mode.SNAKE or self.gameMode.gameMode == Mode.ADDER:
+            # Réapparition immédiate si configuré
+            if self.fruits_config.reappear:
+                # Si on a déjà au moins le nombre initial de fruits, on ne fait rien
+                if len(self.fruits) >= self.fruits_config.initial_fruit_number:
+                    return
+                # Sinon on recrée des fruits jusqu'à atteindre le nombre initial
+                while len(self.fruits) < self.fruits_config.initial_fruit_number-len(self.fruit_timers):
+                    empty_tiles = self.get_empty_tiles()
+                    if empty_tiles:
+                        pos0, pos1 = random.choice(empty_tiles)
+                        # Fruit(x, y) stocke position = (y, x)
+                        # Pour avoir position = (pos0, pos1), on appelle Fruit(pos1, pos0)
+                        new_fruit = self.Fruit(pos1, pos0, self.fruits_config.default_points)
+                        self.fruits.append(new_fruit)
+                    else:
+                        break
+                for timer in self.fruit_timers:
+                    if int(time.time()) >= timer:
+                        empty_tiles = self.get_empty_tiles()
+                        if empty_tiles:
+                            pos0, pos1 = random.choice(empty_tiles)
+                            new_fruit = self.Fruit(pos1, pos0, self.fruits_config.default_points)
+                            self.fruits.append(new_fruit)
+                            self.fruit_timers.remove(timer)
+                        else:
+                            break
 
-                    
-
-        """
-        if len(fruits)==2:
-            new_apple=snake[0]
-            while new_apple in snake:
-                new_apple=(randint(0,31),randint(0,19))
-            cercle(new_apple,red)
-            fruit.append(new_apple)
-        return(apple)
-    """
-    # TODO ALice
     # Dessine le serpent, les fruits, les ennemis et les murs dans une fenêtre    
     def draw(self):
-        # Taille fenêtre
+        # Taille fenêtre (définie dans JSONtoPython)
         
+        # Taille de cellule
         cell_size = 20
         
         # Fond
-        self.fenetre.fill(caca)
-
-        # Bordures
-        # Haut
-        if self.grid.vertically:
-            pygame.draw.rect(self.fenetre, Colors.WHITE, pygame.Rect(0, 0, (self.grid.y+2)*cell_size, cell_size))
+        self.fenetre.fill(Colors.BLACK.value)
+            
+        # Serpent - tête
+        pygame.draw.circle(self.fenetre, self.player.color.value, [((self.player.position[0]+0.5)*cell_size), ((self.player.position[1]+0.5)*cell_size)], cell_size/2, 0)
         
-        # Bas
-        if self.grid.vertically:
-            pygame.draw.rect(self.fenetre, Colors.WHITE, pygame.Rect(0, (self.grid.x + 1) * cell_size, (self.grid.y + 2) * cell_size, cell_size))
-
-        # Gauche
-        if self.grid.horizontally:
-            pygame.draw.rect(self.fenetre, Colors.WHITE, pygame.Rect(0, 0, cell_size, (self.grid.x + 2) * cell_size))
-
-        # Droite
-        if self.grid.horizontally:
-            pygame.draw.rect(self.fenetre, Colors.WHITE, pygame.Rect((self.grid.y + 1) * cell_size, 0, cell_size, (self.grid.x + 2) * cell_size))
+        # Serpent - corps
+        for body in self.snakeBodies:
+            pygame.draw.circle(self.fenetre, self.player.color.value, [((body.position[0]+0.5)*cell_size), ((body.position[1]+0.5)*cell_size)], (cell_size/2)-2, 0)
         
+        # Fruits
+        for fruit in self.fruits:
+            pygame.draw.circle(self.fenetre, Colors.MAGENTA.value, [((fruit.position[0]+0.5)*cell_size), ((fruit.position[1]+0.5)*cell_size)], (cell_size/2), 0)
+        
+        # Ennemis
+        for enemy in self.enemies:
+            pygame.draw.circle(self.fenetre, enemy.color.value, [((enemy.position[0]+0.5)*cell_size), ((enemy.position[1]+0.5)*cell_size)], cell_size/2, 0)
+        # Ennemis - corps
+        for body in self.enemyBodies:
+            pygame.draw.circle(self.fenetre, Colors.RED.value, [((body.position[0]+0.5)*cell_size), ((body.position[1]+0.5)*cell_size)], (cell_size/2)-2, 0)
+        
+        # Murs
+        for wall in self.walls:
+            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect((wall.position[0])*cell_size, (wall.position[1])*cell_size, cell_size, cell_size))
          
 
-    # TODO
     # Lancement de la boucle de jeu
     def go(self, ai_path : str, grid_path : str, next_move_path : str):
         next_move = ""
