@@ -231,11 +231,11 @@ class Jeu :
 
         vertically = False
         horizontally = False
-        if "vertically" in game["border-rules"]:
-            vertically = True
-        
-        if "horizontally" in game["border-rules"]:
-            horizontally = True
+        for rule in game["border-rules"]:
+            if "vertically" in rule and rule["vertically"]:
+                vertically = True
+            if "horizontally" in rule and rule["horizontally"]:
+                horizontally = True
         
         self.grid = self.Grid(game["grid"]["x"], game["grid"]["y"], vertically, horizontally)
 
@@ -389,6 +389,16 @@ class Jeu :
             if pos_fut == body.position:
                 return True
         
+        # Vérifier les bordures selon les règles de wrap
+        # Si horizontally est False, toucher le bord vertical (droite/gauche) = game over
+        if not self.grid.vertically:
+            if pos_fut[1] < 0 or pos_fut[1] >= self.grid.x:
+                return True
+        # Si vertically est False, toucher le bord horizontal (haut/bas) = game over
+        if not self.grid.horizontally:
+            if pos_fut[0] < 0 or pos_fut[0] >= self.grid.y:
+                return True
+        
         for goc in self.game_over_conditions :
             for target in goc.type:
                 match target :
@@ -403,10 +413,6 @@ class Jeu :
                     case "wall" :
                         for wall in self.walls :
                             if pos_fut == wall.position : return True
-                    case "border" :
-                        if (((not self.grid.horizontally) and (pos_fut[1] < 0 or pos_fut[1] >= self.grid.x)) 
-                            or ((not self.grid.vertically) and (pos_fut[0] < 0 or pos_fut[0] >= self.grid.y))):
-                            return True
         return False
     
     def verif_wall(self, d):
