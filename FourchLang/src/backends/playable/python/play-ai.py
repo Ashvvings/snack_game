@@ -1,6 +1,7 @@
 from enum import Enum
 import json
 import sys
+import time
 import pygame
 import regex as re
 sys.path.append('./')
@@ -556,7 +557,7 @@ class Jeu :
             grid[height - 1][x] = '# '
         for y in range(height):
             grid[y][0] = '# '
-            grid[y][width - 1] = '# '
+            grid[y][width - 1] = '#'
         
         # Placer le joueur (serpent)
         px, py = game.player.position
@@ -565,7 +566,7 @@ class Jeu :
         # Placer le corps du serpent
         for body in game.snakeBodies:
             bx, by = body.position
-            grid[bx + 1][by + 1] = 's '
+            grid[bx + 1][by + 1] = 'S '
         
         # Placer les fruits
         for fruit in game.fruits:
@@ -611,6 +612,7 @@ class Jeu :
                 SnakeAIPlayerRun()
             elif ai_type == "llm":
                 pass
+            time.sleep(1)
             # Lire le prochain mouvement
             while not next_move:
                 try:
@@ -618,7 +620,7 @@ class Jeu :
                         next_move = f.read().strip()
                 except FileNotFoundError:
                     pass
-            print(f"Prochaine direction : {next_move}")
+            # print(f"Prochaine direction : {next_move}")
             with open(next_move_path, "w") as f:
                 f.write("")
             # Mettre à jour le jeu avec le mouvement
