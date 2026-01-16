@@ -5,8 +5,7 @@ import sys
 def parse_grid(ascii_grid):
     """Parse la grille ASCII et retourne les positions importantes"""
     lines = [line.strip().replace(' ', '') for line in ascii_grid.strip().split('\n')]
-    print(lines)
-    head, body, fruits, enemies = None, [], [], []
+    head, body, fruits, enemies, borders = None, [], [], [], []
     
     for x, line in enumerate(lines):
         for y in range(len(line)):
@@ -19,9 +18,11 @@ def parse_grid(ascii_grid):
             elif line[y] == 'M':
                 enemies.append((x, y))
             elif line[y] == 'X':
-                enemies.append((x, y))   
+                enemies.append((x, y)) 
+            elif line[y] == '#':
+                borders.append((x, y))  
 
-    return head, body, fruits, enemies, len(lines[0]), len(lines)
+    return head, body, fruits, enemies, borders, len(lines[0]), len(lines)
 
 def get_neighbors(pos, width, height):
     """Retourne les voisins valides d'une position"""
@@ -39,7 +40,7 @@ def is_safe(pos, body, enemies, borders):
     """Vérifie si une position est sûre (pas de collision)"""
     return pos not in body and pos not in enemies and pos not in borders
 
-def a_star(start, goals, body, enemies, width, height):
+def a_star(start, goals, body, enemies, borders, width, height):
     """A* pour trouver le chemin vers le fruit"""
     borders = set()
     for x in range(width):
@@ -78,7 +79,7 @@ def a_star(start, goals, body, enemies, width, height):
     
     return None
 
-def has_escape_after_eating(pos, body, enemies, width, height):
+def has_escape_after_eating(pos, body, enemies, borders, width, height):
     """Vérifie qu'après avoir mangé le fruit, le snake peut encore bouger"""
     borders = set()
     for x in range(width):
@@ -109,16 +110,8 @@ def has_escape_after_eating(pos, body, enemies, width, height):
     # Il faut au moins autant d'espace que la longueur du snake
     return accessible_count >= len(new_body)
 
-def find_safe_move(head, body, enemies, width, height):
-    """Trouve un mouvement sûr en cas d'absence de chemin vers le fruit"""
-    borders = set()
-    for x in range(width):
-        borders.add((x, 0))
-        borders.add((x, height - 1))
-    for y in range(height):
-        borders.add((0, y))
-        borders.add((width - 1, y))
-    
+def find_safe_move(head, body, enemies, borders, width, height):
+    """Trouve un mouvement sûr en cas d'absence de chemin vers le fruit"""    
     best_move = None
     max_space = -1
     
@@ -157,13 +150,13 @@ def get_next_move(ascii_grid):
     Returns:
         string: 'UP', 'DOWN', 'LEFT', ou 'RIGHT'
     """
-    head, body, fruits, enemies, width, height = parse_grid(ascii_grid)
+    head, body, fruits, enemies, borders, width, height = parse_grid(ascii_grid)
     
     if not head or not fruits:
         return 'UP'  # Défaut si parsing échoue
     
     # Cherche un chemin vers le fruit
-    path = a_star(head, fruits, body, enemies, width, height)
+    path = a_star(head, fruits, body, enemies, borders, width, height)
     if path:
         # Vérifie que le mouvement vers le fruit est sûr
         next_pos = None
@@ -178,14 +171,14 @@ def get_next_move(ascii_grid):
         
         # Si c'est le fruit, vérifie qu'on aura une sortie après
         if next_pos in fruits:
-            if has_escape_after_eating(next_pos, body, enemies, width, height):
+            if has_escape_after_eating(next_pos, body, enemies, borders, width, height):
                 return path[0]
             # Sinon, cherche un mouvement alternatif
         else:
             return path[0]
     
     # Pas de chemin direct : cherche un mouvement sûr qui maximise l'espace
-    safe_move = find_safe_move(head, body, enemies, width, height)
+    safe_move = find_safe_move(head, body, enemies, borders, width, height)
     return safe_move if safe_move else 'UP'
 
 def valider_grille(grille_str):
@@ -269,7 +262,7 @@ if __name__ == "__main__":
             grid = param_grid
     
     next_move = get_next_move(grid)
-    print(f"Prochaine direction : {next_move}")
+    print(f"Direction sélectionnée : {next_move}")
     
     with open("AI_response.txt", "w") as f:
         f.write(next_move + "\n")

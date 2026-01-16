@@ -1,7 +1,7 @@
 from enum import Enum
 import json
 import sys
-import time
+import random, time
 import pygame
 import regex as re
 sys.path.append('./')
@@ -612,7 +612,7 @@ class Jeu :
                 SnakeAIPlayerRun()
             elif ai_type == "llm":
                 pass
-            time.sleep(1)
+            time.sleep(0.5)
             # Lire le prochain mouvement
             while not next_move:
                 try:
@@ -620,7 +620,6 @@ class Jeu :
                         next_move = f.read().strip()
                 except FileNotFoundError:
                     pass
-            # print(f"Prochaine direction : {next_move}")
             with open(next_move_path, "w") as f:
                 f.write("")
             # Mettre à jour le jeu avec le mouvement
@@ -637,7 +636,6 @@ if __name__ == "__main__":
     pygame.init()
     game = Jeu()
     game.JSONtoPython(path)
-    print(game.grid)
     game.draw()
     
     ai_type = sys.argv[2] if len(sys.argv) > 2 else None
@@ -646,7 +644,6 @@ if __name__ == "__main__":
     next_move_path = "./AI_response.txt"
     game.go(ai_type, grid_path, next_move_path)
 
-    
     print("Game Over")
 
         
