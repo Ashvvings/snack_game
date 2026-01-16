@@ -132,13 +132,32 @@ class Jeu :
                 self.gameMode = self.GameMode(Mode.SNAKE)
                 pygame.display.set_caption("Snake Game - Mode Snake")
         
+        # Convertir la couleur du joueur en enum Colors
+        player_color_str = game["player"]["color"]
+        if player_color_str == "undefined":
+            player_color = Colors.GREEN
+        else:
+            # Chercher la couleur correspondante dans l'enum
+            player_color = Colors.GREEN  # Valeur par défaut
+            for color in Colors:
+                if color.value == player_color_str or color.name.lower() == player_color_str.lower():
+                    player_color = color
+                    break
+        
+        # Convertir la vitesse en entier (avec valeur par défaut si undefined)
+        player_speed = game["player"]["speed"]
+        if player_speed == "undefined" or player_speed is None:
+            player_speed = 5
+        else:
+            player_speed = int(player_speed)
+        
         self.player = self.Player(
             game["player"]["id"],
             game["player"]["position"]["x"],
             game["player"]["position"]["y"],
             game["player"]["size"],
-            game["player"]["speed"],
-            game["player"]["color"]
+            player_speed,
+            player_color
         )
         
         self.enemies = []
@@ -381,21 +400,6 @@ class Jeu :
         if d==Direction.DROITE:
             pos_fut=(self.player.position[0]+1, self.player.position[1])
         
-        # Toujours vérifier la collision avec le corps du serpent
-        for body in self.snakeBodies:
-            if pos_fut == body.position:
-                return True
-        
-        # Vérifier les bordures selon les règles de wrap
-        # Si horizontally est False, toucher le bord vertical (droite/gauche) = game over
-        if not self.grid.vertically:
-            if pos_fut[1] < 0 or pos_fut[1] >= self.grid.x:
-                return True
-        # Si vertically est False, toucher le bord horizontal (haut/bas) = game over
-        if not self.grid.horizontally:
-            if pos_fut[0] < 0 or pos_fut[0] >= self.grid.y:
-                return True
-        
         for goc in self.game_over_conditions :
             for target in goc.type:
                 match target :
@@ -410,6 +414,16 @@ class Jeu :
                     case "wall" :
                         for wall in self.walls :
                             if pos_fut == wall.position : return True
+                    case "border" :
+                        # Vérifier les bordures selon les règles de wrap
+                        # Si horizontally est False, toucher le bord vertical (droite/gauche) = game over
+                        if not self.grid.vertically:
+                            if pos_fut[1] < 0 or pos_fut[1] >= self.grid.x:
+                                return True
+                        # Si vertically est False, toucher le bord horizontal (haut/bas) = game over
+                        if not self.grid.horizontally:
+                            if pos_fut[0] < 0 or pos_fut[0] >= self.grid.y:
+                                return True
         return False
     
     def verif_wall(self, d):
@@ -475,7 +489,7 @@ class Jeu :
                     self.add_body_segment(growth)
                 
                 self.fruits.remove(self.fruits[a])
-                if(self.fruits_config.respawn != None):
+                if(self.fruits_config.respawn != "undefined" and self.fruits_config.respawn != None):
                     self.fruit_timers.append(int(time.time())+self.fruits_config.respawn)
                 self.reappear_fruit()
                 break
@@ -549,7 +563,7 @@ class Jeu :
         while running:
             game.draw()
             pygame.display.update()
-            self.fpsClock.tick(self.FPS)
+            self.fpsClock.tick(self.player.speed)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
