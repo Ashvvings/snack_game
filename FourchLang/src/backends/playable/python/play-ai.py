@@ -2,6 +2,9 @@ from enum import Enum
 import json
 import sys
 import pygame
+import regex as re
+sys.path.append('./')
+from SnakeAIPlayer import run as SnakeAIPlayerRun
 
 """ from math import *
 from random import *
@@ -112,12 +115,16 @@ class Jeu :
     body_counter = 0
     pending_growth = 0
     fruit_timers = []
+    variant = None
     
     
     def JSONtoPython(self, file_path : str):
         with open(file_path, "r") as f:
             game = json.load(f)
         
+        variant = re.findall(r'\d+', file_path)[0]
+        print(variant)
+
         match game["game-mode"]:
             case "snake":
                 self.gameMode = self.GameMode(Mode.SNAKE)
@@ -247,39 +254,7 @@ class Jeu :
         print(self.player.id)
     
     def __init__(self):
-        pass
-
-
-    # Met à jour la direction en fonction des touches appuyées
-    # DONE
-    def take_direction(self):
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN:
-                    # Flèches directionnelles
-                    if event.key == pygame.K_UP or event.key == pygame.K_z:
-                        if len(self.player)>1:
-                            if (self.player.position[0]-1,self.player.position[1])==self.player.fils.position:
-                                pass
-                        self.direction=Direction.HAUT
-                        return
-                    if event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                        if len(self.player)>1:
-                            if (self.player.position[0]+1,self.player.position[1])==self.player.fils.position:
-                                pass
-                        self.direction=Direction.BAS
-                    if event.key == pygame.K_LEFT or event.key == pygame.K_q:
-                        if len(self.player)>1:
-                            if (self.player.position[0],self.player.position[1]-1)==self.player.fils.position:
-                                pass
-                        self.direction=Direction.GAUCHE
-                    if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                        if len(self.player)>1:
-                            if (self.player.position[0],self.player.position[1]+1)==self.player.fils.position:
-                                pass
-                        self.direction=Direction.DROITE
-
-    
+        pass    
 
     # Déplace lae joueureuse dans la direction actuelle
     def player_forward(self):
@@ -541,41 +516,6 @@ class Jeu :
         for wall in self.walls:
             pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect((wall.position[0])*cell_size, (wall.position[1])*cell_size, cell_size, cell_size))
          
-
-    # Lancement de la boucle de jeu
-    def go(self, ai_path : str, grid_path : str, next_move_path : str):
-        next_move = ""
-        running = True
-        while running:
-            self.draw()
-            pygame.display.update()
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-            with open(grid_path, "w") as f:
-                f.write(self.game_to_grid_string())
-            # Appeler l'IA externe
-            # TO-DO
-            # Lire le prochain mouvement
-            while not next_move:
-                try:
-                    with open(next_move_path, "r") as f:
-                        next_move = f.read().strip()
-                except FileNotFoundError:
-                    pass
-                print(f"Prochaine direction : {next_move}")
-            with open(next_move_path, "w") as f:
-                f.write("")
-            # Mettre à jour le jeu avec le mouvement
-            self.take_direction(next_move)
-            self.player_forward()
-            next_move = ""
-            # if self.is_game_over:
-            #     running = False
-            self.fruit_eat()
-            self.reappear_fruit()
-    
-
     def take_direction(self, direction):
         if direction == "UP":
             if self.player.size>1:
@@ -608,35 +548,87 @@ class Jeu :
         height = self.grid.x + 2
         
         # Initialiser la grille avec des espaces vides
-        grid = [[' ' for _ in range(width)] for _ in range(height)]
+        grid = [['. ' for _ in range(width)] for _ in range(height)]
         
         # Placer les murs (bordures)
         for x in range(width):
-            grid[0][x] = '#'
-            grid[height - 1][x] = '#'
+            grid[0][x] = '# '
+            grid[height - 1][x] = '# '
         for y in range(height):
-            grid[y][0] = '#'
-            grid[y][width - 1] = '#'
+            grid[y][0] = '# '
+            grid[y][width - 1] = '# '
         
         # Placer le joueur (serpent)
         px, py = game.player.position
-        grid[px + 1][py + 1] = 'S'
+        grid[px + 1][py + 1] = 'O '
         
         # Placer le corps du serpent
         for body in game.snakeBodies:
             bx, by = body.position
-            grid[bx + 1][by + 1] = 's'
+            grid[bx + 1][by + 1] = 's '
         
         # Placer les fruits
         for fruit in game.fruits:
             fx, fy = fruit.position
-            grid[fx + 1][fy + 1] = 'F'
+            grid[fx + 1][fy + 1] = 'F '
+        
+        # Placer les ennemis
+        for enemy in game.enemies:
+            ex, ey = enemy.position
+            grid[ex + 1][ey + 1] = 'M '
+        for body in game.enemyBodies:
+            ebx, eby = body.position
+            grid[ebx + 1][eby + 1] = 'X '
         
         # Convertir la grille en chaîne de caractères
         for row in grid:
             grid_lines.append(''.join(row))
         
         return '\n'.join(grid_lines)
+    
+    # Lancement de la boucle de jeu
+    def go(self, ai_type : str, grid_path : str, next_move_path : str):
+        next_move = ""
+        to_call = ""
+        if ai_type == "snake-ai":
+            to_call = "./Snake-AI-player.py"
+        elif ai_type == "llm":
+            to_call = "./FourchLang/src/llm/runner/openrouter.ts"
+        else :
+            print("Type d'IA non reconnu.")
+            return
+        running = True
+        while running:
+            self.draw()
+            pygame.display.update()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+            with open(grid_path, "w") as f:
+                f.write(self.game_to_grid_string())
+            # Appeler l'IA externe
+            if ai_type == "snake-ai":
+                SnakeAIPlayerRun()
+            elif ai_type == "llm":
+                pass
+            # Lire le prochain mouvement
+            while not next_move:
+                try:
+                    with open(next_move_path, "r") as f:
+                        next_move = f.read().strip()
+                except FileNotFoundError:
+                    pass
+            print(f"Prochaine direction : {next_move}")
+            with open(next_move_path, "w") as f:
+                f.write("")
+            # Mettre à jour le jeu avec le mouvement
+            self.take_direction(next_move)
+            self.player_forward()
+            if self.is_game_over:
+                running = False
+            self.fruit_eat()
+            self.reappear_fruit()
+            next_move = ""
 
 if __name__ == "__main__":
     path = sys.argv[1] if len(sys.argv) > 1 else None
@@ -645,16 +637,12 @@ if __name__ == "__main__":
     game.JSONtoPython(path)
     print(game.grid)
     game.draw()
-    to_call = ""
+    
     ai_type = sys.argv[2] if len(sys.argv) > 2 else None
-    if ai_type == "snake-ai":
-        to_call = "./Snake-AI-player.py"
-    elif ai_type == "llm":
-        to_call = "./FourchLang/src/llm/runner/openrouter.ts"
 
     grid_path = "./grid.txt"
     next_move_path = "./AI_response.txt"
-    game.go(to_call, grid_path, next_move_path)
+    game.go(ai_type, grid_path, next_move_path)
 
     
     print("Game Over")
