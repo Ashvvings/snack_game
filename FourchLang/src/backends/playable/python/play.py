@@ -28,6 +28,7 @@ class Jeu :
 
     FPS = 5
     fpsClock = pygame.time.Clock()
+    SCORE_BAR_HEIGHT = 40
 
     class Player:
         def __init__(self, id : str, x : int, y : int, size : int, speed : int, color : Colors, fils : str = None, snake_bodies : list = [] ) :
@@ -111,6 +112,8 @@ class Jeu :
     body_counter = 0
     pending_growth = 0
     fruit_timers = []
+    score = 0
+    initial_body_count = 0
     
     
     def JSONtoPython(self, file_path : str):
@@ -202,6 +205,10 @@ class Jeu :
                 break
         self.snakeBodies = ordered_bodies
         self.player.snake_bodies = self.snakeBodies
+        
+        # Mémoriser la taille initiale pour le calcul du score
+        self.initial_body_count = len(self.snakeBodies)
+        self.score = 0
     
         self.enemyBodies = []
         for enemyBody in game["enemy-bodies"]:
@@ -259,7 +266,7 @@ class Jeu :
         for condition in game["game-over-conditions"]:
             self.game_over_conditions.append(self.GameOverCondition([condition["target"]]))
     
-        self.fenetre = pygame.display.set_mode(((self.grid.y)*20, (self.grid.x)*20))
+        self.fenetre = pygame.display.set_mode(((self.grid.y)*20, (self.grid.x)*20 + self.SCORE_BAR_HEIGHT))
     
     def toString (self) :
         print(self.player.id)
@@ -488,6 +495,7 @@ class Jeu :
                     self.player.size += growth
                     self.add_body_segment(growth)
                 
+                self.score += 1
                 self.fruits.remove(self.fruits[a])
                 if(self.fruits_config.respawn != "undefined" and self.fruits_config.respawn != None):
                     self.fruit_timers.append(int(time.time())+self.fruits_config.respawn)
@@ -530,31 +538,45 @@ class Jeu :
         
         # Taille de cellule
         cell_size = 20
+        offset_y = self.SCORE_BAR_HEIGHT  # Décalage vertical pour la zone de jeu
         
-        # Fond
-        self.fenetre.fill(Colors.BLACK.value)
+        # Fond gris pour le bandeau de score
+        self.fenetre.fill(Colors.GRAY.value)
+        
+        # Zone de jeu noire
+        game_area_width = self.grid.y * cell_size
+        game_area_height = self.grid.x * cell_size
+        pygame.draw.rect(self.fenetre, Colors.BLACK.value, pygame.Rect(0, offset_y, game_area_width, game_area_height))
+        
+        # Contour gris autour de la zone de jeu
+        pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect(0, offset_y, game_area_width, game_area_height), 2)
+        
+        # Score dans le bandeau
+        font = pygame.font.Font(None, 36)
+        score_text = font.render(f"Score : {self.score}", True, Colors.WHITE.value)
+        self.fenetre.blit(score_text, (10, (self.SCORE_BAR_HEIGHT - score_text.get_height()) // 2))
             
         # Serpent - tête
-        pygame.draw.circle(self.fenetre, self.player.color.value, [((self.player.position[0]+0.5)*cell_size), ((self.player.position[1]+0.5)*cell_size)], cell_size/2, 0)
+        pygame.draw.circle(self.fenetre, self.player.color.value, [((self.player.position[0]+0.5)*cell_size), ((self.player.position[1]+0.5)*cell_size) + offset_y], cell_size/2, 0)
         
         # Serpent - corps
         for body in self.snakeBodies:
-            pygame.draw.circle(self.fenetre, self.player.color.value, [((body.position[0]+0.5)*cell_size), ((body.position[1]+0.5)*cell_size)], (cell_size/2)-2, 0)
+            pygame.draw.circle(self.fenetre, self.player.color.value, [((body.position[0]+0.5)*cell_size), ((body.position[1]+0.5)*cell_size) + offset_y], (cell_size/2)-2, 0)
         
         # Fruits
         for fruit in self.fruits:
-            pygame.draw.circle(self.fenetre, Colors.MAGENTA.value, [((fruit.position[0]+0.5)*cell_size), ((fruit.position[1]+0.5)*cell_size)], (cell_size/2), 0)
+            pygame.draw.circle(self.fenetre, Colors.MAGENTA.value, [((fruit.position[0]+0.5)*cell_size), ((fruit.position[1]+0.5)*cell_size) + offset_y], (cell_size/2), 0)
         
         # Ennemis
         for enemy in self.enemies:
-            pygame.draw.circle(self.fenetre, enemy.color.value, [((enemy.position[0]+0.5)*cell_size), ((enemy.position[1]+0.5)*cell_size)], cell_size/2, 0)
+            pygame.draw.circle(self.fenetre, enemy.color.value, [((enemy.position[0]+0.5)*cell_size), ((enemy.position[1]+0.5)*cell_size) + offset_y], cell_size/2, 0)
         # Ennemis - corps
         for body in self.enemyBodies:
-            pygame.draw.circle(self.fenetre, Colors.RED.value, [((body.position[0]+0.5)*cell_size), ((body.position[1]+0.5)*cell_size)], (cell_size/2)-2, 0)
+            pygame.draw.circle(self.fenetre, Colors.RED.value, [((body.position[0]+0.5)*cell_size), ((body.position[1]+0.5)*cell_size) + offset_y], (cell_size/2)-2, 0)
         
         # Murs
         for wall in self.walls:
-            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect((wall.position[0])*cell_size, (wall.position[1])*cell_size, cell_size, cell_size))
+            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect((wall.position[0])*cell_size, (wall.position[1])*cell_size + offset_y, cell_size, cell_size))
 
 
     # Lancement de la boucle de jeu
