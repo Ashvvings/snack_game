@@ -3790,13 +3790,6 @@
         },
         {
             "position": {
-                "x": 13,
-                "y": 26
-            },
-            "points": 10
-        },
-        {
-            "position": {
                 "x": 19,
                 "y": 1
             },
@@ -3855,48 +3848,6 @@
             "position": {
                 "x": 19,
                 "y": 9
-            },
-            "points": 10
-        },
-        {
-            "position": {
-                "x": 19,
-                "y": 10
-            },
-            "points": 10
-        },
-        {
-            "position": {
-                "x": 19,
-                "y": 11
-            },
-            "points": 10
-        },
-        {
-            "position": {
-                "x": 19,
-                "y": 12
-            },
-            "points": 10
-        },
-        {
-            "position": {
-                "x": 19,
-                "y": 15
-            },
-            "points": 10
-        },
-        {
-            "position": {
-                "x": 19,
-                "y": 16
-            },
-            "points": 10
-        },
-        {
-            "position": {
-                "x": 19,
-                "y": 17
             },
             "points": 10
         },
@@ -4030,20 +3981,6 @@
             "position": {
                 "x": 22,
                 "y": 12
-            },
-            "points": 10
-        },
-        {
-            "position": {
-                "x": 22,
-                "y": 13
-            },
-            "points": 10
-        },
-        {
-            "position": {
-                "x": 22,
-                "y": 14
             },
             "points": 10
         },
@@ -5146,6 +5083,9 @@
         },
         {
             "target": "wall"
+        },
+        {
+            "target": "border"
         }
     ]
 }

@@ -1,4 +1,4 @@
-import type { Model } from "../../language/index.js";
+import type { Model } from "../../../language/index.js";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,21 +13,29 @@ function toNum(v: any): number {
 }
 
 /**
- * Construit les segments d'un snake HEAD -> TAIL en suivant une liste de bodies
- * qui pointe via parent.ref (même logique que player/snakeBodies).
+ * IMPORTANT (aligné avec generateAscii) :
+ * - Dans le DSL/AST, x = ligne (row), y = colonne (col).
+ * - Dans le playable (canvas), on veut x = colonne, y = ligne.
+ * Donc SWAP : playableX = modelY, playableY = modelX.
  */
+function mapPosFromModel(node: any): XY {
+  const modelX = toNum(node?.x); // row
+  const modelY = toNum(node?.y); // col
+  return { x: modelY, y: modelX };
+}
+
 function buildSegmentsFromHeadAndBodies(headNode: any, bodies: any[]): XY[] {
   const segments: XY[] = [];
   if (!headNode) return segments;
 
-  segments.push({ x: toNum(headNode.x), y: toNum(headNode.y) });
+  segments.push(mapPosFromModel(headNode));
 
   let current: any = headNode;
   while (true) {
     const nextBody = bodies.find((b) => b.parent?.ref === current);
     if (!nextBody) break;
 
-    segments.push({ x: toNum(nextBody.x), y: toNum(nextBody.y) });
+    segments.push(mapPosFromModel(nextBody));
     current = nextBody;
   }
 
@@ -35,7 +43,7 @@ function buildSegmentsFromHeadAndBodies(headNode: any, bodies: any[]): XY[] {
 }
 
 // --------------------------
-// Couleurs ennemis + headColor (plus foncé que le corps)
+// Couleurs ennemis + headColor (plus foncé)
 // --------------------------
 function clampByte(n: number): number {
   return Math.max(0, Math.min(255, Math.round(n)));
@@ -45,29 +53,17 @@ function normalizeHexColor(color: string | undefined, fallback: string): string 
   if (!color) return fallback;
   const c = color.trim();
 
-  // #RGB -> #RRGGBB
   if (/^#[0-9a-fA-F]{3}$/.test(c)) {
-    const r = c[1],
-      g = c[2],
-      b = c[3];
+    const r = c[1], g = c[2], b = c[3];
     return `#${r}${r}${g}${g}${b}${b}`.toUpperCase();
   }
+  if (/^#[0-9a-fA-F]{6}$/.test(c)) return c.toUpperCase();
 
-  // #RRGGBB
-  if (/^#[0-9a-fA-F]{6}$/.test(c)) {
-    return c.toUpperCase();
-  }
-
-  // si on reçoit un nom "red"/"cyan", etc. on fallback pour rester robuste
   return fallback;
 }
 
-/**
- * Rend une couleur hex plus foncée.
- * amount: 0.0 => identique, 0.35 => ~35% plus sombre
- */
 function darkenHex(hex: string, amount = 0.35): string {
-  const h = normalizeHexColor(hex, "#EF4444"); // fallback rouge
+  const h = normalizeHexColor(hex, "#EF4444");
   const r = parseInt(h.slice(1, 3), 16);
   const g = parseInt(h.slice(3, 5), 16);
   const b = parseInt(h.slice(5, 7), 16);
@@ -96,41 +92,38 @@ export function generatePlayableHtml(model: Model, destination: string) {
   }
 
   // --------------------------
-  // 1 — Lecture des infos DSL
+  // 1 — Dimensions (IDENTIQUES à generateAscii)
   // --------------------------
-  const width = toNum(model.grid[0].y);
-  const height = toNum(model.grid[0].x);
+  const width = toNum(model.grid?.[0]?.y);  // colonnes
+  const height = toNum(model.grid?.[0]?.x); // lignes
 
-  const player = model.player[0];
-  const playerBodyColor = normalizeHexColor(player.color, "#6DD66D");
+  // --------------------------
+  // 2 — Wrap rules (bordure crossable)
+  // --------------------------
+  const wrapX = model.borderRules?.some((b: any) => b.direction === "horizontally") ?? false;
+  const wrapY = model.borderRules?.some((b: any) => b.direction === "vertically") ?? false;
+
+  // --------------------------
+  // 3 — Player
+  // --------------------------
+  const player = model.player?.[0];
+  const playerBodyColor = normalizeHexColor(player?.color, "#6DD66D");
   const playerHeadColor = darkenHex(playerBodyColor, 0.35);
 
-  // Fruits
-  const fruits = (model.fruits ?? []).map((f: any) => ({
-    x: toNum(f.x),
-    y: toNum(f.y),
-  }));
-
-  // Murs
-  const walls = (model.walls ?? []).map((w: any) => ({
-    x: toNum(w.x),
-    y: toNum(w.y),
-  }));
-
-  // --------------------------
-  // 2 — Player HEAD → TAIL
-  // --------------------------
   const snakeSegments = buildSegmentsFromHeadAndBodies(player, model.snakeBodies ?? []);
 
   // --------------------------
-  // 2bis — Enemies HEAD → TAIL
+  // 4 — Fruits / Walls (swap coords)
   // --------------------------
-  // ⚠️ Selon ton AST, ça peut s'appeler model.enemy ou model.enemies.
-  // Ici on essaie enemies, sinon fallback enemy.
+  const fruits = (model.fruits ?? []).map((f: any) => mapPosFromModel(f));
+  const walls = (model.walls ?? []).map((w: any) => mapPosFromModel(w));
+
+  // --------------------------
+  // 5 — Enemies
+  // --------------------------
   const enemies: any[] = (model as any).enemies ?? (model as any).enemy ?? [];
   const enemyBodies: any[] = (model as any).enemyBodies ?? (model as any).enemiesBodies ?? [];
 
-  // Palette sans vert (bleu, jaune, orange, cyan, magenta, rouge)
   const enemyPalette = ["#3B82F6", "#F59E0B", "#F97316", "#06B6D4", "#D946EF", "#EF4444"];
 
   const enemySnakes = enemies.map((enemyNode: any, idx: number) => {
@@ -143,25 +136,19 @@ export function generatePlayableHtml(model: Model, destination: string) {
       id: enemyNode.name ?? enemyNode.id ?? `enemy-${idx + 1}`,
       isPlayerControlled: false,
       color: bodyColor,
-      headColor, // ✅ tête plus foncée (cohérente avec le corps)
+      headColor,
       body: segments,
     };
   });
 
   // --------------------------
-  // 3 — Wrap rules
-  // --------------------------
-  const wrapX = model.borderRules?.some((b: any) => b.direction === "horizontally") ?? false;
-  const wrapY = model.borderRules?.some((b: any) => b.direction === "vertically") ?? false;
-
-  // --------------------------
-  // 4 — Fruit growth
+  // 6 — Fruit growth
   // --------------------------
   const fruitConf = model.fruitConfig?.[0];
   const growthLength = fruitConf?.growthLength ? toNum(fruitConf.growthLength) : 1;
 
   // --------------------------
-  // 5 — Game Over
+  // 7 — Game Over
   // --------------------------
   const targets = (model.game_over_conditions ?? []).map((c: any) => c.target);
 
@@ -171,7 +158,7 @@ export function generatePlayableHtml(model: Model, destination: string) {
   const killWall = targets.includes("wall");
 
   // --------------------------
-  // 6 — Objet PlayableGameInit
+  // 8 — Objet PlayableGameInit
   // --------------------------
   const gameInit = {
     config: {
@@ -179,7 +166,6 @@ export function generatePlayableHtml(model: Model, destination: string) {
       height,
       wrapX,
       wrapY,
-
       growthLength,
 
       fruitRespawn: {
@@ -196,13 +182,12 @@ export function generatePlayableHtml(model: Model, destination: string) {
       ],
     },
 
-    // ✅ player + enemies
     snakes: [
       {
-        id: player.name ?? "player",
+        id: player?.name ?? "player",
         isPlayerControlled: true,
         color: playerBodyColor,
-        headColor: playerHeadColor, // ✅ tête plus foncée
+        headColor: playerHeadColor,
         body: snakeSegments,
       },
       ...enemySnakes,
@@ -213,15 +198,14 @@ export function generatePlayableHtml(model: Model, destination: string) {
   };
 
   // --------------------------
-  // 7 — Charger le template
+  // 9 — Template
   // --------------------------
-  const templatePath = path.resolve("src/backends/playable/template.html");
+  const templatePath = path.resolve("src/backends/playable/html/template.html");
   let template = fs.readFileSync(templatePath, "utf-8");
-
   template = template.replace("__FOURCH_INIT__", JSON.stringify(gameInit, null, 2));
 
   // --------------------------
-  // 8 — Copier style.css + script.js + runtime/*
+  // 10 — Copier assets/runtime
   // --------------------------
   const destFolder = path.dirname(finalDestination);
 
@@ -232,11 +216,9 @@ export function generatePlayableHtml(model: Model, destination: string) {
     fs.mkdirSync(assetsDestDir, { recursive: true });
   }
 
-  // CSS + script.js
   fs.copyFileSync(path.join(assetsSourceDir, "style.css"), path.join(assetsDestDir, "style.css"));
   fs.copyFileSync(path.join(assetsSourceDir, "script.js"), path.join(assetsDestDir, "script.js"));
 
-  // ------------ Copier runtime ------------
   const runtimeSrc = path.resolve("dist/src/runtime");
   const runtimeDest = path.join(assetsDestDir, "runtime");
 
@@ -262,9 +244,8 @@ export function generatePlayableHtml(model: Model, destination: string) {
   copyRecursive(runtimeSrc, runtimeDest);
 
   // --------------------------
-  // 9 — Écrire index.html
+  // 11 — Écrire index.html
   // --------------------------
   fs.writeFileSync(finalDestination, template);
-
   return finalDestination;
 }

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <title>FourchLang – Playable</title>
 
-    <link rel="stylesheet" href="./assets/style.css" />
+    <link rel="stylesheet" href="assets/style.css" />
 </head>
 
 <body>
@@ -47,83 +47,9 @@
 <script>
     /* Le générateur remplacera ce placeholder
        par un objet JSON PlayableGameInit */
-    window.FOURCH_INIT = {
-  "config": {
-    "width": 10,
-    "height": 10,
-    "wrapX": true,
-    "wrapY": true,
-    "growthLength": 1,
-    "fruitRespawn": {
-      "enabled": true,
-      "onEaten": true,
-      "everySeconds": null
-    },
-    "gameOverOn": [
-      "self",
-      "enemy"
-    ]
-  },
-  "snakes": [
-    {
-      "id": "uwu",
-      "isPlayerControlled": true,
-      "color": "#6DD66D",
-      "headColor": "#478B47",
-      "body": [
-        {
-          "x": 2,
-          "y": 1
-        },
-        {
-          "x": 3,
-          "y": 1
-        },
-        {
-          "x": 4,
-          "y": 1
-        },
-        {
-          "x": 5,
-          "y": 1
-        }
-      ]
-    },
-    {
-      "id": "bowser",
-      "isPlayerControlled": false,
-      "color": "#3B82F6",
-      "headColor": "#2655A0",
-      "body": [
-        {
-          "x": 8,
-          "y": 9
-        },
-        {
-          "x": 7,
-          "y": 9
-        },
-        {
-          "x": 6,
-          "y": 9
-        },
-        {
-          "x": 5,
-          "y": 9
-        }
-      ]
-    }
-  ],
-  "walls": [],
-  "fruits": [
-    {
-      "x": 4,
-      "y": 5
-    }
-  ]
-};
+    window.FOURCH_INIT = __FOURCH_INIT__;
 </script>
 
-<script type="module" src="./assets/script.js"></script>
+<script type="module" src="assets/script.js"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <title>FourchLang – Playable</title>
 
-    <link rel="stylesheet" href="./assets/style.css" />
+    <link rel="stylesheet" href="assets/style.css" />
 </head>
 
 <body>
@@ -49,7 +49,7 @@
        par un objet JSON PlayableGameInit */
     window.FOURCH_INIT = {
   "config": {
-    "width": 9,
+    "width": 10,
     "height": 10,
     "wrapX": true,
     "wrapY": true,
@@ -60,26 +60,55 @@
       "everySeconds": null
     },
     "gameOverOn": [
-      "self"
+      "self",
+      "enemy"
     ]
   },
   "snakes": [
     {
-      "id": "blob",
+      "id": "uwu",
       "isPlayerControlled": true,
       "color": "#6DD66D",
       "headColor": "#478B47",
       "body": [
         {
-          "x": 3,
+          "x": 1,
+          "y": 2
+        },
+        {
+          "x": 1,
           "y": 3
         },
         {
-          "x": 3,
+          "x": 1,
           "y": 4
         },
         {
-          "x": 3,
+          "x": 1,
+          "y": 5
+        }
+      ]
+    },
+    {
+      "id": "bowser",
+      "isPlayerControlled": false,
+      "color": "#3B82F6",
+      "headColor": "#2655A0",
+      "body": [
+        {
+          "x": 9,
+          "y": 8
+        },
+        {
+          "x": 9,
+          "y": 7
+        },
+        {
+          "x": 9,
+          "y": 6
+        },
+        {
+          "x": 9,
           "y": 5
         }
       ]
@@ -88,13 +117,13 @@
   "walls": [],
   "fruits": [
     {
-      "x": 7,
-      "y": 6
+      "x": 5,
+      "y": 4
     }
   ]
 };
 </script>
 
-<script type="module" src="./assets/script.js"></script>
+<script type="module" src="assets/script.js"></script>
 </body>
 </html>

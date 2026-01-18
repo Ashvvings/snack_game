@@ -137,33 +137,61 @@ if (speedEl) {
 //  RENDU
 // ===============================================================
 function render() {
-  const { width, height } = state.config;
-  const cellW = canvas.width / width;
-  const cellH = canvas.height / height;
+  const { width, height, wrapX, wrapY } = state.config;
+
+  // ⚠️ marge visuelle pour la bordure (en pixels)
+  const BORDER_PX = 6;
+
+  // Zone réellement utilisée pour dessiner la grille
+  const innerX = wrapX ? 0 : BORDER_PX;
+  const innerY = wrapY ? 0 : BORDER_PX;
+  const innerW = canvas.width - (wrapX ? 0 : BORDER_PX * 2);
+  const innerH = canvas.height - (wrapY ? 0 : BORDER_PX * 2);
+
+  const cellW = innerW / width;
+  const cellH = innerH / height;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // grille
+  // ==============================
+  // GRILLE
+  // ==============================
   ctx.strokeStyle = "white";
+  ctx.lineWidth = 1;
+
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      ctx.strokeRect(x * cellW, y * cellH, cellW, cellH);
+      ctx.strokeRect(
+        innerX + x * cellW,
+        innerY + y * cellH,
+        cellW,
+        cellH
+      );
     }
   }
 
-  // murs
+  // ==============================
+  // MURS (DSL uniquement)
+  // ==============================
   ctx.fillStyle = "gray";
   state.walls.forEach((w) => {
-    ctx.fillRect(w.x * cellW, w.y * cellH, cellW, cellH);
+    ctx.fillRect(
+      innerX + w.x * cellW,
+      innerY + w.y * cellH,
+      cellW,
+      cellH
+    );
   });
 
-  // fruits
+  // ==============================
+  // FRUITS
+  // ==============================
   state.fruits.forEach((f) => {
     ctx.fillStyle = "magenta";
     ctx.beginPath();
     ctx.arc(
-      (f.x + 0.5) * cellW,
-      (f.y + 0.5) * cellH,
+      innerX + (f.x + 0.5) * cellW,
+      innerY + (f.y + 0.5) * cellH,
       Math.min(cellW, cellH) / 3,
       0,
       Math.PI * 2
@@ -171,16 +199,53 @@ function render() {
     ctx.fill();
   });
 
-  // snakes
+  // ==============================
+  // SERPENTS
+  // ==============================
   Object.values(state.snakes).forEach((s) => {
     const headColor = s.headColor ?? darkenHex(s.color ?? "#6DD66D", 0.35);
     const bodyColor = s.color ?? "#6DD66D";
 
     s.body.forEach((seg, i) => {
       ctx.fillStyle = i === 0 ? headColor : bodyColor;
-      ctx.fillRect(seg.x * cellW, seg.y * cellH, cellW, cellH);
+      ctx.fillRect(
+        innerX + seg.x * cellW,
+        innerY + seg.y * cellH,
+        cellW,
+        cellH
+      );
     });
   });
+
+  // ==============================
+  // BORDURE VISUELLE (EXTÉRIEURE)
+  // ==============================
+  ctx.save();
+  ctx.strokeStyle = "white";
+  ctx.lineWidth = BORDER_PX;
+
+  ctx.beginPath();
+
+  // haut / bas → wrapY === false
+  if (!wrapY) {
+    ctx.moveTo(innerX, innerY);
+    ctx.lineTo(innerX + innerW, innerY);
+
+    ctx.moveTo(innerX, innerY + innerH);
+    ctx.lineTo(innerX + innerW, innerY + innerH);
+  }
+
+  // gauche / droite → wrapX === false
+  if (!wrapX) {
+    ctx.moveTo(innerX, innerY);
+    ctx.lineTo(innerX, innerY + innerH);
+
+    ctx.moveTo(innerX + innerW, innerY);
+    ctx.lineTo(innerX + innerW, innerY + innerH);
+  }
+
+  ctx.stroke();
+  ctx.restore();
 
   updateHud();
 }

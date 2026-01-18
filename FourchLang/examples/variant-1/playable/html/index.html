@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <title>FourchLang – Playable</title>
 
-    <link rel="stylesheet" href="./assets/style.css" />
+    <link rel="stylesheet" href="assets/style.css" />
 </head>
 
 <body>
@@ -51,16 +51,16 @@
   "config": {
     "width": 9,
     "height": 10,
-    "wrapX": false,
-    "wrapY": false,
+    "wrapX": true,
+    "wrapY": true,
     "growthLength": 1,
     "fruitRespawn": {
       "enabled": true,
       "onEaten": true,
-      "everySeconds": 2
+      "everySeconds": null
     },
     "gameOverOn": [
-      "border"
+      "self"
     ]
   },
   "snakes": [
@@ -75,11 +75,11 @@
           "y": 3
         },
         {
-          "x": 2,
+          "x": 4,
           "y": 3
         },
         {
-          "x": 1,
+          "x": 5,
           "y": 3
         }
       ]
@@ -88,13 +88,13 @@
   "walls": [],
   "fruits": [
     {
-      "x": 7,
-      "y": 6
+      "x": 6,
+      "y": 7
     }
   ]
 };
 </script>
 
-<script type="module" src="./assets/script.js"></script>
+<script type="module" src="assets/script.js"></script>
 </body>
 </html>
