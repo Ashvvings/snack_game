@@ -5,82 +5,108 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+function toNum(v: any): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/**
+ * IMPORTANT (aligné avec generateAscii) :
+ * - Dans le DSL/AST, x = ligne (row), y = colonne (col).
+ * - Dans la grille HTML (grid[y][x]), on veut :
+ *      x = colonne, y = ligne
+ * Donc SWAP : gridX = modelY, gridY = modelX.
+ */
+function mapXYFromModel(node: any): { x: number; y: number } {
+  const modelRow = toNum(node?.x); // row
+  const modelCol = toNum(node?.y); // col
+  return { x: modelCol, y: modelRow };
+}
+
 export function generateHtml(model: Model, destination: string) {
+  const width = toNum(model.grid?.[0]?.y);  // colonnes (comme generateAscii)
+  const height = toNum(model.grid?.[0]?.x); // lignes
 
-    const width = Number(model.grid[0].y);
-    const height = Number(model.grid[0].x);
+  // grid[y][x]
+  const grid: string[][] = Array.from({ length: height }, () =>
+    Array.from({ length: width }, () => ".")
+  );
 
-    // grid[y][x]
-    const grid = Array.from({ length: height }, () =>
-        Array.from({ length: width }, () => ".")
+  const place = (x: number, y: number, char: string) => {
+    if (y >= 0 && y < height && x >= 0 && x < width) {
+      grid[y][x] = char;
+    }
+  };
+
+  // Helpers de placement (SWAP appliqué)
+  const placeNode = (node: any, char: string) => {
+    if (!node) return;
+    const { x, y } = mapXYFromModel(node);
+    place(x, y, char);
+  };
+
+  const placeList = (nodes: any[] | undefined, char: string) => {
+    (nodes ?? []).forEach((n) => placeNode(n, char));
+  };
+
+  // Remplir la grille (ordre similaire à generateAscii)
+  placeNode(model.player?.[0], "O");
+  placeList((model as any).snakeBodies ?? model.snakeBodies, "S");
+  placeList((model as any).enemies ?? (model as any).enemy ?? model.enemies, "M");
+  placeList((model as any).enemyBodies ?? model.enemyBodies, "X");
+  placeList(model.fruits, "F");
+  placeList(model.walls, "W");
+
+  const playerColor = model.player?.[0]?.color ?? "green";
+
+  // -------------------------------
+  // 1. Charger le template HTML
+  // -------------------------------
+  const templatePath = path.resolve("src/backends/html/template.html");
+  let template = fs.readFileSync(templatePath, "utf-8");
+
+  // -------------------------------
+  // 2. Remplacer les placeholders
+  // -------------------------------
+  function formatGridInline(g: string[][]): string {
+    return (
+      "[\n" +
+      g
+        .map((row) => "  [" + row.map((c) => JSON.stringify(c)).join(", ") + "]")
+        .join(",\n") +
+      "\n]"
     );
+  }
 
-    const place = (x: number, y: number, char: string) => {
-        if (y >= 0 && y < height && x >= 0 && x < width) {
-            grid[y][x] = char;
-        }
-    };
+  template = template
+    .replace(/__PLAYER_COLOR__/g, playerColor)
+    .replace(/__WIDTH__/g, width.toString())
+    .replace(/__HEIGHT__/g, height.toString())
+    .replace(/__GRID_JSON__/g, formatGridInline(grid));
 
-    // Remplir la grille
-    place(Number(model.player[0].x), Number(model.player[0].y), "O");
-    model.snakeBodies.forEach(sb => place(Number(sb.x), Number(sb.y), "S"));
-    model.enemies.forEach(e => place(Number(e.x), Number(e.y), "M"));
-    model.enemyBodies.forEach(eb => place(Number(eb.x), Number(eb.y), "X"));
-    model.fruits.forEach(f => place(Number(f.x), Number(f.y), "F"));
-    model.walls.forEach(w => place(Number(w.x), Number(w.y), "W"));
+  // -------------------------------
+  // 3. Copier le CSS à côté du HTML
+  // -------------------------------
+  const destFolder = path.dirname(destination);
+  if (!fs.existsSync(destFolder)) {
+    fs.mkdirSync(destFolder, { recursive: true });
+  }
 
-    const playerColor = model.player[0].color ?? "green";
+  const cssSource = path.join(__dirname, "assets", "style.css");
 
-    // -------------------------------
-    // 1. Charger le template HTML
-    // -------------------------------
-    // On lit directement depuis src, ce qui marche même après build,
-    // car path.resolve(...) part du cwd (le dossier FourchLang/).
-    const templatePath = path.resolve("src/backends/html/template.html");
-    let template = fs.readFileSync(templatePath, "utf-8");
+  const cssDestDir = path.join(destFolder, "assets");
+  const cssDest = path.join(cssDestDir, "style.css");
 
-    // -------------------------------
-    // 2. Remplacer les placeholders
-    // -------------------------------
-    function formatGridInline(grid: string[][]): string {
-        return "[\n" +
-            grid
-                .map(row => "  [" + row.map(c => JSON.stringify(c)).join(", ") + "]")
-                .join(",\n") +
-            "\n]";
-    }
+  if (!fs.existsSync(cssDestDir)) {
+    fs.mkdirSync(cssDestDir, { recursive: true });
+  }
 
-    template = template
-        .replace(/__PLAYER_COLOR__/g, playerColor)
-        .replace(/__WIDTH__/g, width.toString())
-        .replace(/__HEIGHT__/g, height.toString())
-        .replace(/__GRID_JSON__/g, formatGridInline(grid));
+  fs.copyFileSync(cssSource, cssDest);
 
-    // -------------------------------
-    // 3. Copier le CSS à côté du HTML
-    // -------------------------------
-    const destFolder = path.dirname(destination);
-    if (!fs.existsSync(destFolder)) {
-        fs.mkdirSync(destFolder, { recursive: true });
-    }
+  // -------------------------------
+  // 4. Écrire l’HTML final
+  // -------------------------------
+  fs.writeFileSync(destination, template);
 
-    // cssSource = dist/backends/html/assets/style.css
-    // (copié par le script "copy:assets" de ton package.json)
-    const cssSource = path.join(__dirname, "assets", "style.css");
-
-    const cssDestDir = path.join(destFolder, "assets");
-    const cssDest = path.join(cssDestDir, "style.css");
-
-    if (!fs.existsSync(cssDestDir)) {
-        fs.mkdirSync(cssDestDir, { recursive: true });
-    }
-
-    fs.copyFileSync(cssSource, cssDest);
-
-    // -------------------------------
-    // 4. Écrire l’HTML final
-    // -------------------------------
-    fs.writeFileSync(destination, template);
-
-    return destination;
+  return destination;
 }

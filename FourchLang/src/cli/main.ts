@@ -19,6 +19,7 @@ export default function cli(): void {
         .argument("<source>", "Path to .fl file")
         .argument("<destinationOrOut>", "Output file OR directory")
         .option("--target <target>", "ascii | html | playable", "ascii")
+        .option("--playable-backend <backend>", "html | python", "html")
         .option("--ai <ai>", "random | greedy | minimax:2")
         .option("--seed <seed>", "Seed integer", v => parseInt(v, 10))
         .option("--headless", "Run without UI", false)

@@ -61,19 +61,21 @@ export interface PlayableGameInit {
 ============================ */
 
 export interface GameState {
-    turn: number;
-    currentActorId: string;      // id du snake dont c’est le tour
+  turn: number;
+  currentActorId: string;
 
-    snakes: Record<string, Snake>;
+  snakes: Record<string, Snake>;
 
-    walls: Pos[];
-    fruits: Pos[];
+  walls: Pos[];
+  fruits: Pos[];
 
-    config: GameConfig;
+  config: GameConfig;
 
-    isTerminal: boolean;
-    winnerId?: string;
-    reason?: string;
+  isTerminal: boolean;
+  winnerId?: string;
+  reason?: string;
+
+  score: number;
 }
 
 /* ============================

@@ -14,3 +14,4 @@ fruit at (2, 2) worth -4
 
 game over when hitting snake_body
 game over when hitting enemy
+game over when hitting border

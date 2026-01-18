@@ -74,6 +74,9 @@
         },
         {
             "target": "enemy"
+        },
+        {
+            "target": "border"
         }
     ]
 }

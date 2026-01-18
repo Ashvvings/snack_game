@@ -6,7 +6,7 @@ import { extractAstNode } from "./util.js";
 import { generateAscii } from "../backends/ascii/asciiGenerator.js";
 import { generateHtml } from "../backends/html/htmlGenerator.js";
 import { generateJson } from "../backends/json/jsonGenerator.js";
-import { generatePlayableHtml } from "../backends/playable/playableGenerator.js";
+import { generatePlayableHtml } from "../backends/playable/html/playableGenerator.js";
 
 export async function runGeneration(
     source: string,

@@ -27,39 +27,40 @@
         }
     },
     "scripts": {
-      "clean": "shx rm -rf dist .generated *.tsbuildinfo",
-      "watch": "tsc -w",
+        "clean": "shx rm -rf dist .generated *.tsbuildinfo",
+        "watch": "tsc -w",
+        "build": "tsc -p tsconfig.json && npm run copy:assets && npm run copy:playable && npm run copy:playable-runtime",
+        "build:clean": "npm run clean && npm run build",
+        "copy:assets": "shx mkdir -p dist/src/backends/html/assets && shx cp -r src/backends/html/assets/* dist/src/backends/html/assets/",
+        "copy:playable": "shx cp -r src/backends/playable/html/assets dist/src/backends/playable/html",
+        "copy:playable-runtime": "shx mkdir -p dist/src/backends/playable/html/assets/runtime && shx cp -r src/runtime dist/src/backends/playable/html/assets/",
+        "langium:generate": "langium generate",
+        "langium:watch": "langium generate --watch",
 
-      "build": "tsc -p tsconfig.json && npm run copy:assets && npm run copy:playable && npm run copy:playable-runtime",
-      "build:clean": "npm run clean && npm run build",
-      "copy:assets": "shx mkdir -p dist/src/backends/html/assets && shx cp -r src/backends/html/assets/* dist/src/backends/html/assets/",
-      "copy:playable": "shx cp -r src/backends/playable/assets dist/src/backends/playable/",
-      "copy:playable-runtime": "shx mkdir -p dist/src/backends/playable/assets/runtime && shx cp -r src/runtime dist/src/backends/playable/assets/",
+        "generate": "npm run build && node ./dist/src/cli/main.js generate",
+        "generate:auto": "npm run build && node ./dist/src/cli/main.js auto",
+        "generate:ascii:all": "npm run build && node -e \"const {execSync}=require('node:child_process'); for(let i=1;i<=5;i++){ execSync('node ./dist/src/cli/main.js auto --variant '+i+' --backend ascii', {stdio:'inherit'}); }\"",
+        "generate:html:all": "npm run build && node -e \"const {execSync}=require('node:child_process'); for(let i=1;i<=5;i++){ execSync('node ./dist/src/cli/main.js auto --variant '+i+' --backend html', {stdio:'inherit'}); }\"",
+        "generate:json:all": "npm run build && node -e \"const {execSync}=require('node:child_process'); for(let i=1;i<=5;i++){ execSync('node ./dist/src/cli/main.js auto --variant '+i+' --backend json', {stdio:'inherit'}); }\"",
+        "generate:playable:html:all": "npm run build && node -e \"const {execSync}=require('node:child_process'); for(let i=1;i<=5;i++){ execSync('node ./dist/src/cli/main.js generate examples/variant-'+i+'/program.fl examples/variant-'+i+' --target playable --playable-backend html', {stdio:'inherit'}); }\"",       "test": "vitest run",
 
-      "langium:generate": "langium generate",
-      "langium:watch": "langium generate --watch",
-
-      "generate": "npm run build && node ./dist/src/cli/main.js generate",
-      "generate:auto": "npm run build && node ./dist/src/cli/main.js auto",
-
-      "test": "vitest run",
-      "test:oracle": "vitest run oracle.test.ts",
-      "test:validation": "vitest run validation.test.ts",
-      "test:generation": "vitest run generation.test.ts",
-      "test:render": "vitest run render.test.ts",
-      "test:name": "vitest run --testNamePattern",
-      "test:coverage": "vitest run --coverage",
-      "cli": "node ./bin/cli.js"
+        "test:oracle": "vitest run oracle.test.ts",
+        "test:validation": "vitest run validation.test.ts",
+        "test:generation": "vitest run generation.test.ts",
+        "test:render": "vitest run render.test.ts",
+        "test:name": "vitest run --testNamePattern",
+        "test:coverage": "vitest run --coverage",
+        "cli": "node ./bin/cli.js"
     },
     "dependencies": {
         "ansi-styles": "^6.2.3",
         "chalk": "^5.3.0",
-        "commander": "^11.1.0",
-        "langium": "~4.1.0"
+        "commander": "^11.1.0"
     },
     "devDependencies": {
         "@types/node": "^24.10.1",
         "@vitest/coverage-v8": "^4.0.12",
+        "langium": "^4.1.3",
         "langium-cli": "~4.1.0",
         "linkedom": "^0.18.12",
         "shx": "^0.4.0",
@@ -71,6 +72,6 @@
         "npm": "10.8.2"
     },
     "bin": {
-      "fourch": "bin/cli.js"
+        "fourch": "bin/cli.js"
     }
 }

@@ -1,0 +1,54 @@
+:root {
+    --player-color: red;
+}
+
+body {
+    background: #222;
+    color: white;
+    font-family: monospace;
+    font-size: 20px;
+}
+
+.player {
+    color: var(--player-color);
+    font-weight: bold;
+}
+
+.enemy      { color: red; }
+.enemy-body { color: darkred; }
+.snake-body { color: var(--player-color); }
+.fruit      { color: magenta; }
+.wall       { color: black; font-weight: bold; }
+.empty      { color: rgb(120, 160, 255); }
+
+#grid {
+    line-height: 1.2;
+    padding: 10px;
+}
+
+#gameover {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.7);
+  z-index: 9999;
+}
+
+#gameover.hidden {
+  display: none;
+}
+
+#gameover .panel {
+  background: #111;
+  border: 2px solid #fff;
+  padding: 24px;
+  text-align: center;
+  border-radius: 12px;
+  min-width: 260px;
+}
+
+#gameover h2 {
+  margin: 0 0 16px;
+}
