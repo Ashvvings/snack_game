@@ -202,14 +202,19 @@ From this previous prompt, we obtain from the queried LLM an answer containing a
 The script operating the game then interprets this return as either a move or another command (resigning and errors triggering end of game).
 The LLM return also contains a "explain" field containing an explanation of why it chosed to make the correspondant move. This field is retrieved and put in the JSON file mentionned previously in this section.  
   
-<!-- TODO - Description supplémentaire ? -->
+The overall behavior of the LLM is off-putting. It give us explanations for its selected moves that feel sensible, like "Moving up to avoid enemies and collect nearby fruits while maintaining distance from borders.", but also moves erraticaly, never truly going toward any fruit, and most of the time going head-straight towards a wall.  
+This can be explained by the fact that LLM are very good at generating text, but really bad at logic and computation. Playing a game not being trivial only by generating text, they "understand" the concept of a snake game, yet lack the real understanding required to actually select a sensible move to correctly play.  
+  
+We could tweak our prompt endlessly, but if we do not ask a model specificaly trained to play snake, we will surely end up with non-sensical-sensical answers from the called LLM anyways. 
+  
+<!-- TODO ? - Description supplémentaire ? -->
 
 # 7. Mini-evaluation <!-- Optional -->
 <!-- TODO -->
 # 8. Unsupported features and limitations
 <!-- TODO Dorian -->
 Some features could still be added to our project to improve it.  
-We created multiple variations, with various parameters and functionment, but one variation we though of during the brainstorming at the beginning of the project was one where on each fruit was written a number, and the player needed to select the fruits they 
+We created multiple variations, with various parameters and functionment, but one variation we though of during the brainstorming at the beginning of the project was one where on each fruit was written a number, and the player needed to eat the fruits which value was a multiple of a given number. 
 # 9. Lessons learned
 
 
