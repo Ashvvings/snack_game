@@ -1,4 +1,10 @@
 # 1. Project overview
+FourchLang is a domain-specific language (DSL) for describing snake-like games played on a 2D discrete grid.
+Our idea was to create a basic version that corresponds to the game Snake, then add variations such as “to grow, you only have to eat numbers that are multiples of 3”, etc. Another variation could typically be Pac-Man! We remove the size change dimension and can add enemies, for example.​
+A program specifies the grid, borders, players/snakes, objects (fruits, enemies, walls) and game-over conditions, which are then compiled to an executable game or a visual representation (ASCII / GUI).​
+The focus is on deterministic, turn-based updates (up, down, left, right) with simple collision and scoring rules, making it easy to explore many gameplay variants (multiples-of-3 fruits, pacman-like modes, etc.).​
+The project is implemented with Langium (TypeScript) and uses Node.js tooling (npm run langium:generate, generators, tests).​
+Optional AI agents (rule-based or LLM-controlled via OpenRouter) can play the game, evaluate variants, or act as opponents.​
 
 # 2. Representative DSL programs with some explanations 
 
