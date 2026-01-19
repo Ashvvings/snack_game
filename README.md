@@ -1,154 +1,223 @@
-# Bienvenue dans notre jeu Snake personnalisé !
+# 1. Project overview
+<!-- Done -->
+FourchLang is a domain-specific language (DSL) for describing snake-like games played on a 2D discrete grid.  
+A program specifies the grid, borders, players/snakes, objects (fruits, enemies, walls) and game-over conditions, which are then compiled to an executable game or a visual representation (ASCII / GUI).​  
+The focus is on deterministic, turn-based updates (up, down, left, right) with simple collision and scoring rules, making it easy to explore many gameplay variants (multiples-of-3 fruits, pacman-like modes, etc.).​  
+The project is implemented with Langium (TypeScript) and uses Node.js tooling (npm run langium:generate, generators, tests).​  
+Optional AI agents (rule-based or LLM-controlled via OpenRouter) can play the game, evaluate variants, or act as opponents.​  
+
+
+
+
+
+
+# 2. Representative DSL programs with some explanations
+<!-- Done -->
+We have created five representative examples of what can be done with our DSL.
+
+## Variation 1: Classic “Snake” game
+
+The code contained in the `program.fl` file [here](FourchLang/examples/variant-1/program.fl) represents the configuration of a classic “Snake” game, with a snake that is 3 squares long, a grid that is 10 squares long by 9 squares wide, and one piece of fruit already present.  
+Eating a piece of fruit with the snake increases the score by 1 and lengthens the snake by one square.  
+Coming into contact with a square where the snake is located ends the game.  
+The edges of the grid can be crossed, causing the snake to reappear on the other side if it passes through an edge.  
+Fruit reappears in an empty square as soon as it is eaten by the snake.  
+
+<video controls src="snake1-2026-01-19_10.18.29.mov" title="SnakeGame-Variant1"></video>
+
+## Variation 2: Classic “Snake” game with closed edges
+
+The code contained in the `program.fl` file [here](FourchLang/examples/variant-2/program.fl) represents the configuration of a “Snake” game with closed edges, with a snake that is 3 squares long, a grid that is 10 squares long by 9 squares wide, and one piece of fruit already present.  
+Eating a fruit with the snake increases the score by 1 and lengthens the snake by one square.  
+Eaten fruits reappear on a random empty square 2 seconds after they are eaten.  
+Touching the edge of the grid ends the game.  
+
+<video controls src="snake2-2026-01-19_10.27.18.mov" title="SnakeGame-Variant2"></video>
+
+## Variation 3: “Snake” game with enemies Snake
+
+The code contained in the `program.fl` file [here](FourchLang/examples/variant-3/program.fl) resembles the configuration of a classic “Snake” game with a snake that is 4 squares long, a grid that is 10 squares long by 9 squares wide, and a fruit already present.  
+The difference with the classic “Snake” is the addition of an enemy, which is also a snake 4 squares long.  
+Eating a piece of fruit with the snake increases the score by 1, and it reappears in an empty square as soon as it is eaten.  
+The edges of the grid can be crossed, causing the snakes to reappear on the opposite side of the grid.  
+Coming into contact with a square where a snake (ally or enemy) is located ends the game.  
+
+<video controls src="snake3-2026-01-19_10.30.42.mov" title="SnakeGame-Variant3"></video>
+
+## Variation 4: Pac-Man
+
+The code contained in the `program.fl` file [here](FourchLang/examples/variant-4/program.fl) resembles the configuration of a single-player Pac-Man game, with a grid 29 squares long by 28 squares wide, walls, fruit, and enemies.  
+There is a passage between the left and right edges towards the middle of the grid, so the vertical border can be crossed. The horizontal border cannot.  
+Eating a piece of fruit with the player increases the score by 10. The fruit does not reappear.  
+Several enemies are present in the grid.  
+Coming into contact with a square containing an enemy ends the game.  
+
+<video controls src="snake3-2026-01-19_10.32.04.mov" title="SnakeGame-Variant4"></video>
+
+## Variation 5: Custom “Snake” game
+
+The code contained in the `program.fl` file [here](FourchLang/examples/variant-5/program.fl) represents the configuration of a custom “Snake” game, with a snake that is 3 squares long, a grid that is 4 squares long by 3 squares wide, one enemy, and two pieces of fruit already present. There is one healthy fruit and one rotten fruit. There are also impassable walls. The edges are impassable.  
+Eating a healthy fruit with the snake increases the score by 4 and lengthens the snake by one square.  
+Eating a rotten fruit with the snake decreases the score by 4 and lengthens the snake by one square.  
+Touching a square where the snake is located ends the game.  
+Touching the enemy ends the game.  
+Touching an edge ends the game.  
+
+<video controls src="snake3-2026-01-19_10.34.28.mov" title="SnakeGame-Variant5"></video>
+
+
+# 3. How to run
+
+## To generate variations
+The commands to execute are as follows:
+- ```cd Fourchlang```
+- ```npm install```
+- ```npm run build```
+
+Then:  
+- ```npm run generate -- [source] [destination] [config]```
+
+or  
+- ```npm run generate:auto -- --variant=2 --backend=ascii```
+
+backend= ascii or json or html depending on the desired output
+
+[EXEMPLE]
+
+```npm run generate -- examples/variant-2/program.fl examples/variant-2/output.txt ascii```
+
+## To generate a playable and play:
+
+### Python
+
+At the root of the project, execute:
+- ```python3 "./FourchLang/src/backends/playable/python/play.py" "./FourchLang/examples/variant-1/json/output.json"```
+- ```python3 "./FourchLang/src/backends/playable/python/play.py" "./FourchLang/examples/variant-2/json/output.json"```
+- ```python3 "./FourchLang/src/backends/playable/python/play.py" "./FourchLang/examples/variant-3/json/output.json"```
+- ```python3 "./FourchLang/src/backends/playable/python/play.py" "./FourchLang/examples/variant-4/json/output.json"```
+- ```python3 "./FourchLang/src/backends/playable/python/play.py" "./FourchLang/examples/variant-5/json/output.json"```
+
+It displays a new window with the game, you can play with the arrow keys of your keyboard.
+
+### HTML
+- ```cd FourchLang```
+- ```npm run generate:playable:html:all```
+- ```npx http-server -p 8080```
+
+Then you can play if you open this [link](http://127.0.0.1:8080) (http://127.0.0.1:8080) and go to `examples>variant-1>playable>html`.
+It opens a browser tab with the game, you can play with the arrows, and you can try various algorithm moves by clicking on the corresponding button.
+
+<video controls src="snake1html-2026-01-19_11.40.57.mov" title="SnakeVariation1HTML"></video>
+
+## To play with AI
+To make our AI play any variant of snake precendently mentionned, start by generating a json of the desired program (see section "#3. How to run").   
+To then launch a game where our AI actually plays the selected variant, run the following command at the root of the project :  
+```python3 "./FourchLang/src/backends/playable/python/play-ai.py" "./FourchLang/examples/variant-[X]/json/output.json" snake-ai```  
+with X being the chosed variant.
+This will open a window with the game running, where you can witness the AI playing the game. This window will close itself when the AI loses or if you click on the cross button on its top-right corner.  
+
+## To play with LLM
+To make an LLM type AI made available by OpenAI through an endpoint play any variant of snake precendently mentionned, start by generating a json of the desired program (see section "#3. How to run").  
+To then launch a game where our AI actually plays the selected variant, run the following command at the root of the project :  
+```python3 "./FourchLang/src/backends/playable/python/play-ai.py" "./FourchLang/examples/variant-[X]/json/output.json" llm```  
+with X being the chosed variant, as for running our own AI.
+
+This will open a window with the game running, where you can witness the LLM playing the game. This window will close itself when the AI loses or if you click on the cross button on its top-right corner.  
+
+
+
+
+# 4. Grammar and metamodel and class diagram
+<!-- Done -->
+The Fourchlang grammar can be found [here](FourchLang/src/language/fourch-lang.langium).
+
+
+The metamodel diagram can be found [here](model/class/class.puml).
+
+![classDiagramImage](image-1.png)
+
+# 5. AIs : strengths/weaknesses, known failure modes
+<!-- Done ? -->
+As a video of our AI wouldn't make clear its abilities correctly, for our visualisation of the game does not show much of a difference between human and machine gameplay, so we recommend launching our AI to get a better visualisation a video or a GIF could give. Please refer to section "#3 How to run" to launch AI runs.   
+A "next_state.json" JSON file is also generated at the root of the project, displaying every move made by the AI until end of its trial. It is composed as such :  
+- a "number_of_moves_done" field holding the number of moves the AI did before being stopped, either by user action or by losing the game.
+- a "moves" field holding an array of said moves in the order the AI made them.  
+  
+Our AI is based on the A* algortihm, which is an extension of Dijkstra's shortest path algorithm. We tuned it to identify the shortest path from the snake's head to the nearest fruit, while avoiding eventual threats.  
+A python scriptable, designed to be easily tailor-made for the selected variant, defines the current state of the ongoing game, given as a string parameter to our AI, and operates the move selected by our AI algorithm when it obtains it.   
+By the end of our development on our project, the AI was very resilient, avoiding most of threats and swiftly eating fruits, always using the shortest path to do so.  
+ 
+Although, it presents a potent weakness in its reluctancy to cross borders when possible. This is due to the distance computation using the coordinates of positions in the grid instead of relative positions from the snake's head.  
+Thus, the AI always takes the shortest path _not_ crossing any borders (even when possible) by default. this results in weird behaviors, especially in the variant 4 (the Pac-Man variant) where it chooses to go backwards instead of crossing the tunnel.  
+  
+Another weakness we identified is the case where there is no fruits to be found in the grid. This happens in variant 2 where a timer regulates fruit spawning to happen 2 seconds after the fruit was eaten. In that period of time, our AI is unable to find the shortest path to a fruit (thanks to no fruits being anywhere), and chooses to pass priority, repeating the same move as previously without necessarily taking where that is headint them to.  
+This behavior results in silly game overs, where the AI voluntarily ram through an enemy, a wall, or sometimes itself when no fruits are around.
+
+# 6. LLM protocol
+<!-- TODO Jules -->
+As for our own AI section, we recommend running LLM driven AI trials to get a demonstration of our work on that part of this project. Please refer to section "#3 Hom to run" for instruction on how to launch such runs.  
+And as for our own AI runs, the LLM driven runs also generate a "next_state.json" JSON file at the root of the project, also composed of :  
+- a "number_of_moves_done" field holding the number of moves the AI did before being stopped, either by user action or by losing the game.
+- a "moves" field holding an array of said moves in the order the AI made them. 
+   
+The same python script is used to operate the LLM driven AI runs, 
+# 7. Mini-evaluation <!-- Optional -->
+<!-- TODO -->
+# 8. Unsupported features and limitations
+<!-- TODO Dorian -->
+Some features could still be added to our project to improve it. 
+
+# 9. Lessons learned
+<!-- TODO Alice -->
+
+# 10. Ressources
+<!-- Done -->
+
+# Previous README (French)
+
+## Bienvenue dans notre jeu Snake personnalisé !
 
 Notre idée de jeu : créer une version de base qui correspond au jeu Snake, puis ajouter des variantes telles que "pour grandir il faut seulement manger les nombres qui sont des multiples de 3", etc. Une autre variante pourrait typiquement être un pacman ! On enlève la dimension de changement de taille, et on peut ajouter des ennemis par exemple.
 
----
+## Sous-domaine et périmètre
 
-# Sous-domaine et périmètre
+Titre du sous-domaine : *Matrice 2D "snake-like"*
 
-**Titre du sous-domaine :**
-*Matrice 2D “snake-like”*
+### Concepts centraux
 
-Ce sous-domaine couvre les jeux se déroulant sur une **grille 2D discrète**, où les entités évoluent case par case selon des règles explicites.
+Le sous-domaine s’appuie sur une grille discrète représentant l’espace de jeu, dans laquelle évolue un·e ou plusieurs joueur·euse·s (ou serpents) dont la taille peut varier au fil du temps. Les déplacements sont limités aux quatre directions principales (haut, bas, gauche, droite). Le système gère les collisions, qui peuvent être bloquantes (fin de partie), non bloquantes (récupération d’objets) ou éliminantes. Des objets apparaissent de manière aléatoire sur la grille et peuvent être ramassés pour accumuler des points ou modifier la taille du joueur·euse. Enfin, la situation de fin de partie (game over) est définie selon plusieurs critères, comme une collision avec soi-même, un mur, ou un dépassement de chronomètre.
 
----
-
-## Concepts centraux
-
-Le sous-domaine repose sur les concepts suivants :
-
-* **Grille discrète**
-  L’espace de jeu est une matrice 2D de taille finie, composée de cellules.
-
-* **Serpents (joueurs et ennemis)**
-  Un ou plusieurs serpents occupent la grille.
-
-    * Chaque serpent possède une tête et éventuellement un corps.
-    * La taille peut évoluer (croissance, décroissance, taille fixe).
-    * Les déplacements sont limités aux **quatre directions cardinales** : haut, bas, gauche, droite.
-
-* **Objets de la grille**
-
-    * Fruits (positifs, négatifs, conditionnels…),
-    * Murs,
-    * Bordures de la carte (crossables ou non).
-
-* **Interactions et collisions**
-
-    * Collision avec soi-même,
-    * Collision avec un mur,
-    * Collision avec un ennemi,
-    * Traversée ou non des bordures.
-
-* **Conditions de fin de partie**
-  Le *game over* peut être déclenché par :
-
-    * une collision spécifique,
-    * le franchissement d’une bordure non autorisée,
-    * ou toute autre règle définie par la variante.
-
-L’ensemble de ces règles est **entièrement déclaratif** : aucune logique implicite n’est cachée.
-
----
-## Familles de jeux visées
+### Familles de jeux visées
 
 Ce sous-domaine vise exclusivement les jeux 2D se déroulant sur une grille discrète, centrés sur des mécaniques proches du jeu Snake classique et ses variantes. Il exclut expressément les jeux 3D, les jeux multijoueur·euse·s, les systèmes complexes de tournoi multi-tables, et tout gameplay basé sur des mécanismes autres que le déplacement et la collecte sur grille (par exemple, pas de physique continue ni d’environnement ouvert).
 
----
+### Pourquoi c’est atteignable et fécond en variantes
 
-## Pourquoi c’est atteignable et fécond en variantes
+Le jeu repose sur des états successifs simples, clairement définis et entièrement descriptibles, ce qui facilite la modélisation et la mise en œuvre.  
+Les concepts fondamentaux du sous-domaine (taille du ou de la joueur·euse, collisions, apparition d’objets, type d’objets) sont indépendants mais peuvent être combinés et paramétrés de nombreuses manières, générant ainsi une grande diversité de variantes possibles. Par exemple, on peut ajuster la taille de la grille, le comportement aux bordures, la nature des objets ou les règles de fin de partie.
 
-Ce sous-domaine est à la fois **simple à implémenter** et **riche en possibilités** :
+### Comment compiler un fichier FourchLang (.fl)
 
-* Les états du jeu sont **finis, discrets et parfaitement décrits**.
-* Chaque règle (croissance, collision, bordure, objet) est **indépendante**, mais combinable.
-* Une modification locale (ex. bordure crossable) peut produire une **variante radicalement différente**.
-
-Quelques exemples de paramètres facilement modulables :
-
-* taille de la grille,
-* comportement des bordures (crossable horizontalement, verticalement, ou non),
-* règles de croissance,
-* nature et valeur des fruits,
-* présence ou absence d’ennemis,
-* conditions exactes de défaite.
-
-Cela rend FourchLang particulièrement adapté à l’**exploration systématique de variantes de gameplay**.
-
----
-
-## 🛠️ Comment compiler un fichier FourchLang (.fl)
-
-### Pré-requis
-
-Avant toute génération, assure-toi que le langage et ses backends ont été compilés.
-
-Depuis le dossier racine du projet **FourchLang** :
-
-```shell
-npm run langium:generate
-npm run build
+La compilation n'est possible que si les fichiers du language FourchLang ont été générés, pensez donc au préalable avant de suivre le restant de cette partie à exécuter les commandes suivantes : 
+```shell 
+~$ npm run langium:generate
+~$ npm run build
 ```
+Et en vous plaçant à l'aide d'un terminal dans le dossier FourchLang de ce projet.
 
----
+La commande, à lancer dans un terminal, permettant de passer d'un fichier **.fl** contenant la description du jeu dans son état initial à un fichier contenant l'affichage de la grille de jeu de snake dans l'état décrit est la suivante : 
 
-### Génération automatique par variante
-
-Pour générer automatiquement une variante existante :
-
-```shell
-npm run generate:auto -- --variant=[num-variant] --backend=[format]
+```shell 
+~$ npm run generate:auto -- --variant=[num-variante] --backend=[format-export]
 ```
-
-Exemples de formats possibles :
-
-* `ascii`
-* `html`
-* `json`
-
----
-
-### Génération manuelle
-
-Commande générique :
-
-```shell
-npm run generate -- [source] [destination] [backend]
+```shell 
+~$ npm run generate -- [source] [destination] [backend]
 ```
+Cette commande retourne par défaut un fichier texte avec une représentation de l'état initial d'un jeu de Snake en art ASCII.
+Elle affiche égalementdans le terminal le même affichage, cette fois-ci en couleur.
 
-Par défaut, la génération produit :
-
-* un fichier texte ASCII,
-* et affiche également la grille colorée dans le terminal.
-
----
-
-### Générer un playable HTML (jeu interactif)
-
-```shell
-npm run generate -- examples/variant-2/program.fl examples/variant-2/playable/index.html --target playable
-```
-
----
-
-### Générer tous les fichiers (batch)
-
-```shell
-npm run generate:ascii:all
-npm run generate:html:all
-npm run generate:json:all
-npm run generate:playable:html:all
-```
-
-Ces commandes fonctionnent aussi bien sous **bash** que sous **PowerShell**, car elles utilisent Node.js pour la boucle.
-
----
-
-## Exemple complet
-
-### Fichier FourchLang (`.fl`)
-
-```fl
+Exemple de compilation obtenue avec le fichier suivant : 
+```fl 
 grid size 10 x 9
 
 border horizontal not crossable
@@ -168,27 +237,20 @@ game over when hitting enemy
 game over when hitting border
 ```
 
----
-
-### Fichier généré (ASCII)
-
+Fichier obtenu :
 ```ansi
- #  #  #  #  #  #  #  #  #  #  # 
- #  .  .  .  .  .  .  .  .  .  # 
- #  .  .  .  S  .  .  .  .  .  # 
- #  .  .  .  S  .  .  .  .  .  # 
- #  .  .  .  O  .  .  .  .  .  # 
- #  .  .  .  .  .  .  .  .  .  # 
- #  .  .  .  .  .  .  .  .  .  # 
- #  .  .  .  .  .  .  .  .  .  # 
- #  .  .  .  .  .  .  F  .  .  # 
- #  .  .  .  .  .  .  .  .  .  # 
- #  .  .  .  .  .  .  .  .  .  # 
- #  #  #  #  #  #  #  #  #  #  #
+# # # # # # # # # # # # 
+# . . . . . . . . . . #
+# . . . . . . . . . . #
+# . . . . . . . . . . #
+# . S S O . . . . . . #
+# . . . . . . . . . . #
+# . . . . . . . . . . #
+# . . . . . . . F . . #
+# . . . . . . . . . . #
+# . . . . . . . . . . #
+# # # # # # # # # # # # 
 ```
+Affichage dans le terminal : 
 
----
-
-### Affichage dans le terminal
-
-![Grid\_example](docs/Grid_example.png)
+![Grid_example](../snack_game/Grid_example.png)
