@@ -723,7 +723,11 @@ Concrete list of allowed moves for THIS state:\n\
             # Appeler l'IA externe
             if ai_type == "snake-ai":
                 # Appel de l'IA SnakeAIPlayer (A*)
-                next_move = SnakeAIPlayerRun(self.game_to_grid_string())
+                next_move = SnakeAIPlayerRun(self.game_to_grid_string(),
+                                             self.grid.vertically,
+                                             self.grid.horizontally)
+                if next_move == "pass":
+                    next_move = last_move
             elif ai_type == "llm":
                 # Appel à une IA de type LLM par endpoint D'OpenAI
                 prompt = self.json_prompt()
@@ -743,11 +747,10 @@ Concrete list of allowed moves for THIS state:\n\
                     print("ERREUR : L'IA n'a pas su fournir de mouvement valide.")
                     running = False
                     break
-            time.sleep(0.5) # Modulable selon la vitesse voulue
+            time.sleep(0.2) # Modulable selon la vitesse voulue
             # Ecrire le mouvement défini dans le fichier next_state.json
             self.moves_done.append(next_move)
-            next_json = {"number_of_moves_done" : len(self.moves_done),
-                         "moves": self.moves_done}
+            next_json = {"number_of_moves_done" : len(self.moves_done), "moves": self.moves_done}
             with open("next_state.json", "w") as f:
                 json.dump(next_json, f)
             # Mettre à jour le jeu avec le mouvement défini par l'IA

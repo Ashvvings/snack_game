@@ -24,7 +24,7 @@ def parse_grid(ascii_grid):
 
     return head, body, fruits, enemies, borders, len(lines[0]), len(lines)
 
-def get_neighbors(pos, width, height):
+def get_neighbors(pos, width, height, v, h):
     """Retourne les voisins valides d'une position"""
     x, y = pos
     neighbors = []
@@ -34,22 +34,29 @@ def get_neighbors(pos, width, height):
         nx, ny = x + dx, y + dy
         if 0 <= nx < width and 0 <= ny < height:
             neighbors.append(((nx, ny), direction))
+        elif nx < 0 and ny >= 0 and ny < height and not v:
+            neighbors.append(((width - 1, ny), direction))
+        elif nx >= width and ny >= 0 and ny < height and not v:
+            neighbors.append(((0, ny), direction))
+        elif ny < 0 and nx >= 0 and nx < width and not h: 
+            neighbors.append(((nx, height - 1), direction))
+        elif ny >= height and nx >= 0 and nx < width and not h:
+            neighbors.append(((nx, 0), direction))
     return neighbors
 
-def is_safe(pos, body, enemies, borders):
+def is_safe(pos, body, enemies, borders, width, height, v, h):
     """Vérifie si une position est sûre (pas de collision)"""
-    return pos not in body and pos not in enemies and pos not in borders
+    test = pos not in body and pos not in enemies
+    if not v and not h:
+        test = test and pos not in borders
+    elif h and not v:
+        test = test and pos[0] > 0 and pos[0] < width - 1
+    elif v and not h:
+        test = test and pos[1] > 0 and pos[1] < height - 1
+    return test
 
-def a_star(start, goals, body, enemies, borders, width, height):
-    """A* pour trouver le chemin vers le fruit"""
-    borders = set()
-    for x in range(width):
-        borders.add((x, 0))
-        borders.add((x, height - 1))
-    for y in range(height):
-        borders.add((0, y))
-        borders.add((width - 1, y))
-    
+def a_star(start, goals, body, enemies, borders, width, height, v, h):
+    """A* pour trouver le chemin vers le fruit"""    
     def heuristic(pos):
         min_distance = float('inf')
         for goal in goals:
@@ -71,24 +78,16 @@ def a_star(start, goals, body, enemies, borders, width, height):
             continue
         visited.add(current)
         
-        for next_pos, direction in get_neighbors(current, width, height):
-            if is_safe(next_pos, body, enemies, borders) and next_pos not in visited:
+        for next_pos, direction in get_neighbors(current, width, height, v, h):
+            if is_safe(next_pos, body, enemies, borders, width, height, v, h) and next_pos not in visited:
                 new_path = path + [direction]
                 priority = len(new_path) + heuristic(next_pos)
                 heapq.heappush(frontier, (priority, next_pos, new_path))
     
     return None
 
-def has_escape_after_eating(pos, body, enemies, borders, width, height):
-    """Vérifie qu'après avoir mangé le fruit, le snake peut encore bouger"""
-    borders = set()
-    for x in range(width):
-        borders.add((x, 0))
-        borders.add((x, height - 1))
-    for y in range(height):
-        borders.add((0, y))
-        borders.add((width - 1, y))
-    
+def has_escape_after_eating(pos, body, enemies, borders, width, height, v, h):
+    """Vérifie qu'après avoir mangé le fruit, le snake peut encore bouger"""    
     # Simule le corps après avoir mangé (la queue ne bouge pas)
     new_body = [pos] + body
     
@@ -101,22 +100,22 @@ def has_escape_after_eating(pos, body, enemies, borders, width, height):
         current = queue.popleft()
         accessible_count += 1
         
-        for next_pos, _ in get_neighbors(current, width, height):
+        for next_pos, _ in get_neighbors(current, width, height, v, h):
             if (next_pos not in visited and 
-                is_safe(next_pos, new_body, enemies, borders)):
+                is_safe(next_pos, new_body, enemies, borders, width, height, v, h)):
                 visited.add(next_pos)
                 queue.append(next_pos)
     
     # Il faut au moins autant d'espace que la longueur du snake
     return accessible_count >= len(new_body)
 
-def find_safe_move(head, body, enemies, borders, width, height):
+def find_safe_move(head, body, enemies, borders, width, height, v, h):
     """Trouve un mouvement sûr en cas d'absence de chemin vers le fruit"""    
     best_move = None
     max_space = -1
     
     for next_pos, direction in get_neighbors(head, width, height):
-        if not is_safe(next_pos, body, enemies, borders):
+        if not is_safe(next_pos, body, enemies, borders, width, height, v, h):
             continue
         
         # Compte l'espace accessible depuis cette position
@@ -128,9 +127,9 @@ def find_safe_move(head, body, enemies, borders, width, height):
             current = queue.popleft()
             space_count += 1
             
-            for neighbor, _ in get_neighbors(current, width, height):
+            for neighbor, _ in get_neighbors(current, width, height, v, h):
                 if (neighbor not in visited and 
-                    is_safe(neighbor, body, enemies, borders)):
+                    is_safe(neighbor, body, enemies, borders, width, height, v, h)):
                     visited.add(neighbor)
                     queue.append(neighbor)
         
@@ -140,7 +139,7 @@ def find_safe_move(head, body, enemies, borders, width, height):
     
     return best_move
 
-def get_next_move(ascii_grid):
+def get_next_move(ascii_grid, v, h):
     """
     Fonction principale : retourne la prochaine direction
     
@@ -153,10 +152,10 @@ def get_next_move(ascii_grid):
     head, body, fruits, enemies, borders, width, height = parse_grid(ascii_grid)
     
     if not head or not fruits:
-        return 'UP'  # Défaut si parsing échoue
+        return 'pass'  # Défaut si parsing échoue
     
     # Cherche un chemin vers le fruit
-    path = a_star(head, fruits, body, enemies, borders, width, height)
+    path = a_star(head, fruits, body, enemies, borders, width, height, v, h)
     if path:
         # Vérifie que le mouvement vers le fruit est sûr
         next_pos = None
@@ -171,14 +170,14 @@ def get_next_move(ascii_grid):
         
         # Si c'est le fruit, vérifie qu'on aura une sortie après
         if next_pos in fruits:
-            if has_escape_after_eating(next_pos, body, enemies, borders, width, height):
+            if has_escape_after_eating(next_pos, body, enemies, borders, width, height, v, h):
                 return path[0]
             # Sinon, cherche un mouvement alternatif
         else:
             return path[0]
     
     # Pas de chemin direct : cherche un mouvement sûr qui maximise l'espace
-    safe_move = find_safe_move(head, body, enemies, borders, width, height)
+    safe_move = find_safe_move(head, body, enemies, borders, width, height, v, h)
     return safe_move if safe_move else 'UP'
 
 def valider_grille(grille_str):
@@ -226,18 +225,9 @@ def valider_grille(grille_str):
     
     return True
 
-def run(grid = ""):
-    # param_grid = ""
-    # with open("./grid.txt", 'r') as fichier:
-    #     param_grid = fichier.read()
-    #     if valider_grille(param_grid):
-    #         grid = param_grid
-    
-    next_move = get_next_move(grid)
+def run(grid = "", vertical_crossability = False, horizontal_crossability = False):    
+    next_move = get_next_move(grid, vertical_crossability, horizontal_crossability)
     print(f"Direction sélectionnée : {next_move}")
-    
-    # with open("./AI_response.txt", "w") as f:
-    #     f.write(next_move + "\n")
     return next_move
 
 # Exemple d'utilisation
