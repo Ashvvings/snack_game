@@ -1,4 +1,5 @@
 # 1. Project overview
+<!-- Done -->
 FourchLang is a domain-specific language (DSL) for describing snake-like games played on a 2D discrete grid.
 A program specifies the grid, borders, players/snakes, objects (fruits, enemies, walls) and game-over conditions, which are then compiled to an executable game or a visual representation (ASCII / GUI).​
 The focus is on deterministic, turn-based updates (up, down, left, right) with simple collision and scoring rules, making it easy to explore many gameplay variants (multiples-of-3 fruits, pacman-like modes, etc.).​
@@ -11,6 +12,7 @@ Optional AI agents (rule-based or LLM-controlled via OpenRouter) can play the ga
 
 
 # 2. Representative DSL programs with some explanations
+<!-- Done -->
 We have created five representative examples of what can be done with our DSL.
 # Variation 1: Classic “Snake” game
 
@@ -89,7 +91,7 @@ backend= ascii or json or html depending on the desired output
 
 ```npm run generate -- examples/variant-2/program.fl examples/variant-2/output.txt ascii```
 
-## To generate a playable: 
+## To generate a playable and play: 
 ### Python
 At the root of the project, execute:
 - ```python3 "./FourchLang/src/backends/playable/python/play.py" "./FourchLang/examples/variant-1/json/output.json"```
@@ -98,7 +100,7 @@ At the root of the project, execute:
 - ```python3 "./FourchLang/src/backends/playable/python/play.py" "./FourchLang/examples/variant-4/json/output.json"```
 - ```python3 "./FourchLang/src/backends/playable/python/play.py" "./FourchLang/examples/variant-5/json/output.json"```
 
-It displays a new window with the game, you can play with the arrows.
+It displays a new window with the game, you can play with the arrow keys of your keyboard.
 ### HTML
 - ```cd FourchLang```
 - ```npm run generate:playable:html:all```
@@ -108,20 +110,38 @@ Then you can play if you open this [link](http://127.0.0.1:8080) (http://127.0.0
 It opens a browser tab with the game, you can play with the arrows, and you can try various algorithm moves by clicking on the corresponding button.
 
 <video controls src="snake1html-2026-01-19_11.40.57.mov" title="SnakeVariation1HTML"></video>
+<!-- TODO IA -->
+
+
+
+
 # 4. Grammar and metamodel and class diagram
+<!-- TODO Alice -->
+The Fourchlang grammar can be found [here](FourchLang/src/language/fourch-lang.langium).
+
+
+The metamodel diagram can be found [here](model/class/class.puml).
+
+![classDiagramImage](image-1.png)
 
 # 5. AIs : strengths/weaknesses, known failure modes
-
+<!-- TODO -->
+To make our AI play any variant of snake precendently mentionned, start by generating a json of the desired program (see section "#3. How to run").<br/>
+To then launch a game where our AI actually plays the selected variant, run the following command at the root of the project : <br/> 
+```python3 "./FourchLang/src/backends/playable/python/play-ai.py" "./FourchLang/examples/variant-[X]/json/output.json" snake-ai```<br/>
+with X being the chosed variant.<br/><br/>
+This will open a window with the game running, where you can witness the AI playing the game. This window will close itself when the AI loses or if you click on the cross button on its top-right corner. <br/>
+A "next_state.json" file is also generated at the root of the project, displaying every move made by the AI until end of its trial.
 # 6. LLM protocol
+<!-- TODO -->
 
 
-
-# 7. Mini-evaluation
-
+# 7. Mini-evaluation <!-- Optional -->
+<!-- TODO -->
 # 8. Unsupported features and limitations
-
+<!-- TODO -->
 # 9. Lessons learned
-
+<!-- TODO -->
 # 10. Ressources
 # Previous README (French)
 ## Bienvenue dans notre jeu Snake personnalisé !
