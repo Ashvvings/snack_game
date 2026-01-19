@@ -82,6 +82,38 @@ def extract_move(response: str) -> str:
     
     return "ERROR"
 
+def extract_explanation(response: str) -> str:
+    """
+    Extrait le 'explain' du JSON LLM.
+    Retourne: un string explicatif
+    """
+    response = response.strip()
+    
+    if response.startswith("```"):
+        lines = response.splitlines()
+        if lines and lines.startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].startswith("```"):
+            lines = lines[:-1]
+        response = "\n".join(lines).strip()
+    
+    try:
+        data = json.loads(response)
+        
+        if "explain" in data:
+            return data["explain"]
+        
+        if data.get("pass") is True:
+            return "pass"
+        if data.get("resign") is True:
+            return "resign"
+            
+    except json.JSONDecodeError:
+        match = re.search(r'"move"\s*:\s*"([^"]+)"', response, re.IGNORECASE)
+        if match:
+            return match.group(1)
+    
+    return "ERROR"
 
 
 if __name__ == "__main__":

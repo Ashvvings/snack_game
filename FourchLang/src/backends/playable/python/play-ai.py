@@ -10,6 +10,7 @@ from SnakeAIPlayer import run as SnakeAIPlayerRun
 sys.path.insert(1, './FourchLang/src/llm/runner')
 from openrouter import call_llm_openrouter as LLMAIPlayerRun
 from openrouter import extract_move as getLLMMove
+from openrouter import extract_explanation as getLLMExplanation
 
 class Direction(Enum) :
     HAUT = 1
@@ -125,6 +126,7 @@ class Jeu :
     initial_body_count = 0
     variant = None
     moves_done = []
+    moves_explanations = []
     
     variant_context = {
         "1" : "1 fruit is worth 1 point, makes you grow by 1 point, and reappears when eaten. The game ends if the snake bites itself. You can cross the edges.",
@@ -715,6 +717,7 @@ Concrete list of allowed moves for THIS state:\n\
     def go(self, ai_type : str):
         next_move = None
         last_move = None
+        next_json = None
         if ai_type != "llm" and ai_type != "snake-ai":
             print("Type d'IA non reconnu.")
             return
@@ -741,6 +744,7 @@ Concrete list of allowed moves for THIS state:\n\
                 ret = LLMAIPlayerRun(prompt, max_tokens=200)
                 next_move = self.ninety_degrees_fix(getLLMMove(ret))
                 print(f"Move given by LLM: {ret}")
+                self.moves_explanations.append(getLLMExplanation(ret))
                 print(f"rotated move: {next_move}")
                 if next_move == "pass":
                     next_move = last_move
@@ -755,7 +759,10 @@ Concrete list of allowed moves for THIS state:\n\
             time.sleep(0.2) # Modulable selon la vitesse voulue
             # Ecrire le mouvement défini dans le fichier next_state.json
             self.moves_done.append(next_move)
-            next_json = {"number_of_moves_done" : len(self.moves_done), "moves": self.moves_done}
+            if ai_type == "llm":
+                next_json = {"number_of_moves_done" : len(self.moves_done), "moves": self.moves_done, "explanations": self.moves_explanations}
+            else:
+                next_json = {"number_of_moves_done" : len(self.moves_done), "moves": self.moves_done}
             with open("next_state.json", "w") as f:
                 json.dump(next_json, f)
             # Mettre à jour le jeu avec le mouvement défini par l'IA
