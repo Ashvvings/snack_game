@@ -6,6 +6,10 @@ The project is implemented with Langium (TypeScript) and uses Node.js tooling (n
 Optional AI agents (rule-based or LLM-controlled via OpenRouter) can play the game, evaluate variants, or act as opponents.​
 
 
+
+
+
+
 # 2. Representative DSL programs with some explanations
 We have created five representative examples of what can be done with our DSL.
 # Variation 1: Classic “Snake” game
@@ -18,7 +22,6 @@ Fruit reappears in an empty square as soon as it is eaten by the snake.
 
 <video controls src="snake1-2026-01-19_10.18.29.mov" title="SnakeGame-Variant1"></video>
 
-
 # Variation 2: Classic “Snake” game with closed edges
 
 The code contained in the `program.fl` file in this folder represents the configuration of a “Snake” game with closed edges, with a snake that is 3 squares long, a grid that is 10 squares long by 9 squares wide, and one piece of fruit already present.  
@@ -27,7 +30,6 @@ Eaten fruits reappear on a random empty square 2 seconds after they are eaten.
 Touching the edge of the grid ends the game.
 
 <video controls src="snake2-2026-01-19_10.27.18.mov" title="SnakeGame-Variant2"></video>
-
 
 # Variation 3: “Snake” game with enemies Snake
 
@@ -39,9 +41,6 @@ Coming into contact with a square where a snake (ally or enemy) is located ends 
 
 <video controls src="snake3-2026-01-19_10.30.42.mov" title="SnakeGame-Variant3"></video>
 
-
-
-
 # Variation 4: Pac-Man
 
 The code contained in the `program.fl` file in this folder resembles the configuration of a single-player Pac-Man game, with a grid 29 squares long by 28 squares wide, walls, fruit, and enemies.  
@@ -51,10 +50,6 @@ Several enemies are present in the grid.
 Coming into contact with a square containing an enemy ends the game.
 
 <video controls src="snake3-2026-01-19_10.32.04.mov" title="SnakeGame-Variant4"></video>
-
-
-
-
 
 # Variation 5: Custom “Snake” game
 
@@ -67,13 +62,59 @@ Touching an edge ends the game.
 
 <video controls src="snake3-2026-01-19_10.34.28.mov" title="SnakeGame-Variant5"></video>
 
+
+
+
+
+
+
+
 # 3. How to run
 
+## To generate variations
+The commands to execute are as follows:
+- ```cd Fourchlang```
+- ```npm install```
+- ```npm run build```
+
+Then:
+- ```npm run generate -- [source] [destination] [config]```
+  
+or
+- ```npm run generate:auto -- --variant=2 --backend=ascii```
+
+backend= ascii or json or html depending on the desired output
+
+[EXEMPLE]
+
+```npm run generate -- examples/variant-2/program.fl examples/variant-2/output.txt ascii```
+
+## To generate a playable: 
+### Python
+At the root of the project, execute:
+- ```python3 "./FourchLang/src/backends/playable/python/play.py" "./FourchLang/examples/variant-1/json/output.json"```
+- ```python3 "./FourchLang/src/backends/playable/python/play.py" "./FourchLang/examples/variant-2/json/output.json"```
+- ```python3 "./FourchLang/src/backends/playable/python/play.py" "./FourchLang/examples/variant-3/json/output.json"```
+- ```python3 "./FourchLang/src/backends/playable/python/play.py" "./FourchLang/examples/variant-4/json/output.json"```
+- ```python3 "./FourchLang/src/backends/playable/python/play.py" "./FourchLang/examples/variant-5/json/output.json"```
+
+It displays a new window with the game, you can play with the arrows.
+### HTML
+- ```cd FourchLang```
+- ```npm run generate:playable:html:all```
+- ```npx http-server -p 8080```
+
+Then you can play if you open this [link](http://127.0.0.1:8080) (http://127.0.0.1:8080) and go to `examples>variant-1>playable>html`.
+It opens a browser tab with the game, you can play with the arrows, and you can try various algorithm moves by clicking on the corresponding button.
+
+<video controls src="snake1html-2026-01-19_11.40.57.mov" title="SnakeVariation1HTML"></video>
 # 4. Grammar and metamodel and class diagram
 
 # 5. AIs : strengths/weaknesses, known failure modes
 
 # 6. LLM protocol
+
+
 
 # 7. Mini-evaluation
 
