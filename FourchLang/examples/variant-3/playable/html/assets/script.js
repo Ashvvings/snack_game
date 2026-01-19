@@ -222,32 +222,42 @@ function render() {
 
   // ==============================
   // BORDURE VISUELLE (EXTÉRIEURE)
+  // - Blanc si bloquante
+  // - Rouge si mortelle ("border" dans gameOverOn)
   // ==============================
-  ctx.save();
-  ctx.strokeStyle = "white";
-  ctx.lineWidth = BORDER_PX;
+  const killBorder = (state?.config?.gameOverOn ?? []).includes("border");
 
-  ctx.beginPath();
+  ctx.save();
+  ctx.lineWidth = BORDER_PX;
 
   // haut / bas → wrapY === false
   if (!wrapY) {
+    ctx.strokeStyle = killBorder ? "red" : "white";
+    ctx.beginPath();
+
     ctx.moveTo(innerX, innerY);
     ctx.lineTo(innerX + innerW, innerY);
 
     ctx.moveTo(innerX, innerY + innerH);
     ctx.lineTo(innerX + innerW, innerY + innerH);
+
+    ctx.stroke();
   }
 
   // gauche / droite → wrapX === false
   if (!wrapX) {
+    ctx.strokeStyle = killBorder ? "red" : "white";
+    ctx.beginPath();
+
     ctx.moveTo(innerX, innerY);
     ctx.lineTo(innerX, innerY + innerH);
 
     ctx.moveTo(innerX + innerW, innerY);
     ctx.lineTo(innerX + innerW, innerY + innerH);
+
+    ctx.stroke();
   }
 
-  ctx.stroke();
   ctx.restore();
 
   updateHud();

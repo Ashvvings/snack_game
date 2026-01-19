@@ -58,6 +58,18 @@ function isOutOfBoundsRaw(raw: Pos, state: GameState): boolean {
   return outX || outY;
 }
 
+/**
+ * Border bloquante si :
+ * - raw sort de la grille
+ * - ET "border" n'est PAS une condition de game over
+ * (si "border" est gameOver, alors c'est un move fatal mais valide)
+ */
+function isBlockingBorderForPlayer(raw: Pos, state: GameState): boolean {
+  const out = isOutOfBoundsRaw(raw, state);
+  if (!out) return false;
+  return !state.config.gameOverOn.includes("border");
+}
+
 function growSnakeBy(actor: Snake, n: number) {
   const growth = Math.max(1, Number(n ?? 1));
   const tail = actor.body[actor.body.length - 1];
@@ -80,7 +92,7 @@ function isPacmanMode(state: GameState): boolean {
 }
 
 /* ============================================================
-   2. SCORE (inchangé)
+   2. SCORE
 ============================================================ */
 
 function ensureScores(state: GameState) {
@@ -111,14 +123,12 @@ function getScore(state: GameState, actorId: string): number {
 }
 
 /* ============================================================
-   3. RESPAWN FRUIT (inchangé)
+   3. RESPAWN FRUIT
 ============================================================ */
+
 function nowMs(state: GameState): number {
-  // Option A (recommandé si ton runtime peut fournir le temps) :
   const anyState = state as any;
   if (typeof anyState?.timeMs === "number") return anyState.timeMs;
-
-  // Option B (fallback) :
   return Date.now();
 }
 
@@ -141,50 +151,33 @@ function respawnFruitIfNeeded(state: GameState, ateFruit: boolean) {
 
   const tNow = nowMs(state);
 
-  // init: point de départ du timer
   if (typeof anyState.runtime.fruitRespawnLastMs !== "number") {
     anyState.runtime.fruitRespawnLastMs = tNow;
   }
 
-  let spawned = 0;
-
-  // 1) Respawn "when eaten"
+  // 1) when eaten
   if (ateFruit && onEaten) {
     respawnOneFruit(state);
-    spawned++;
-    // Option: ré-ancrer le timer après un spawn évènementiel (évite double spawn immédiat)
-    anyState.runtime.fruitRespawnLastMs = tNow;
+    anyState.runtime.fruitRespawnLastMs = tNow; // anti double-trigger immédiat
   }
 
-  // 2) Respawn périodique en vraies secondes
+  // 2) every N seconds (temps réel)
   if (hasTimer) {
     const intervalMs = everySeconds * 1000;
-
-    // combien d'intervalles complets ont passé depuis le dernier tick timer ?
     const elapsed = tNow - anyState.runtime.fruitRespawnLastMs;
 
     if (elapsed >= intervalMs) {
-      // si tu veux EXACTEMENT 1 fruit max par appel : remplace n par 1
       const n = Math.floor(elapsed / intervalMs);
-
-      // cap sécurité (évite de spawn 200 fruits après une pause)
       const maxPerCall = 5;
       const toSpawn = Math.min(n, maxPerCall);
 
-      // anti double-respawn : si on vient déjà de respawn via onEaten, on peut réduire de 1
-      // (selon ton intention). Ici: on ne retire rien car on a déjà reset lastMs au-dessus.
       for (let i = 0; i < toSpawn; i++) {
         respawnOneFruit(state);
-        spawned++;
       }
 
-      // avance l’horloge interne du timer
-      // (on garde le "reste" pour ne pas dériver)
       anyState.runtime.fruitRespawnLastMs += n * intervalMs;
     }
   }
-
-  // Rien d'autre à faire
 }
 
 function respawnOneFruit(state: GameState) {
@@ -210,20 +203,9 @@ function respawnOneFruit(state: GameState) {
 }
 
 /* ============================================================
-   4. COLLISIONS PLAYER/ENEMY (règles)
+   4. COLLISIONS PLAYER/ENEMY
 ============================================================ */
 
-/**
- * Règles voulues :
- * - Si la TÊTE du JOUEUR touche un ennemi (tête OU corps) => joueur meurt
- * - Si la TÊTE d'un ENNEMI touche le joueur :
- *    - si touche la TÊTE du joueur => joueur meurt
- *    - si touche le CORPS du joueur => ennemi meurt (il disparaît)
- *
- * NOTE IMPORTANT :
- * - Un ennemi ne doit JAMAIS mourir pour bord/mur/self/etc.
- *   La seule mort ennemi est enemy-head -> player-body (hors tête).
- */
 function resolvePlayerEnemyCollision(
   state: GameState,
   actor: Snake,
@@ -235,7 +217,7 @@ function resolvePlayerEnemyCollision(
   const playerHead = player.body[0];
   const playerBodyWithoutHead = player.body.slice(1);
 
-  // Joueur se déplace sur ennemi (tête OU corps) => joueur meurt
+  // Joueur sur ennemi => joueur meurt
   if (actor.isPlayerControlled) {
     for (const s of Object.values(state.snakes)) {
       if (s.isPlayerControlled) continue;
@@ -249,7 +231,7 @@ function resolvePlayerEnemyCollision(
     return { terminal: false, actorStillExists: true };
   }
 
-  // Ennemi se déplace sur tête joueur => joueur meurt
+  // Ennemi sur tête joueur => joueur meurt
   if (positionsEqual(newHead, playerHead)) {
     player.alive = false;
     state.isTerminal = true;
@@ -257,7 +239,7 @@ function resolvePlayerEnemyCollision(
     return { terminal: true, actorStillExists: !!state.snakes[actor.id] };
   }
 
-  // Ennemi se déplace sur corps joueur (hors tête) => ennemi meurt (seule mort possible)
+  // Ennemi sur corps joueur (hors tête) => ennemi meurt
   if (playerBodyWithoutHead.some((p) => positionsEqual(p, newHead))) {
     delete state.snakes[actor.id];
     return { terminal: false, actorStillExists: false };
@@ -267,7 +249,7 @@ function resolvePlayerEnemyCollision(
 }
 
 /* ============================================================
-   5. COLLISIONS ENEMY/ENEMY (interdit)
+   5. COLLISIONS ENEMY/ENEMY
 ============================================================ */
 
 function isOccupiedByEnemyBody(state: GameState, pos: Pos, exceptId?: string): boolean {
@@ -280,9 +262,7 @@ function isOccupiedByEnemyBody(state: GameState, pos: Pos, exceptId?: string): b
 }
 
 /* ============================================================
-   6. IA ENNEMI (chasse le joueur)
-   - Les directions illégales NE doivent JAMAIS être choisies.
-   - "Bloqué" = aucune direction légale.
+   6. IA ENNEMI
 ============================================================ */
 
 function wrappedDelta(a: number, b: number, size: number, wrap: boolean): number {
@@ -312,12 +292,6 @@ function wouldPlayerEatFruit(state: GameState, nextHead: Pos): boolean {
   return state.fruits?.some((f) => positionsEqual(f, nextHead)) ?? false;
 }
 
-/**
- * Directions légales pour un ennemi.
- * IMPORTANT:
- * - interdit: mur, border non traversable, collision sur autre ennemi, self-collision,
- *   et en classic: tête sur corps joueur (hors tête) (suicide).
- */
 function getEnemyLegalDirections(state: GameState, enemy: Snake): Direction[] {
   const dirs: Direction[] = ["up", "down", "left", "right"];
   const pacman = isPacmanMode(state);
@@ -328,19 +302,19 @@ function getEnemyLegalDirections(state: GameState, enemy: Snake): Direction[] {
     const { raw, wrapped } = computeNextHead(enemy.body[0], dir, state);
     const next = wrapped;
 
-    // border non traversable
+    // border non traversable => interdit
     if (isOutOfBoundsRaw(raw, state)) continue;
 
-    // mur
+    // mur => interdit
     if (isWall(next, state)) continue;
 
-    // pas traverser un autre ennemi
+    // autre ennemi => interdit
     if (isOccupiedByEnemyBody(state, next, enemy.id)) continue;
 
-    // classic: pas de suicide sur corps joueur
+    // classic => interdit de suicider sa tête sur le corps du joueur
     if (!pacman && isPosInPlayerBodyExcludingHead(state, next)) continue;
 
-    // self collision ennemi: interdite
+    // self collision ennemi => interdit
     const hypothetical: Snake = { ...enemy, body: [next, ...enemy.body] };
     hypothetical.body.pop();
     if (snakeSelfCollision(hypothetical)) continue;
@@ -360,7 +334,7 @@ function pickEnemyDirection(state: GameState, enemy: Snake): Direction | null {
   const pacman = isPacmanMode(state);
 
   const legalDirs = getEnemyLegalDirections(state, enemy);
-  if (legalDirs.length === 0) return null; // seul vrai cas "bloqué"
+  if (legalDirs.length === 0) return null;
 
   const dirsAll: Direction[] = ["up", "down", "left", "right"];
 
@@ -376,30 +350,21 @@ function pickEnemyDirection(state: GameState, enemy: Snake): Direction | null {
 
     let score = 0;
 
-    // kill immédiat: head-to-head
     if (positionsEqual(nextE, headP)) score += 1_000_000;
 
-    // minimax léger: réduire les moves sûrs du joueur
     let safeMovesForPlayer = 0;
-
     for (const pDir of dirsAll) {
       const { raw: pRaw, wrapped: pWrapped } = computeNextHead(headP, pDir, state);
       const nextP = pWrapped;
 
-      // joueur: border mortel
       if (conf.gameOverOn.includes("border") && isOutOfBoundsRaw(pRaw, state)) continue;
-
-      // joueur: mur (mortel ou bloquant) => pas safe
       if (isWall(nextP, state)) continue;
 
-      // joueur sur tête ennemie => head-to-head => joueur meurt
       if (positionsEqual(nextP, nextE)) continue;
 
-      // joueur sur corps ennemi après move (approx)
       const enemyBodyAfter = [nextE, ...enemy.body].slice(0, enemy.body.length);
       if (enemyBodyAfter.some((seg) => positionsEqual(seg, nextP))) continue;
 
-      // self collision joueur avec anticipation croissance (classic)
       const playerWillEat = (!pacman && wouldPlayerEatFruit(state, nextP));
       const playerBodyBase = [nextP, ...player.body];
       const playerBodyAfter = playerWillEat ? playerBodyBase : playerBodyBase.slice(0, player.body.length);
@@ -411,11 +376,8 @@ function pickEnemyDirection(state: GameState, enemy: Snake): Direction | null {
     }
 
     score += (4 - safeMovesForPlayer) * 10_000;
-
-    // agressivité légère
     score += -distToPlayerHead(state, nextE) * 50;
 
-    // bonus pression adjacency (simple)
     if (Math.abs(nextE.x - headP.x) + Math.abs(nextE.y - headP.y) === 1) score += 2_000;
 
     if (score > bestScore) {
@@ -428,9 +390,7 @@ function pickEnemyDirection(state: GameState, enemy: Snake): Direction | null {
 }
 
 /* ============================================================
-   7. STEP UN SERPENT (joueur ou ennemi)
-   - Ennemi: on ASSUME que dir est légale (sinon pickEnemyDirection retourne null).
-   - Ennemi ne meurt pas sur border/wall/self/etc (seulement collision tête->corps joueur).
+   7. STEP UN SERPENT
 ============================================================ */
 
 function stepSnake(state: GameState, actorId: string, dir: Direction): void {
@@ -445,13 +405,17 @@ function stepSnake(state: GameState, actorId: string, dir: Direction): void {
   const { raw, wrapped } = computeNextHead(headBefore, dir, state);
   const newHead = wrapped;
 
-  // --- VALIDATION UNIQUEMENT POUR LE JOUEUR ---
-  // L'ennemi ne doit jamais recevoir une direction illégale (filtrée avant).
+  // Validation joueur:
+  // - border: si gameOver => mort, sinon BLOQUANT (donc on ne bouge pas)
+  // - wall: si gameOver => mort, sinon BLOQUANT
+  // Ennemi: ses directions illégales ne doivent jamais arriver ici (filtrées dans getEnemyLegalDirections)
   if (!isEnemy) {
-    if (conf.gameOverOn.includes("border") && isOutOfBoundsRaw(raw, state)) {
-      actor.alive = false;
-      state.isTerminal = true;
-      state.reason = "border";
+    if (isOutOfBoundsRaw(raw, state)) {
+      if (conf.gameOverOn.includes("border")) {
+        actor.alive = false;
+        state.isTerminal = true;
+        state.reason = "border";
+      }
       respawnFruitIfNeeded(state, false);
       return;
     }
@@ -461,21 +425,16 @@ function stepSnake(state: GameState, actorId: string, dir: Direction): void {
         actor.alive = false;
         state.isTerminal = true;
         state.reason = "wall";
-        respawnFruitIfNeeded(state, false);
-        return;
       }
-
-      // mur bloquant pour joueur => pas de move (selon tes règles globales)
-      // ici on considère que ton runtime ne donnera pas ce move au joueur si tu ne veux pas
       respawnFruitIfNeeded(state, false);
       return;
     }
   }
 
-  // --- Avance la tête ---
+  // Avance
   actor.body = [newHead, ...actor.body];
 
-  // --- Fruits ---
+  // Fruits
   let ateFruit = false;
   const fruitIdx = state.fruits.findIndex((f) => positionsEqual(f, newHead));
 
@@ -489,18 +448,15 @@ function stepSnake(state: GameState, actorId: string, dir: Direction): void {
     if (!pacman) {
       growSnakeBy(actor, growth);
     } else {
-      // pacman : longueur constante même quand on mange
       actor.body.pop();
     }
   } else {
-    // déplacement normal (joueur ou ennemi)
     actor.body.pop();
   }
 
   respawnFruitIfNeeded(state, ateFruit);
 
-  // --- Self collision ---
-  // Joueur seulement (ennemi: self collision interdite en amont dans getEnemyLegalDirections)
+  // Self collision: joueur seulement
   if (actor.isPlayerControlled && conf.gameOverOn.includes("self") && snakeSelfCollision(actor)) {
     actor.alive = false;
     state.isTerminal = true;
@@ -508,7 +464,7 @@ function stepSnake(state: GameState, actorId: string, dir: Direction): void {
     return;
   }
 
-  // --- Collisions player/enemy ---
+  // Player/enemy collisions
   if (conf.gameOverOn.includes("enemy") || conf.gameOverOn.includes("snake_body")) {
     const res = resolvePlayerEnemyCollision(state, actor, newHead);
     if (res.terminal) return;
@@ -523,17 +479,35 @@ export const snakeContract: GameContract = {
   getLegalMoves(state) {
     if (state.isTerminal) return [];
 
-    // On ne propose des coups QUE pour le joueur
     const player = Object.values(state.snakes).find((s) => s.isPlayerControlled && s.alive);
     if (!player) return [];
 
     const directions: Direction[] = ["up", "down", "left", "right"];
-    return directions.map((dir) => ({
-      id: `${state.turn}-${player.id}-${dir}`,
-      label: dir.toUpperCase(),
-      actorId: player.id,
-      direction: dir,
-    }));
+
+    // IMPORTANT:
+    // On ne propose PAS les moves impossibles:
+    // - mur bloquant (wall pas gameOver)
+    // - border bloquante (border pas gameOver + non traversable)
+    return directions
+      .filter((dir) => {
+        const { raw, wrapped } = computeNextHead(player.body[0], dir, state);
+
+        // border bloquante si pas gameOver
+        if (isBlockingBorderForPlayer(raw, state)) return false;
+
+        // mur bloquant si pas gameOver
+        const wall = isWall(wrapped, state);
+        if (wall && !state.config.gameOverOn.includes("wall")) return false;
+
+        // sinon ok (y compris move fatal, ex: border gameOver ou wall gameOver)
+        return true;
+      })
+      .map((dir) => ({
+        id: `${state.turn}-${player.id}-${dir}`,
+        label: dir.toUpperCase(),
+        actorId: player.id,
+        direction: dir,
+      }));
   },
 
   applyMove(state, move) {
@@ -542,19 +516,24 @@ export const snakeContract: GameContract = {
 
     ensureScores(newState);
 
-    // 1) Coup joueur
     const player = Object.values(newState.snakes).find((s) => s.isPlayerControlled && s.alive);
     if (!player) return newState;
 
-    // sécurité : on ignore un move qui ne vient pas du joueur
     if (move.actorId !== player.id) return newState;
 
-    stepSnake(newState, player.id, move.direction);
+    // sécurité: si jamais le runtime envoie quand même un move impossible (border/wall bloquants),
+    // on l'ignore (pas de déplacement). (Le joueur doit bouger, mais ici c'est garde-fou.)
+    {
+      const { raw, wrapped } = computeNextHead(player.body[0], move.direction, newState);
+      if (isBlockingBorderForPlayer(raw, newState)) return newState;
+      if (isWall(wrapped, newState) && !newState.config.gameOverOn.includes("wall")) return newState;
+    }
 
-    // si joueur mort => stop
+    // 1) Joueur
+    stepSnake(newState, player.id, move.direction);
     if (newState.isTerminal) return newState;
 
-    // 2) Coup(s) ennemis (un pas chacun)
+    // 2) Ennemis
     const enemyIds = Object.values(newState.snakes)
       .filter((s) => !s.isPlayerControlled && s.alive)
       .map((s) => s.id);
@@ -565,15 +544,11 @@ export const snakeContract: GameContract = {
       if (!enemy) continue;
 
       const dir = pickEnemyDirection(newState, enemy);
-      if (!dir) {
-        // SEUL cas de blocage réel: aucune direction légale
-        continue;
-      }
+      if (!dir) continue;
 
       stepSnake(newState, eid, dir);
     }
 
-    // 3) Tour suivant
     newState.turn++;
     return newState;
   },
@@ -590,7 +565,6 @@ export const snakeContract: GameContract = {
   evaluate(state, forActorId) {
     const s = state.snakes[forActorId];
     if (!s) return -1e9;
-
     if (state.isTerminal || !s.alive) return -1e6;
 
     function distToNearestFruit(head: Pos): number {
@@ -613,14 +587,12 @@ export const snakeContract: GameContract = {
     const pacman = isPacmanMode(state);
     const isEnemy = !s.isPlayerControlled;
 
-    // ENNEMIS : chassent le joueur
     if (isEnemy) {
       const dPlayer = distToPlayerHead(state, head);
       const W_CHASE = 50;
       return -dPlayer * W_CHASE;
     }
 
-    // JOUEUR : fruits/score/longueur
     const distFruit = distToNearestFruit(head);
     const myScore = getScore(state, forActorId);
 
