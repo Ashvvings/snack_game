@@ -3,7 +3,7 @@
         "x": 29,
         "y": 28
     },
-    "game-mode": "undefined",
+    "game-mode": "pacman",
     "border-rules": [
         {
             "horizontally": true
@@ -5080,9 +5080,6 @@
     "game-over-conditions": [
         {
             "target": "enemy"
-        },
-        {
-            "target": "wall"
         },
         {
             "target": "border"

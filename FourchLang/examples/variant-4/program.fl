@@ -10,8 +10,9 @@ enemy inky at (13, 14) moves
 enemy clyde at (13, 15) moves
 
 game over when hitting enemy
-game over when hitting wall
 game over when hitting border
+
+game mode pacman
 
 wall at (1, 2)
 wall at (1, 3)
