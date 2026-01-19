@@ -203,10 +203,12 @@ From this previous prompt, we obtain from the queried LLM an answer containing a
 The script operating the game then interprets this return as either a move or another command (resigning and errors triggering end of game).
 The LLM return also contains a "explain" field containing an explanation of why it chosed to make the correspondant move. This field is retrieved and put in the JSON file mentionned previously in this section.  
   
-The overall behavior of the LLM is off-putting. It give us explanations for its selected moves that feel sensible, like "Moving up to avoid enemies and collect nearby fruits while maintaining distance from borders.", but also moves erraticaly, never truly going toward any fruit, and most of the time going head-straight towards a wall.  
-This can be explained by the fact that LLM are very good at generating text, but really bad at logic and computation. Playing a game not being trivial only by generating text, they "understand" the concept of a snake game, yet lack the real understanding required to actually select a sensible move to correctly play.  
+The overall behavior of the Mistral's model is off-putting. It give us explanations for its selected moves that feel sensible, like "Moving up to avoid enemies and collect nearby fruits while maintaining distance from borders.", but also moves erraticaly, never truly going toward any fruit, and most of the time going head-straight towards a wall.  
+<!-- insert video -->
+On the other hand, Claude 4.5 model scores easily some point in our games, showing the ability to moves toward the fruit and to successfuly eat it.
+<!-- insert video -->
   
-We could tweak our prompt endlessly, but if we do not ask a model specificaly trained to play snake, we will surely end up with non-sensical-sensical answers from the called LLM anyways. 
+We could tweak our prompt endlessly, but if we do not ask a model specificaly trained to play snake, or a very large one, we will surely end up with answers to weird to be played from the called LLM anyways. 
   
 <!-- TODO ? - Description supplémentaire ? -->
 

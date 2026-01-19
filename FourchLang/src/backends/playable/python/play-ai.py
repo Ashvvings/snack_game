@@ -132,7 +132,7 @@ class Jeu :
         "1" : "1 fruit is worth 1 point, makes you grow by 1 point, and reappears when eaten. The game ends if the snake bites itself. You can cross the edges.",
         "2" : "1 fruit is worth 1 point, and a new one appears randomly every 2 seconds. Contact with the edges ends the game.",
         "3" : "1 fruit is worth 1 point, increases your score by 1, and reappears when eaten. A snake enemy is on the grid. The game ends if the snake bites itself or comes into contact with the enemy or the enemy's body.",
-        "4" : "The edges can only be crossed horizontally. There are 4 enemies on the map. The game ends if the snake comes into contact with any part of the enemy.",
+        "4" : "This variant is like Pac-Man. The edges can only be crossed horizontally. Walls cannot be crossed. There are 4 enemies on the map. The game ends if the snake comes into contact with any part of the enemy.",
         "5" : ""
     }
     
@@ -616,45 +616,45 @@ class Jeu :
 
     def game_to_grid_string(self) -> str:
         grid_lines = []
-        width = self.grid.y + 2
-        height = self.grid.x + 2
+        height = self.grid.y + 2
+        width = self.grid.x + 2
         
         # Initialiser la grille avec des espaces vides
-        grid = [['. ' for _ in range(width)] for _ in range(height)]
+        grid = [['. ' for _ in range(height)] for _ in range(width)]
         
         # Placer les murs (bordures)
         for x in range(width):
-            grid[0][x] = '# '
-            grid[height - 1][x] = '# '
+            grid[x][0] = '# '
+            grid[x][height - 1] = '# '
         for y in range(height):
-            grid[y][0] = '# '
-            grid[y][width - 1] = '#'
+            grid[0][y] = '# '
+            grid[width - 1][y] = '# '
         
         # Placer le joueur (serpent)
-        px, py = game.player.position
+        py, px = game.player.position
         grid[px + 1][py + 1] = 'O '
         
         # Placer le corps du serpent
         for body in game.snakeBodies:
-            bx, by = body.position
+            by, bx = body.position
             grid[bx + 1][by + 1] = 'S '
         
         # Placer les fruits
         for fruit in game.fruits:
-            fx, fy = fruit.position
+            fy, fx = fruit.position
             grid[fx + 1][fy + 1] = 'F '
         
         # Placer les ennemis
         for enemy in game.enemies:
-            ex, ey = enemy.position
+            ey, ex = enemy.position
             grid[ex + 1][ey + 1] = 'M '
         for body in game.enemyBodies:
-            ebx, eby = body.position
+            eby, ebx = body.position
             grid[ebx + 1][eby + 1] = 'X '
 
         # Placer les murs internes
         for wall in game.walls:
-            wx, wy = wall.position
+            wy, wx = wall.position
             grid[wx + 1][wy + 1] = '# '
         
         # Convertir la grille en chaîne de caractères
@@ -708,12 +708,12 @@ GRID_TXT_END\n\
 # LEGAL_MOVES\n\
 All directions except the one that is the exact opposite of the current snake direction.\n\
 Concrete list of allowed moves for THIS state:\n\
-[\"UP\",\"RIGHT\",\"DOWN\",\"LEFT\"]\n\
+{self.get_legal_moves()}\n\
 \n\
 # OUTPUT SCHEMA (strict)\n\
 {{\"move\":\"UP\",\"explain\":\"optional, single sentence\"}} or {{\"pass\":true}} or {{\"resign\":true}}\
 "
-# {self.get_legal_moves()}\n\
+#  [\"UP\",\"RIGHT\",\"DOWN\",\"LEFT\"]\n\
         return prompt
 
     def ninety_degrees_fix(self, direction: str) -> str:
@@ -743,7 +743,6 @@ Concrete list of allowed moves for THIS state:\n\
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-            print(self.grid)
             print(self.game_to_grid_string())
             # Appeler l'IA externe
             if ai_type == "snake-ai":
@@ -758,10 +757,11 @@ Concrete list of allowed moves for THIS state:\n\
                 prompt = self.json_prompt()
                 # with open("./prompt.txt", "w") as f:
                 #     f.write(prompt)
+                # return
                 # print(f"Legal moves : {self.get_legal_moves()}")
                 ret = LLMAIPlayerRun(prompt, max_tokens=200)
-                # next_move = getLLMMove(ret)
-                next_move = self.ninety_degrees_fix(getLLMMove(ret))
+                next_move = getLLMMove(ret)
+                # next_move = self.ninety_degrees_fix(getLLMMove(ret))
                 print(f"Move given by LLM: {ret}")
                 self.moves_explanations.append(getLLMExplanation(ret))
                 # print(f"rotated move: {next_move}")

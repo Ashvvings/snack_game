@@ -29,7 +29,7 @@ def get_neighbors(pos, width, height, v, h):
     x, y = pos
     neighbors = []
     # Haut, Bas, Gauche, Droite
-    for dx, dy, direction in [(0, -1, 'UP'), (0, 1, 'DOWN'), 
+    for dy, dx, direction in [(0, -1, 'UP'), (0, 1, 'DOWN'), 
                                (-1, 0, 'LEFT'), (1, 0, 'RIGHT')]:
         nx, ny = x + dx, y + dy
         if 0 <= nx < width and 0 <= ny < height:
