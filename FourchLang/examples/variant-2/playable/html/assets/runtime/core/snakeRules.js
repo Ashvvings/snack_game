@@ -93,24 +93,65 @@ function getScore(state, actorId) {
 /* ============================================================
    3. RESPAWN FRUIT (inchangé)
 ============================================================ */
+function nowMs(state) {
+    // Option A (recommandé si ton runtime peut fournir le temps) :
+    const anyState = state;
+    if (typeof anyState?.timeMs === "number")
+        return anyState.timeMs;
+    // Option B (fallback) :
+    return Date.now();
+}
+function ensureRuntime(state) {
+    const anyState = state;
+    if (!anyState.runtime || typeof anyState.runtime !== "object")
+        anyState.runtime = {};
+}
 function respawnFruitIfNeeded(state, ateFruit) {
     const rules = state.config.fruitRespawn;
     if (!rules?.enabled)
         return;
-    const everySeconds = rules.everySeconds ?? rules.frequencySeconds ?? null;
-    const freq = Number(everySeconds);
-    let shouldRespawn = false;
-    if (ateFruit && !!rules.onEaten) {
-        shouldRespawn = true;
+    ensureRuntime(state);
+    const anyState = state;
+    const onEaten = !!rules.onEaten;
+    const everySecondsRaw = rules.everySeconds ?? rules.frequencySeconds ?? null;
+    const everySeconds = Number(everySecondsRaw);
+    const hasTimer = Number.isFinite(everySeconds) && everySeconds > 0;
+    const tNow = nowMs(state);
+    // init: point de départ du timer
+    if (typeof anyState.runtime.fruitRespawnLastMs !== "number") {
+        anyState.runtime.fruitRespawnLastMs = tNow;
     }
-    if (Number.isFinite(freq) && freq > 0) {
-        if (state.turn > 0 && state.turn % freq === 0) {
-            shouldRespawn = true;
+    let spawned = 0;
+    // 1) Respawn "when eaten"
+    if (ateFruit && onEaten) {
+        respawnOneFruit(state);
+        spawned++;
+        // Option: ré-ancrer le timer après un spawn évènementiel (évite double spawn immédiat)
+        anyState.runtime.fruitRespawnLastMs = tNow;
+    }
+    // 2) Respawn périodique en vraies secondes
+    if (hasTimer) {
+        const intervalMs = everySeconds * 1000;
+        // combien d'intervalles complets ont passé depuis le dernier tick timer ?
+        const elapsed = tNow - anyState.runtime.fruitRespawnLastMs;
+        if (elapsed >= intervalMs) {
+            // si tu veux EXACTEMENT 1 fruit max par appel : remplace n par 1
+            const n = Math.floor(elapsed / intervalMs);
+            // cap sécurité (évite de spawn 200 fruits après une pause)
+            const maxPerCall = 5;
+            const toSpawn = Math.min(n, maxPerCall);
+            // anti double-respawn : si on vient déjà de respawn via onEaten, on peut réduire de 1
+            // (selon ton intention). Ici: on ne retire rien car on a déjà reset lastMs au-dessus.
+            for (let i = 0; i < toSpawn; i++) {
+                respawnOneFruit(state);
+                spawned++;
+            }
+            // avance l’horloge interne du timer
+            // (on garde le "reste" pour ne pas dériver)
+            anyState.runtime.fruitRespawnLastMs += n * intervalMs;
         }
     }
-    if (shouldRespawn) {
-        respawnOneFruit(state);
-    }
+    // Rien d'autre à faire
 }
 function respawnOneFruit(state) {
     const freeTiles = [];
