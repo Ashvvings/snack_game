@@ -205,12 +205,13 @@ The LLM return also contains a "explain" field containing an explanation of why 
   
 The overall behavior of the Mistral's model is off-putting. It give us explanations for its selected moves that feel sensible, like "Moving up to avoid enemies and collect nearby fruits while maintaining distance from borders.", but also moves erraticaly, never truly going toward any fruit, and most of the time going head-straight towards a wall.  
 <!-- insert video -->
-On the other hand, Claude 4.5 model scores easily some point in our games, showing the ability to moves toward the fruit and to successfuly eat it.
+On the other hand, Claude 4.5 model scores easily some point in our games, showing the ability to moves toward fruits and to successfuly eat them.
 <!-- insert video -->
+Although it also shows some weakness of its own, such as in the variant 4, which is sort of a "Pac-Man" game, where it suddely stops conforming to the asked response format when to close to the 4 ennemies in the game.
+<!-- insérer image ? -->
   
-We could tweak our prompt endlessly, but if we do not ask a model specificaly trained to play snake, or a very large one, we will surely end up with answers to weird to be played from the called LLM anyways. 
-  
-<!-- TODO ? - Description supplémentaire ? -->
+After some testing on several different models, we came to the conclusion that if we do not ask a model specificaly trained to play snake, or a very large one, we will surely end up with answers too weird to be played with. 
+
 
 # 7. Mini-evaluation <!-- Optional -->
 <!-- TODO -->
