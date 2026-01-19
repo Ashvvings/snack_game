@@ -226,19 +226,19 @@ def valider_grille(grille_str):
     
     return True
 
-def run():
-    param_grid = ""
-    grid = ""
-    with open("./grid.txt", 'r') as fichier:
-        param_grid = fichier.read()
-        if valider_grille(param_grid):
-            grid = param_grid
+def run(grid = ""):
+    # param_grid = ""
+    # with open("./grid.txt", 'r') as fichier:
+    #     param_grid = fichier.read()
+    #     if valider_grille(param_grid):
+    #         grid = param_grid
     
     next_move = get_next_move(grid)
     print(f"Direction sélectionnée : {next_move}")
     
-    with open("./AI_response.txt", "w") as f:
-        f.write(next_move + "\n")
+    # with open("./AI_response.txt", "w") as f:
+    #     f.write(next_move + "\n")
+    return next_move
 
 # Exemple d'utilisation
 if __name__ == "__main__":

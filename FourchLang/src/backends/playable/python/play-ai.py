@@ -118,6 +118,13 @@ class Jeu :
     fruit_timers = []
     variant = None
     
+    variant_context = {
+        "1" : "1 fruit qui vaut 1, fait grandir de 1 et réapparaît quand il est mangé. Fin de jeu si serpent se mord. On peut traverser les bords.",
+        "2" : "1 fruit qui vaut 1 et un nouveau apparaît  aléatoirement toutes les 2 secondes. Le contact avec les bords provoquent la fin du jeu.",
+        "3" : "1 fruit qui vaut 1, fait grandir de 1 et réapparaît quand il est mangé. un ennemi serpent est sur la grille. Fin de jeu si serpent se mord ou entre en contact avec l'ennemi ou l'ennemi body.",
+        "4" : "les bords sont traversables seulement horizontalement. il y a 4 ennemis sur la carte. Fin de jeu si serpent entre en contact avec n'importe quelle partie de l'ennemi",
+        "5" : ""
+    }
     
     def JSONtoPython(self, file_path : str):
         with open(file_path, "r") as f:
@@ -125,6 +132,7 @@ class Jeu :
         
         variant = re.findall(r'\d+', file_path)[0]
         print(variant)
+        self.variant = variant
 
         match game["game-mode"]:
             case "snake":
@@ -587,15 +595,60 @@ class Jeu :
         
         return '\n'.join(grid_lines)
     
+    def get_legal_moves(self):
+        legal_moves = ["UP", "DOWN", "LEFT", "RIGHT"]
+        if self.direction == Direction.HAUT:
+            legal_moves.remove("DOWN")
+        elif self.direction == Direction.BAS:
+            legal_moves.remove("UP")
+        elif self.direction == Direction.GAUCHE:
+            legal_moves.remove("RIGHT")
+        elif self.direction == Direction.DROITE:
+            legal_moves.remove("LEFT")
+        return legal_moves
+
+    def get_game_over_conditions(self):
+        conditions = []
+        for goc in self.game_over_conditions:
+            for target in goc.type:
+                conditions.append("hitting "+target)
+        return conditions
+
+    def json_prompt(self):
+        prompt = f"# RULES\n\
+- Game: reforged Snake, objective is to survive and grow the longest possible.\n\
+- Variant context: {self.variant_context[self.variant]}\n\
+- Symbols:\n\
+\t- '#' = wall / border\n\
+\t- 'F' = fruit\n\
+\t- '0' = player-controlled snake head\n\
+\t- 'S' = player snake body\n\
+\t- 'M' = enemy head\n\
+\t- 'X' = enemy body\n\
+\t- '.' = empty cells\n\
+- Move constraints: move must be one of [\"UP\", \"DOWN\", \"RIGHT\", \"LEFT\"].\n\
+- End conditions: {self.get_game_over_conditions()}\n\
+\n\
+# STATE\n\
+The current grid is given as ASCII text between GRID_TXT_BEGIN and GRID_TXT_END.\n\
+GRID_TXT_BEGIN\n\
+{self.game_to_grid_string()}\n\
+GRID_TXT_END\n\
+\n\
+# LEGAL_MOVES\n\
+All directions except the one that is the exact opposite of the current snake direction.\n\
+Concrete list of allowed moves for THIS state:\n\
+{self.get_legal_moves()}\n\
+\n\
+# OUTPUT SCHEMA (strict)\n\
+{{\"move\":\"UP\",\"explain\":\"optional, single sentence\"}} or {{\"pass\":true}} or {{\"resign\":true}}\
+"
+        return prompt
+
     # Lancement de la boucle de jeu
     def go(self, ai_type : str, grid_path : str, next_move_path : str):
-        next_move = ""
-        to_call = ""
-        if ai_type == "snake-ai":
-            to_call = "./Snake-AI-player.py"
-        elif ai_type == "llm":
-            to_call = "./FourchLang/src/llm/runner/openrouter.ts"
-        else :
+        next_move = None
+        if ai_type != "llm" and ai_type != "snake-ai":
             print("Type d'IA non reconnu.")
             return
         running = True
@@ -605,14 +658,19 @@ class Jeu :
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-            with open(grid_path, "w") as f:
-                f.write(self.game_to_grid_string())
+            with open(next_move_path, "w") as f:
+                f.write("")
             # Appeler l'IA externe
             if ai_type == "snake-ai":
-                SnakeAIPlayerRun()
+                # with open(grid_path, "w") as f:
+                #     f.write(self.game_to_grid_string())
+                next_move = SnakeAIPlayerRun(self.game_to_grid_string())
             elif ai_type == "llm":
-                pass
-            time.sleep(0.5)
+                prompt = self.json_prompt()
+                with open("llm_prompt.txt", "w") as f:
+                    f.write(prompt)
+                
+            time.sleep(0.5) # Modulable selon la vitesse voulue
             # Lire le prochain mouvement
             while not next_move:
                 try:
@@ -620,8 +678,6 @@ class Jeu :
                         next_move = f.read().strip()
                 except FileNotFoundError:
                     pass
-            with open(next_move_path, "w") as f:
-                f.write("")
             # Mettre à jour le jeu avec le mouvement
             self.take_direction(next_move)
             self.player_forward()
@@ -629,7 +685,7 @@ class Jeu :
                 running = False
             self.fruit_eat()
             self.reappear_fruit()
-            next_move = ""
+            next_move = None
 
 if __name__ == "__main__":
     path = sys.argv[1] if len(sys.argv) > 1 else None
