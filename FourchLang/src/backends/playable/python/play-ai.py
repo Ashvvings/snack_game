@@ -206,6 +206,18 @@ class Jeu :
                 snakeBody["position"]["y"],
                 snakeBody["follows"]
             ))
+            if snakeBody["follows"] == game["player"]["id"] :
+                tempx = self.player.position[1] - snakeBody["position"]["x"]
+                tempy = self.player.position[0] - snakeBody["position"]["y"]
+                if tempx > 0 :
+                    self.direction = Direction.BAS
+                elif tempx < 0 :
+                    self.direction = Direction.HAUT
+                elif tempy > 0 :
+                    self.direction = Direction.DROITE
+                elif tempy < 0 :
+                    self.direction = Direction.GAUCHE
+
         
         # Initialiser le compteur avec le nombre total de segments de corps
         self.body_counter = len(self.snakeBodies)
@@ -672,8 +684,9 @@ class Jeu :
 
     def json_prompt(self):
         prompt = f"# RULES\n\
-- Game: reforged Snake, objective is to survive and eat as much fruits as possible.\n\
+- Game: reforged Snake, objective is to EAT AS MUCH FRUITS AS POSSIBLE and to survive.\n\
 - Variant context: {self.variant_context[self.variant]}\n\
+- The y coordinate corresponds to the line of the grid, the x coordinate corresponds to the column of the grid.\n\
 - Symbols:\n\
 \t- '#' = wall / border\n\
 \t- 'F' = fruit\n\
@@ -683,6 +696,7 @@ class Jeu :
 \t- 'X' = enemy body\n\
 \t- '.' = empty cells\n\
 - Move constraints: move must be one of [\"UP\", \"DOWN\", \"RIGHT\", \"LEFT\"].\n\
+- \"UP\" = (y, x-1), \"DOWN\" = (y, x+1), \"RIGHT\" = (y+1, x), \"LEFT\" = (y-1, x)\n\
 - End conditions: {self.get_game_over_conditions()}\n\
 \n\
 # STATE\n\
@@ -694,23 +708,24 @@ GRID_TXT_END\n\
 # LEGAL_MOVES\n\
 All directions except the one that is the exact opposite of the current snake direction.\n\
 Concrete list of allowed moves for THIS state:\n\
-{self.get_legal_moves()}\n\
+[\"UP\",\"RIGHT\",\"DOWN\",\"LEFT\"]\n\
 \n\
 # OUTPUT SCHEMA (strict)\n\
 {{\"move\":\"UP\",\"explain\":\"optional, single sentence\"}} or {{\"pass\":true}} or {{\"resign\":true}}\
 "
+# {self.get_legal_moves()}\n\
         return prompt
 
     def ninety_degrees_fix(self, direction: str) -> str:
         match direction:
             case "UP":
-                return "RIGHT"
-            case "RIGHT":
-                return "DOWN"
-            case "DOWN":
                 return "LEFT"
             case "LEFT":
                 return "UP"
+            case "DOWN":
+                return "RIGHT"
+            case "RIGHT":
+                return "DOWN"
         return direction
 
     # Lancement de la boucle de jeu
@@ -728,6 +743,8 @@ Concrete list of allowed moves for THIS state:\n\
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+            print(self.grid)
+            print(self.game_to_grid_string())
             # Appeler l'IA externe
             if ai_type == "snake-ai":
                 # Appel de l'IA SnakeAIPlayer (A*)
@@ -741,11 +758,13 @@ Concrete list of allowed moves for THIS state:\n\
                 prompt = self.json_prompt()
                 # with open("./prompt.txt", "w") as f:
                 #     f.write(prompt)
+                # print(f"Legal moves : {self.get_legal_moves()}")
                 ret = LLMAIPlayerRun(prompt, max_tokens=200)
+                # next_move = getLLMMove(ret)
                 next_move = self.ninety_degrees_fix(getLLMMove(ret))
                 print(f"Move given by LLM: {ret}")
                 self.moves_explanations.append(getLLMExplanation(ret))
-                print(f"rotated move: {next_move}")
+                # print(f"rotated move: {next_move}")
                 if next_move == "pass":
                     next_move = last_move
                 elif next_move == "resign":

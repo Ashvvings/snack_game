@@ -5,7 +5,7 @@ import requests
 def call_llm_openrouter(
     prompt: str,
     *,
-    model: str = "mistralai/devstral-2512:free",
+    model: str = "anthropic/claude-opus-4.5",
     temperature: float = 0.2,
     max_tokens: int = 128,
     seed: int = 42,
@@ -120,43 +120,43 @@ if __name__ == "__main__":
 
     prompt = """
     # RULES
-    - Game: reforged Snake, objective is to survive and grow the longest possible.
-    - Variant context: 1 fruit qui vaut 1 et un nouveau apparaît  aléatoirement toutes les 2 secondes. Le contact avec les bords provoquent la fin du jeu.
-    - Symbols:
-        - '#' = wall / border
-        - 'F' = fruit
-        - '0' = player-controlled snake head
-        - 'S' = player snake body
-        - 'M' = enemy head
-        - 'X' = enemy body
-        - '.' = empty cells
-    - Move constraints: move must be one of ["UP", "DOWN", "RIGHT", "LEFT"].
-    - End conditions: ['hitting border']
+- Game: reforged Snake, objective is to survive and eat as much fruits as possible.
+- Variant context: 1 fruit is worth 1 point, and a new one appears randomly every 2 seconds. Contact with the edges ends the game.
+- Symbols:
+    - '#' = wall / border
+    - 'F' = fruit
+    - 'O' = player-controlled snake head
+    - 'S' = player snake body
+    - 'M' = enemy head
+    - 'X' = enemy body
+    - '.' = empty cells
+- Move constraints: move must be one of ["UP", "DOWN", "RIGHT", "LEFT"].
+- End conditions: ['hitting border']
 
-    # STATE
-    The current grid is given as ASCII text between GRID_TXT_BEGIN and GRID_TXT_END.
-    GRID_TXT_BEGIN
-    # # # # # # # # # # #
-    # . . . . . . . . . #
-    # . . . . . . . . . #
-    # . . . . . . . . . #
-    # . S S O . . . . . #
-    # . . . . . . . . . #
-    # . . . . . . . . . #
-    # . . . . . . . F . #
-    # . . . . . . . . . #
-    # . . . . . . . . . #
-    # . . . . . . . . . #
-    # # # # # # # # # # #
-    GRID_TXT_END
+# STATE
+The current grid is given as ASCII text between GRID_TXT_BEGIN and GRID_TXT_END.
+GRID_TXT_BEGIN
+# # # # # # # # # # #
+# . . . . . . . . . #
+# . . . . . . . . . #
+# . . . . . . . . . #
+# . . . . . . . . . #
+# . . . . . . . . . #
+# . . . . . . . . . #
+# . . . . S S O F . #
+# . . . . . . . . . #
+# . . . . . . . . . #
+# . . . . . . . . . #
+# # # # # # # # # # #
+GRID_TXT_END
 
-    # LEGAL_MOVES
-    All directions except the one that is the exact opposite of the current snake direction.
-    Concrete list of allowed moves for THIS state:
-    ['UP', 'DOWN', 'LEFT', 'RIGHT']
+# LEGAL_MOVES
+All directions except the one that is the exact opposite of the current snake direction.
+Concrete list of allowed moves for THIS state:
+['UP', 'DOWN', 'LEFT', 'RIGHT']
 
-    # OUTPUT SCHEMA (strict)
-    {"move":"UP","explain":"optional, single sentence"} or {"pass":true} or {"resign":true}
+# OUTPUT SCHEMA (strict)
+{"move":"UP","explain":"optional, single sentence"} or {"pass":true} or {"resign":true}
     """
     
     try:

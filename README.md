@@ -161,6 +161,7 @@ Another weakness we identified is the case where there is no fruits to be found 
 This behavior results in silly game overs, where the AI voluntarily ram through an enemy, a wall, or sometimes itself when no fruits are around.
 
 # 6. LLM protocol
+In this section we will detail our work around making a LLM model play with our snake variants. We chose Mistralai's "devstral-2512:free" model, for it had a better perplexity score among a selection we went through.  
 As for our own AI section, we recommend running LLM driven AI trials to get a demonstration of our work on that part of this project. Please refer to section "#3 Hom to run" for instruction on how to launch such runs.  
 And as for our own AI runs, the LLM driven runs also generate a "next_state.json" JSON file at the root of the project, also composed of :  
 - a "number_of_moves_done" field holding the number of moves the AI did before being stopped, either by user action or by losing the game.
