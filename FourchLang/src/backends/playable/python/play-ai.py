@@ -665,14 +665,22 @@ class Jeu :
     
     def get_legal_moves(self):
         legal_moves = ["UP", "DOWN", "LEFT", "RIGHT"]
-        if self.direction == Direction.HAUT:
-            legal_moves.remove("DOWN")
-        elif self.direction == Direction.BAS:
-            legal_moves.remove("UP")
-        elif self.direction == Direction.GAUCHE:
-            legal_moves.remove("RIGHT")
-        elif self.direction == Direction.DROITE:
-            legal_moves.remove("LEFT")
+        if self.gameMode.gameMode == Mode.SNAKE or self.gameMode.gameMode == Mode.ADDER :
+            if self.direction == Direction.HAUT:
+                legal_moves.remove("DOWN")
+            elif self.direction == Direction.BAS:
+                legal_moves.remove("UP")
+            elif self.direction == Direction.GAUCHE:
+                legal_moves.remove("RIGHT")
+            elif self.direction == Direction.DROITE:
+                legal_moves.remove("LEFT")
+        elif self.gameMode.gameMode == Mode.PACMAN:
+            for dx, dy, direction in [(0, -1, "UP"),
+                                      (0, 1, "DOWN"),
+                                      (-1, 0, "LEFT"),
+                                      (1, 0, "RIGHT")]:
+                if (self.player.position[0]+dx, self.player.position[1]+dy) in [wall.position for wall in self.walls]:
+                    legal_moves.remove(direction)
         return legal_moves
 
     def get_game_over_conditions(self):
@@ -743,7 +751,6 @@ Concrete list of allowed moves for THIS state:\n\
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-            print(self.game_to_grid_string())
             # Appeler l'IA externe
             if ai_type == "snake-ai":
                 # Appel de l'IA SnakeAIPlayer (A*)
@@ -758,7 +765,6 @@ Concrete list of allowed moves for THIS state:\n\
                 # with open("./prompt.txt", "w") as f:
                 #     f.write(prompt)
                 # return
-                # print(f"Legal moves : {self.get_legal_moves()}")
                 ret = LLMAIPlayerRun(prompt, max_tokens=200)
                 next_move = getLLMMove(ret)
                 # next_move = self.ninety_degrees_fix(getLLMMove(ret))
