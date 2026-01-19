@@ -109,12 +109,14 @@ It opens a browser tab with the game, you can play with the arrows, and you can 
 
 <video controls src="snake1html-2026-01-19_11.40.57.mov" title="SnakeVariation1HTML"></video>
 
-To make our AI play any variant of snake precendently mentionned, start by generating a json of the desired program (see section "#3. How to run").  
+## To play with AI
+To make our AI play any variant of snake precendently mentionned, start by generating a json of the desired program (see section "#3. How to run").   
 To then launch a game where our AI actually plays the selected variant, run the following command at the root of the project :  
 ```python3 "./FourchLang/src/backends/playable/python/play-ai.py" "./FourchLang/examples/variant-[X]/json/output.json" snake-ai```  
 with X being the chosed variant.
 This will open a window with the game running, where you can witness the AI playing the game. This window will close itself when the AI loses or if you click on the cross button on its top-right corner.  
 
+## To play with LLM
 To make an LLM type AI made available by OpenAI through an endpoint play any variant of snake precendently mentionned, start by generating a json of the desired program (see section "#3. How to run").  
 To then launch a game where our AI actually plays the selected variant, run the following command at the root of the project :  
 ```python3 "./FourchLang/src/backends/playable/python/play-ai.py" "./FourchLang/examples/variant-[X]/json/output.json" llm```  
@@ -126,6 +128,7 @@ This will open a window with the game running, where you can witness the LLM pla
 
 
 # 4. Grammar and metamodel and class diagram
+<!-- Done -->
 The Fourchlang grammar can be found [here](FourchLang/src/language/fourch-lang.langium).
 
 
@@ -134,32 +137,41 @@ The metamodel diagram can be found [here](model/class/class.puml).
 ![classDiagramImage](image-1.png)
 
 # 5. AIs : strengths/weaknesses, known failure modes
-<!-- TODO -->
+<!-- Done ? -->
 As a video of our AI wouldn't make clear its abilities correctly, for our visualisation of the game does not show much of a difference between human and machine gameplay, so we recommend launching our AI to get a better visualisation a video or a GIF could give. Please refer to section "#3 How to run" to launch AI runs.   
 A "next_state.json" JSON file is also generated at the root of the project, displaying every move made by the AI until end of its trial. It is composed as such :  
 - a "number_of_moves_done" field holding the number of moves the AI did before being stopped, either by user action or by losing the game.
-- a "moves" field holding an array of said moves in the order the AI made them.
-
+- a "moves" field holding an array of said moves in the order the AI made them.  
+  
 Our AI is based on the A* algortihm, which is an extension of Dijkstra's shortest path algorithm. We tuned it to identify the shortest path from the snake's head to the nearest fruit, while avoiding eventual threats.  
+A python scriptable, designed to be easily tailor-made for the selected variant, defines the current state of the ongoing game, given as a string parameter to our AI, and operates the move selected by our AI algorithm when it obtains it.   
 By the end of our development on our project, the AI was very resilient, avoiding most of threats and swiftly eating fruits, always using the shortest path to do so.  
+ 
 Although, it presents a potent weakness in its reluctancy to cross borders when possible. This is due to the distance computation using the coordinates of positions in the grid instead of relative positions from the snake's head.  
 Thus, the AI always takes the shortest path _not_ crossing any borders (even when possible) by default. this results in weird behaviors, especially in the variant 4 (the Pac-Man variant) where it chooses to go backwards instead of crossing the tunnel.  
+  
 Another weakness we identified is the case where there is no fruits to be found in the grid. This happens in variant 2 where a timer regulates fruit spawning to happen 2 seconds after the fruit was eaten. In that period of time, our AI is unable to find the shortest path to a fruit (thanks to no fruits being anywhere), and chooses to pass priority, repeating the same move as previously without necessarily taking where that is headint them to.  
 This behavior results in silly game overs, where the AI voluntarily ram through an enemy, a wall, or sometimes itself when no fruits are around.
 
 # 6. LLM protocol
-<!-- TODO -->
-
-
+<!-- TODO Jules -->
+As for our own AI section, we recommend running LLM driven AI trials to get a demonstration of our work on that part of this project. Please refer to section "#3 Hom to run" for instruction on how to launch such runs.  
+And as for our own AI runs, the LLM driven runs also generate a "next_state.json" JSON file at the root of the project, also composed of :  
+- a "number_of_moves_done" field holding the number of moves the AI did before being stopped, either by user action or by losing the game.
+- a "moves" field holding an array of said moves in the order the AI made them. 
+   
+The same python script is used to operate the LLM driven AI runs, 
 # 7. Mini-evaluation <!-- Optional -->
 <!-- TODO -->
 # 8. Unsupported features and limitations
-<!-- TODO -->
+<!-- TODO Dorian -->
+Some features could still be added to our project to improve it. 
 
 # 9. Lessons learned
-<!-- TODO -->
-# 10. Ressources
+<!-- TODO Alice -->
 
+# 10. Ressources
+<!-- Done -->
 
 # Previous README (French)
 
