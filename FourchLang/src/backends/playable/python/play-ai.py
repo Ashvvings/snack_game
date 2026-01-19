@@ -5,11 +5,11 @@ import random, time
 import pygame
 import regex as re
 sys.path.append('./')
+# sys.path.insert(1, './FourchLang/src/llm/runner')
 from SnakeAIPlayer import run as SnakeAIPlayerRun
-
-""" from math import *
-from random import *
-from time import *"""
+sys.path.insert(1, './FourchLang/src/llm/runner')
+from openrouter import call_llm_openrouter as LLMAIPlayerRun
+from openrouter import extract_move as getLLMMove
 
 class Direction(Enum) :
     HAUT = 1
@@ -34,6 +34,11 @@ class Mode(Enum) :
     ADDER = 3
     
 class Jeu :
+
+    SCORE_BAR_HEIGHT = 40
+    MIN_WINDOW_WIDTH = 200
+    MIN_WINDOW_HEIGHT = 200
+
     class Player:
         def __init__(self, id : str, x : int, y : int, size : int, speed : int, color : Colors, fils : str = None, snake_bodies : list = [] ) :
             self.id = id
@@ -116,13 +121,15 @@ class Jeu :
     body_counter = 0
     pending_growth = 0
     fruit_timers = []
+    score = 0
+    initial_body_count = 0
     variant = None
     
     variant_context = {
-        "1" : "1 fruit qui vaut 1, fait grandir de 1 et réapparaît quand il est mangé. Fin de jeu si serpent se mord. On peut traverser les bords.",
-        "2" : "1 fruit qui vaut 1 et un nouveau apparaît  aléatoirement toutes les 2 secondes. Le contact avec les bords provoquent la fin du jeu.",
-        "3" : "1 fruit qui vaut 1, fait grandir de 1 et réapparaît quand il est mangé. un ennemi serpent est sur la grille. Fin de jeu si serpent se mord ou entre en contact avec l'ennemi ou l'ennemi body.",
-        "4" : "les bords sont traversables seulement horizontalement. il y a 4 ennemis sur la carte. Fin de jeu si serpent entre en contact avec n'importe quelle partie de l'ennemi",
+        "1" : "1 fruit is worth 1 point, makes you grow by 1 point, and reappears when eaten. The game ends if the snake bites itself. You can cross the edges.",
+        "2" : "1 fruit is worth 1 point, and a new one appears randomly every 2 seconds. Contact with the edges ends the game.",
+        "3" : "1 fruit is worth 1 point, increases your score by 1, and reappears when eaten. A snake enemy is on the grid. The game ends if the snake bites itself or comes into contact with the enemy or the enemy's body.",
+        "4" : "The edges can only be crossed horizontally. There are 4 enemies on the map. The game ends if the snake comes into contact with any part of the enemy.",
         "5" : ""
     }
     
@@ -149,13 +156,32 @@ class Jeu :
                 self.gameMode = self.GameMode(Mode.SNAKE)
                 pygame.display.set_caption("Snake Game - Mode Snake")
         
+        # Convertir la couleur du joueur en enum Colors
+        player_color_str = game["player"]["color"]
+        if player_color_str == "undefined":
+            player_color = Colors.GREEN
+        else:
+            # Chercher la couleur correspondante dans l'enum
+            player_color = Colors.GREEN  # Valeur par défaut
+            for color in Colors:
+                if color.value == player_color_str or color.name.lower() == player_color_str.lower():
+                    player_color = color
+                    break
+        
+        # Convertir la vitesse en entier (avec valeur par défaut si undefined)
+        player_speed = game["player"]["speed"]
+        if player_speed == "undefined" or player_speed is None:
+            player_speed = 5
+        else:
+            player_speed = int(player_speed)
+
         self.player = self.Player(
             game["player"]["id"],
             game["player"]["position"]["x"],
             game["player"]["position"]["y"],
             game["player"]["size"],
-            game["player"]["speed"],
-            game["player"]["color"]
+            player_speed,
+            player_color
         )
         
         self.enemies = []
@@ -200,6 +226,10 @@ class Jeu :
                 break
         self.snakeBodies = ordered_bodies
         self.player.snake_bodies = self.snakeBodies
+
+        # Mémoriser la taille initiale pour le calcul du score
+        self.initial_body_count = len(self.snakeBodies)
+        self.score = 0
     
         self.enemyBodies = []
         for enemyBody in game["enemy-bodies"]:
@@ -224,7 +254,6 @@ class Jeu :
                     break
         self.enemyBodies = ordered_bodies
         
-    
         self.walls = []
         for wall in game["walls"]:
             self.walls.append(self.Wall(wall["position"]["x"], wall["position"]["y"]))
@@ -257,7 +286,12 @@ class Jeu :
         for condition in game["game-over-conditions"]:
             self.game_over_conditions.append(self.GameOverCondition([condition["target"]]))
     
-        self.fenetre = pygame.display.set_mode(((self.grid.y)*20, (self.grid.x)*20))
+        # Calcul de la taille de fenêtre avec minimum
+        game_width = self.grid.y * 20
+        game_height = self.grid.x * 20 + self.SCORE_BAR_HEIGHT
+        window_width = max(game_width, self.MIN_WINDOW_WIDTH)
+        window_height = max(game_height, self.MIN_WINDOW_HEIGHT + self.SCORE_BAR_HEIGHT)
+        self.fenetre = pygame.display.set_mode((window_width, window_height))
     
     def toString (self) :
         print(self.player.id)
@@ -367,21 +401,6 @@ class Jeu :
         if d==Direction.DROITE:
             pos_fut=(self.player.position[0]+1, self.player.position[1])
         
-        # Toujours vérifier la collision avec le corps du serpent
-        for body in self.snakeBodies:
-            if pos_fut == body.position:
-                return True
-        
-        # Vérifier les bordures selon les règles de wrap
-        # Si horizontally est False, toucher le bord vertical (droite/gauche) = game over
-        if not self.grid.vertically:
-            if pos_fut[1] < 0 or pos_fut[1] >= self.grid.x:
-                return True
-        # Si vertically est False, toucher le bord horizontal (haut/bas) = game over
-        if not self.grid.horizontally:
-            if pos_fut[0] < 0 or pos_fut[0] >= self.grid.y:
-                return True
-        
         for goc in self.game_over_conditions :
             for target in goc.type:
                 match target :
@@ -396,6 +415,16 @@ class Jeu :
                     case "wall" :
                         for wall in self.walls :
                             if pos_fut == wall.position : return True
+                    case "border" :
+                        # Vérifier les bordures selon les règles de wrap
+                        # Si horizontally est False, toucher le bord vertical (droite/gauche) = game over
+                        if not self.grid.vertically:
+                            if pos_fut[1] < 0 or pos_fut[1] >= self.grid.x:
+                                return True
+                        # Si vertically est False, toucher le bord horizontal (haut/bas) = game over
+                        if not self.grid.horizontally:
+                            if pos_fut[0] < 0 or pos_fut[0] >= self.grid.y:
+                                return True
         return False
                 
     def verif_wall(self, d):
@@ -458,8 +487,9 @@ class Jeu :
                     self.player.size += growth
                     self.add_body_segment(growth)
                 
+                self.score += self.fruits[a].points
                 self.fruits.remove(self.fruits[a])
-                if(self.fruits_config.respawn != None):
+                if(self.fruits_config.respawn != "undefined" and self.fruits_config.respawn != None):
                     self.fruit_timers.append(int(time.time())+self.fruits_config.respawn)
                 self.reappear_fruit()
                 break
@@ -496,34 +526,52 @@ class Jeu :
     # Dessine le serpent, les fruits, les ennemis et les murs dans une fenêtre    
     def draw(self):
         # Taille fenêtre (définie dans JSONtoPython)
+        window_width, window_height = self.fenetre.get_size()
         
         # Taille de cellule
         cell_size = 20
         
-        # Fond
-        self.fenetre.fill(Colors.BLACK.value)
+        # Calcul des offsets pour centrer la zone de jeu
+        game_area_width = self.grid.y * cell_size
+        game_area_height = self.grid.x * cell_size
+        offset_x = (window_width - game_area_width) // 2
+        offset_y = self.SCORE_BAR_HEIGHT + (window_height - self.SCORE_BAR_HEIGHT - game_area_height) // 2
+        
+        # Fond gris pour toute la fenêtre
+        self.fenetre.fill(Colors.GRAY.value)
+        
+        # Zone de jeu noire (centrée)
+        pygame.draw.rect(self.fenetre, Colors.BLACK.value, pygame.Rect(offset_x, offset_y, game_area_width, game_area_height))
+        
+        # Contour gris autour de la zone de jeu
+        pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect(offset_x, offset_y, game_area_width, game_area_height), 2)
+        
+        # Score dans le bandeau
+        font = pygame.font.Font(None, 36)
+        score_text = font.render(f"Score : {self.score}", True, Colors.WHITE.value)
+        self.fenetre.blit(score_text, (10, (self.SCORE_BAR_HEIGHT - score_text.get_height()) // 2))
             
         # Serpent - tête
-        pygame.draw.circle(self.fenetre, self.player.color.value, [((self.player.position[0]+0.5)*cell_size), ((self.player.position[1]+0.5)*cell_size)], cell_size/2, 0)
+        pygame.draw.circle(self.fenetre, self.player.color.value, [offset_x + ((self.player.position[0]+0.5)*cell_size), ((self.player.position[1]+0.5)*cell_size) + offset_y], cell_size/2, 0)
         
         # Serpent - corps
         for body in self.snakeBodies:
-            pygame.draw.circle(self.fenetre, self.player.color.value, [((body.position[0]+0.5)*cell_size), ((body.position[1]+0.5)*cell_size)], (cell_size/2)-2, 0)
+            pygame.draw.circle(self.fenetre, self.player.color.value, [offset_x + ((body.position[0]+0.5)*cell_size), ((body.position[1]+0.5)*cell_size) + offset_y], (cell_size/2)-2, 0)
         
         # Fruits
         for fruit in self.fruits:
-            pygame.draw.circle(self.fenetre, Colors.MAGENTA.value, [((fruit.position[0]+0.5)*cell_size), ((fruit.position[1]+0.5)*cell_size)], (cell_size/2), 0)
+            pygame.draw.circle(self.fenetre, Colors.MAGENTA.value, [offset_x + ((fruit.position[0]+0.5)*cell_size), ((fruit.position[1]+0.5)*cell_size) + offset_y], (cell_size/2), 0)
         
         # Ennemis
         for enemy in self.enemies:
-            pygame.draw.circle(self.fenetre, enemy.color.value, [((enemy.position[0]+0.5)*cell_size), ((enemy.position[1]+0.5)*cell_size)], cell_size/2, 0)
+            pygame.draw.circle(self.fenetre, enemy.color.value, [offset_x + ((enemy.position[0]+0.5)*cell_size), ((enemy.position[1]+0.5)*cell_size) + offset_y], cell_size/2, 0)
         # Ennemis - corps
         for body in self.enemyBodies:
-            pygame.draw.circle(self.fenetre, Colors.RED.value, [((body.position[0]+0.5)*cell_size), ((body.position[1]+0.5)*cell_size)], (cell_size/2)-2, 0)
+            pygame.draw.circle(self.fenetre, Colors.RED.value, [offset_x + ((body.position[0]+0.5)*cell_size), ((body.position[1]+0.5)*cell_size) + offset_y], (cell_size/2)-2, 0)
         
         # Murs
         for wall in self.walls:
-            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect((wall.position[0])*cell_size, (wall.position[1])*cell_size, cell_size, cell_size))
+            pygame.draw.rect(self.fenetre, Colors.GRAY.value, pygame.Rect(offset_x + (wall.position[0])*cell_size, (wall.position[1])*cell_size + offset_y, cell_size, cell_size))
          
     def take_direction(self, direction):
         if direction == "UP":
@@ -616,12 +664,12 @@ class Jeu :
 
     def json_prompt(self):
         prompt = f"# RULES\n\
-- Game: reforged Snake, objective is to survive and grow the longest possible.\n\
+- Game: reforged Snake, objective is to survive and eat as much fruits as possible.\n\
 - Variant context: {self.variant_context[self.variant]}\n\
 - Symbols:\n\
 \t- '#' = wall / border\n\
 \t- 'F' = fruit\n\
-\t- '0' = player-controlled snake head\n\
+\t- 'O' = player-controlled snake head\n\
 \t- 'S' = player snake body\n\
 \t- 'M' = enemy head\n\
 \t- 'X' = enemy body\n\
@@ -645,9 +693,22 @@ Concrete list of allowed moves for THIS state:\n\
 "
         return prompt
 
+    def ninety_degrees_fix(self, direction: str) -> str:
+        match direction:
+            case "UP":
+                return "RIGHT"
+            case "RIGHT":
+                return "DOWN"
+            case "DOWN":
+                return "LEFT"
+            case "LEFT":
+                return "UP"
+        return direction
+
     # Lancement de la boucle de jeu
     def go(self, ai_type : str, grid_path : str, next_move_path : str):
         next_move = None
+        last_move = None
         if ai_type != "llm" and ai_type != "snake-ai":
             print("Type d'IA non reconnu.")
             return
@@ -658,33 +719,41 @@ Concrete list of allowed moves for THIS state:\n\
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-            with open(next_move_path, "w") as f:
-                f.write("")
             # Appeler l'IA externe
             if ai_type == "snake-ai":
-                # with open(grid_path, "w") as f:
-                #     f.write(self.game_to_grid_string())
+                # Appel de l'IA SnakeAIPlayer (A*)
                 next_move = SnakeAIPlayerRun(self.game_to_grid_string())
             elif ai_type == "llm":
+                # Appel à une IA de type LLM par endpoint D'OpenAI
                 prompt = self.json_prompt()
-                with open("llm_prompt.txt", "w") as f:
+                with open("./prompt.txt", "w") as f:
                     f.write(prompt)
-                
+                ret = LLMAIPlayerRun(prompt, max_tokens=200)
+                next_move = self.ninety_degrees_fix(getLLMMove(ret))
+                print(f"Move given by LLM: {ret}")
+                print(f"rotated move: {next_move}")
+                if next_move == "pass":
+                    next_move = last_move
+                elif next_move == "resign":
+                    print("L'IA a abandonné la partie.")
+                    running = False
+                    break
+                elif next_move == "ERROR":
+                    print("ERREUR : L'IA n'a pas su fournir de mouvement valide.")
+                    running = False
+                    break
             time.sleep(0.5) # Modulable selon la vitesse voulue
-            # Lire le prochain mouvement
+            # DEBUG : attendre un mouvement valide
             while not next_move:
-                try:
-                    with open(next_move_path, "r") as f:
-                        next_move = f.read().strip()
-                except FileNotFoundError:
-                    pass
-            # Mettre à jour le jeu avec le mouvement
+                continue
+            # Mettre à jour le jeu avec le mouvement défini par l'IA
             self.take_direction(next_move)
             self.player_forward()
             if self.is_game_over:
                 running = False
             self.fruit_eat()
             self.reappear_fruit()
+            last_move = next_move
             next_move = None
 
 if __name__ == "__main__":
@@ -700,7 +769,7 @@ if __name__ == "__main__":
     next_move_path = "./AI_response.txt"
     game.go(ai_type, grid_path, next_move_path)
 
-    print("Game Over")
+    print(f"Game Over\n Score obtenu : ${game.score}")
 
         
     
