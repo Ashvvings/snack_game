@@ -161,7 +161,6 @@ Another weakness we identified is the case where there is no fruits to be found 
 This behavior results in silly game overs, where the AI voluntarily ram through an enemy, a wall, or sometimes itself when no fruits are around.
 
 # 6. LLM protocol
-<!-- TODO Jules -->
 As for our own AI section, we recommend running LLM driven AI trials to get a demonstration of our work on that part of this project. Please refer to section "#3 Hom to run" for instruction on how to launch such runs.  
 And as for our own AI runs, the LLM driven runs also generate a "next_state.json" JSON file at the root of the project, also composed of :  
 - a "number_of_moves_done" field holding the number of moves the AI did before being stopped, either by user action or by losing the game.
@@ -203,7 +202,7 @@ From this previous prompt, we obtain from the queried LLM an answer containing a
 The script operating the game then interprets this return as either a move or another command (resigning and errors triggering end of game).
 The LLM return also contains a "explain" field containing an explanation of why it chosed to make the correspondant move. This field is retrieved and put in the JSON file mentionned previously in this section.  
   
-
+<!-- TODO - Description supplémentaire ? -->
 
 # 7. Mini-evaluation <!-- Optional -->
 <!-- TODO -->
@@ -213,11 +212,12 @@ Some features could still be added to our project to improve it.
 We created multiple variations, with various parameters and functionment, but one variation we though of during the brainstorming at the beginning of the project was one where on each fruit was written a number, and the player needed to select the fruits they 
 # 9. Lessons learned
 
+
  snake. This variation was inspired by [this website](https://maff.games/adder), but it was really complicated to write it with our grammar, so we decided to abandon it.  
 With the Python version of our game, enemies don't move and stay where they spawned. Another implementation we could add is a simple AI for the enemies to chase the player and try to end the game by entering in contact with the player. For the Pacman variation, some more complex thinking can be implied for these AI, by creating personalities depending on the enemy it is linked to, like in the real game.
-<!-- Done? -->
 <!-- TODO Alice -->
-One of the main lessons was the importance of careful DSL scope definition. Limiting the domain to snake-like, grid-based games proved essential. This constraint made the language expressive enough to cover many variants (classic Snake, Pac-Man–like gameplay, enemies, special fruits) while remaining simple and understandable. At first we wanted to be able to make so many possible games such as https://maff.games/adder. But at the end of the day we ended up doing just a custom snake and pacman.
+One of the main lessons was the importance of careful DSL scope definition. Limiting the domain to snake-like, grid-based games proved essential. This constraint made the language expressive enough to cover many variants (classic Snake, Pac-Man–like gameplay, enemies, special fruits) while remaining simple and understandable. At first we wanted to be able to make so many possible games such as https://maff.games/adder. But at the end of the day we ended up d
+oing just a custom snake and pacman.
 # 10. Ressources
 <!-- Done -->
 
