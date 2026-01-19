@@ -132,7 +132,7 @@ class Jeu :
         "1" : "1 fruit is worth 1 point, makes you grow by 1 point, and reappears when eaten. The game ends if the snake bites itself. You can cross the edges.",
         "2" : "1 fruit is worth 1 point, and a new one appears randomly every 2 seconds. Contact with the edges ends the game.",
         "3" : "1 fruit is worth 1 point, increases your score by 1, and reappears when eaten. A snake enemy is on the grid. The game ends if the snake bites itself or comes into contact with the enemy or the enemy's body.",
-        "4" : "This variant is like Pac-Man. The edges can only be crossed horizontally. Walls cannot be crossed. There are 4 enemies on the map. The game ends if the snake comes into contact with any part of the enemy.",
+        "4" : "This variant is like Pac-Man. The edges can only be crossed horizontally. Walls cannot be crossed. There are 4 enemies on the map. The enemies cannot cross walls. The game ends if the snake comes into contact with any part of the enemy.",
         "5" : ""
     }
     
