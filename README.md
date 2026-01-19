@@ -117,9 +117,16 @@ with X being the chosed variant.
 This will open a window with the game running, where you can witness the AI playing the game. This window will close itself when the AI loses or if you click on the cross button on its top-right corner.  
 
 ## To play with LLM
-To make an LLM type AI made available by OpenAI through an endpoint play any variant of snake precendently mentionned, start by generating a json of the desired program (see section "#3. How to run").  
-To then launch a game where our AI actually plays the selected variant, run the following command at the root of the project :  
-```python3 "./FourchLang/src/backends/playable/python/play-ai.py" "./FourchLang/examples/variant-[X]/json/output.json" llm```  
+To make an LLM type AI made available by OpenAI through an endpoint play any variant of snake precendently mentionned, start by launching the following command in a terminal : 
+```
+export OPENROUTER_API_KEY='enter_an_OpenAI_API_key_here'
+``` 
+Without this, the following instructions won't launch a run for lack of API key.
+Then generate a json of the desired program (see section "#3. How to run").  
+To launch a game where our AI actually plays the selected variant, then run the following command at the root of the project :  
+```
+python3 "./FourchLang/src/backends/playable/python/play-ai.py" "./FourchLang/examples/variant-[X]/json/output.json" llm
+```  
 with X being the chosed variant, as for running our own AI.
 
 This will open a window with the game running, where you can witness the LLM playing the game. This window will close itself when the AI loses or if you click on the cross button on its top-right corner.  
@@ -159,17 +166,58 @@ As for our own AI section, we recommend running LLM driven AI trials to get a de
 And as for our own AI runs, the LLM driven runs also generate a "next_state.json" JSON file at the root of the project, also composed of :  
 - a "number_of_moves_done" field holding the number of moves the AI did before being stopped, either by user action or by losing the game.
 - a "moves" field holding an array of said moves in the order the AI made them. 
+- a "explanations" field holding an array of explanations for each move in the order the AI made them. 
    
-The same python script is used to operate the LLM driven AI runs, 
+The same python script is used to operate the LLM driven AI runs, the difference comes from the file operating the AI, which is a script calling an OpenAI API endpoint with a prompt structured as following : 
+```"# RULES\n\
+- Game: reforged Snake, objective is to survive and eat as much fruits as possible.\n\
+- Variant context: [Description de la variante]\n\
+- Symbols:\n\
+\t- '#' = wall / border\n\
+\t- 'F' = fruit\n\
+\t- 'O' = player-controlled snake head\n\
+\t- 'S' = player snake body\n\
+\t- 'M' = enemy head\n\
+\t- 'X' = enemy body\n\
+\t- '.' = empty cells\n\
+- Move constraints: move must be one of [\"UP\", \"DOWN\", \"RIGHT\", \"LEFT\"].\n\
+- End conditions: [Liste des conditions de fin de partie]\n\
+\n\
+# STATE\n\
+The current grid is given as ASCII text between GRID_TXT_BEGIN and GRID_TXT_END.\n\
+GRID_TXT_BEGIN\n\
+[Représentation en grille du jeu]\n\
+GRID_TXT_END\n\
+\n\
+# LEGAL_MOVES\n\
+All directions except the one that is the exact opposite of the current snake direction.\n\
+Concrete list of allowed moves for THIS state:\n\
+[Liste des coups légaux étant donné la grille précédente]\n\
+\n\
+# OUTPUT SCHEMA (strict)\n\
+{{\"move\":\"UP\",\"explain\":\"optional, single sentence\"}} or {{\"pass\":true}} or {{\"resign\":true}}\
+"
+```
+  
+From this previous prompt, we obtain from the queried LLM an answer containing a "move" value determined among "UP", "DOWN", "LEFT", "RIGHT", "pass", "resign" and "ERROR".  
+The script operating the game then interprets this return as either a move or another command (resigning and errors triggering end of game).
+The LLM return also contains a "explain" field containing an explanation of why it chosed to make the correspondant move. This field is retrieved and put in the JSON file mentionned previously in this section.  
+  
+
+
 # 7. Mini-evaluation <!-- Optional -->
 <!-- TODO -->
 # 8. Unsupported features and limitations
 <!-- TODO Dorian -->
-Some features could still be added to our project to improve it. 
-
+Some features could still be added to our project to improve it.  
+We created multiple variations, with various parameters and functionment, but one variation we though of during the brainstorming at the beginning of the project was one where on each fruit was written a number, and the player needed to select the fruits they 
 # 9. Lessons learned
-<!-- TODO Alice -->
 
+ snake. This variation was inspired by [this website](https://maff.games/adder), but it was really complicated to write it with our grammar, so we decided to abandon it.  
+With the Python version of our game, enemies don't move and stay where they spawned. Another implementation we could add is a simple AI for the enemies to chase the player and try to end the game by entering in contact with the player. For the Pacman variation, some more complex thinking can be implied for these AI, by creating personalities depending on the enemy it is linked to, like in the real game.
+<!-- Done? -->
+<!-- TODO Alice -->
+One of the main lessons was the importance of careful DSL scope definition. Limiting the domain to snake-like, grid-based games proved essential. This constraint made the language expressive enough to cover many variants (classic Snake, Pac-Man–like gameplay, enemies, special fruits) while remaining simple and understandable. At first we wanted to be able to make so many possible games such as https://maff.games/adder. But at the end of the day we ended up doing just a custom snake and pacman.
 # 10. Ressources
 <!-- Done -->
 
