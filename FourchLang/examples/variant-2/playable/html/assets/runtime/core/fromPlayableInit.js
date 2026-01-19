@@ -10,13 +10,18 @@ export function fromPlayableInit(init) {
         };
     }
     const firstId = init.snakes[0]?.id ?? "player";
+    const anyInit = init;
+    const config = { ...init.config };
+    if (config.gameMode == null && anyInit.gameMode != null) {
+        config.gameMode = anyInit.gameMode;
+    }
     return {
         turn: 0,
         currentActorId: firstId,
         snakes: snakesRecord,
         walls: init.walls,
         fruits: init.fruits,
-        config: init.config,
+        config,
         isTerminal: false,
         score: 0,
     };

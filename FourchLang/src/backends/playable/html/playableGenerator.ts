@@ -54,7 +54,9 @@ function normalizeHexColor(color: string | undefined, fallback: string): string 
   const c = color.trim();
 
   if (/^#[0-9a-fA-F]{3}$/.test(c)) {
-    const r = c[1], g = c[2], b = c[3];
+    const r = c[1],
+      g = c[2],
+      b = c[3];
     return `#${r}${r}${g}${g}${b}${b}`.toUpperCase();
   }
   if (/^#[0-9a-fA-F]{6}$/.test(c)) return c.toUpperCase();
@@ -78,6 +80,92 @@ function darkenHex(hex: string, amount = 0.35): string {
     .padStart(2, "0")}`.toUpperCase();
 }
 
+/**
+ * JSON safe (évite les cycles Langium : $container, $document, etc.)
+ * Utile uniquement pour debug.
+ */
+function safeStringify(obj: any, maxDepth = 5): string {
+  const seen = new WeakSet();
+
+  const helper = (value: any, depth: number): any => {
+    if (depth > maxDepth) return "[MaxDepth]";
+    if (value && typeof value === "object") {
+      if (seen.has(value)) return "[Circular]";
+      seen.add(value);
+
+      if (Array.isArray(value)) return value.map((v) => helper(v, depth + 1));
+
+      const out: any = {};
+      for (const k of Object.keys(value)) {
+        if (k.startsWith("$")) continue; // ignore internals langium
+        out[k] = helper(value[k], depth + 1);
+      }
+      return out;
+    }
+    return value;
+  };
+
+  return JSON.stringify(helper(obj, 0), null, 2);
+}
+
+/**
+ * Game mode (pacman, classic, ...)
+ * Robuste aux structures AST (string / array / objet / ref Langium).
+ */
+function readGameMode(model: Model): string {
+  const anyModel = model as any;
+
+  const extract = (v: any): string | null => {
+    if (v == null) return null;
+
+    if (typeof v === "string") return v;
+    if (Array.isArray(v)) return extract(v[0]);
+
+    // objets AST / Langium
+    const candidates = [
+      v.value,
+      v.name,
+      v.mode,
+      v.id,
+      v.kind,
+      v.type,
+
+      // refs
+      v.ref?.name,
+      v.value?.ref?.name,
+      v.mode?.ref?.name,
+
+      // nested { value: { value: "pacman" } }
+      v.value?.value,
+      v.mode?.value,
+      v.name?.value,
+    ];
+
+    for (const c of candidates) {
+      const got = extract(c);
+      if (got) return got;
+    }
+
+    return null;
+  };
+
+  // priorité: gameMode, puis fallback
+  const candidates = [
+    anyModel?.gameMode,
+    anyModel?.game_mode,
+    anyModel?.mode,
+    anyModel?.gameModes,
+    anyModel?.game_modes,
+  ];
+
+  for (const c of candidates) {
+    const got = extract(c);
+    if (got) return String(got).trim().toLowerCase() || "classic";
+  }
+
+  return "classic";
+}
+
 export function generatePlayableHtml(model: Model, destination: string) {
   // --------------------------
   // 0 — Chemin final (index.html)
@@ -94,7 +182,7 @@ export function generatePlayableHtml(model: Model, destination: string) {
   // --------------------------
   // 1 — Dimensions (IDENTIQUES à generateAscii)
   // --------------------------
-  const width = toNum(model.grid?.[0]?.y);  // colonnes
+  const width = toNum(model.grid?.[0]?.y); // colonnes
   const height = toNum(model.grid?.[0]?.x); // lignes
 
   // --------------------------
@@ -102,6 +190,11 @@ export function generatePlayableHtml(model: Model, destination: string) {
   // --------------------------
   const wrapX = model.borderRules?.some((b: any) => b.direction === "horizontally") ?? false;
   const wrapY = model.borderRules?.some((b: any) => b.direction === "vertically") ?? false;
+
+  // --------------------------
+  // 2bis — Game mode
+  // --------------------------
+  const gameMode = readGameMode(model);
 
   // --------------------------
   // 3 — Player
@@ -148,6 +241,17 @@ export function generatePlayableHtml(model: Model, destination: string) {
   const growthLength = fruitConf?.growthLength ? toNum(fruitConf.growthLength) : 1;
 
   // --------------------------
+  // 6bis — Fruit respawn rules
+  // --------------------------
+  const every = fruitConf?.seconds ? toNum(fruitConf.seconds) : null;
+
+  // "when eaten" = reappear true ET pas de seconds
+  const onEaten = !!fruitConf?.reappear && (every == null || every <= 0);
+
+  // "enabled" = soit onEaten, soit everySeconds
+  const enabled = onEaten || (every != null && every > 0);
+
+  // --------------------------
   // 7 — Game Over
   // --------------------------
   const targets = (model.game_over_conditions ?? []).map((c: any) => c.target);
@@ -166,12 +270,15 @@ export function generatePlayableHtml(model: Model, destination: string) {
       height,
       wrapX,
       wrapY,
+
+      gameMode,
+
       growthLength,
 
       fruitRespawn: {
-        enabled: !!fruitConf?.reappear,
-        onEaten: !!fruitConf?.reappear,
-        everySeconds: fruitConf?.seconds ? toNum(fruitConf.seconds) : null,
+        enabled,
+        onEaten,
+        everySeconds: every != null && every > 0 ? every : null,
       },
 
       gameOverOn: [

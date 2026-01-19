@@ -117,6 +117,9 @@ function ensureSnakeColors(st) {
 const initialState = fromPlayableInit(window.FOURCH_INIT);
 let state = structuredClone(initialState);
 
+console.log("[DEBUG] INIT config.gameMode =", initialState?.config?.gameMode);
+console.log("[DEBUG] INIT config keys =", Object.keys(initialState?.config ?? {}));
+
 ensureSnakeColors(state);
 
 // init slider label

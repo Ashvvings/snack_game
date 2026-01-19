@@ -4,8 +4,9 @@
 function cloneState(state) {
     return JSON.parse(JSON.stringify(state));
 }
-function stepHead(pos, dir, state) {
-    let { x, y } = pos;
+function computeNextHead(pos, dir, state) {
+    let x = pos.x;
+    let y = pos.y;
     if (dir === "up")
         y--;
     if (dir === "down")
@@ -14,12 +15,16 @@ function stepHead(pos, dir, state) {
         x--;
     if (dir === "right")
         x++;
+    const raw = { x, y };
     const { width, height, wrapX, wrapY } = state.config;
+    let wx = x;
+    let wy = y;
     if (wrapX)
-        x = (x + width) % width;
+        wx = (wx + width) % width;
     if (wrapY)
-        y = (y + height) % height;
-    return { x, y };
+        wy = (wy + height) % height;
+    const wrapped = { x: wx, y: wy };
+    return { raw, wrapped };
 }
 function positionsEqual(a, b) {
     return a.x === b.x && a.y === b.y;
@@ -31,24 +36,46 @@ function snakeSelfCollision(s) {
 function isWall(pos, state) {
     return state.walls.some((w) => positionsEqual(w, pos));
 }
-function isOutOfBounds(pos, state) {
+function isOutOfBoundsRaw(raw, state) {
     const { width, height, wrapX, wrapY } = state.config;
+    const outX = raw.x < 0 || raw.x >= width;
+    const outY = raw.y < 0 || raw.y >= height;
     if (wrapX && wrapY)
         return false;
-    return pos.x < 0 || pos.x >= width || pos.y < 0 || pos.y >= height;
+    if (wrapX && !wrapY)
+        return outY;
+    if (!wrapX && wrapY)
+        return outX;
+    return outX || outY;
 }
 function growSnakeBy(actor, n) {
     const growth = Math.max(1, Number(n ?? 1));
-    // déjà +1 car on ne retire pas la queue le tour où on mange
     const tail = actor.body[actor.body.length - 1];
     for (let i = 1; i < growth; i++) {
         actor.body.push({ ...tail });
     }
 }
 /**
- * Tour suivant : prend le prochain snake "alive".
- * Si aucun => on garde l'acteur courant (cas rare).
+ * Détermine si on est en mode Pacman.
  */
+function isPacmanMode(state) {
+    const anyState = state;
+    const mode = anyState?.config?.gameMode ??
+        anyState?.config?.mode ??
+        anyState?.gameMode ??
+        anyState?.mode ??
+        "";
+    return String(mode).toLowerCase() === "pacman";
+}
+/**
+ * IMPORTANT: empêche le bug "je contrôle l'ennemi après mort du joueur".
+ * On force toujours l'acteur courant à rester le joueur (s'il existe).
+ */
+function ensureCurrentActorIsPlayer(state) {
+    const player = Object.values(state.snakes).find((s) => s.isPlayerControlled);
+    if (player)
+        state.currentActorId = player.id;
+}
 function nextActorId(state) {
     const ids = Object.keys(state.snakes);
     if (ids.length === 0)
@@ -62,42 +89,80 @@ function nextActorId(state) {
     }
     return state.currentActorId;
 }
-/**
- * Retire un snake (ennemi) du jeu : il "disparaît"
- */
 function removeSnake(state, snakeId) {
     delete state.snakes[snakeId];
-    // on pourrait aussi nettoyer des fruits/walls si besoin, mais pas nécessaire ici
 }
-/**
- * Mort du joueur => fin de partie.
- * Mort d'un ennemi => on le retire, la partie continue.
- */
 function killActor(state, actorId, reason) {
     const actor = state.snakes[actorId];
     if (!actor)
         return;
     actor.alive = false;
     if (actor.isPlayerControlled) {
+        // On termine la partie => plus aucun contrôle possible
         state.isTerminal = true;
         state.reason = reason;
+        // Optionnel: cacher le joueur (si le rendu se base sur snakes)
+        // (on garde le snake mais alive=false suffit souvent)
         return;
     }
-    // ennemi : disparaît
     removeSnake(state, actorId);
+}
+/**
+ * Gestion des scores par serpent.
+ * - state.score pour le HUD (joueur)
+ * - (state as any).scores[snakeId] pour l'IA
+ */
+function ensureScores(state) {
+    const anyState = state;
+    if (!anyState.scores || typeof anyState.scores !== "object") {
+        anyState.scores = {};
+    }
+}
+function addScore(state, actorId, points) {
+    ensureScores(state);
+    const anyState = state;
+    const p = Math.max(0, Number(points ?? 0));
+    anyState.scores[actorId] = (anyState.scores[actorId] ?? 0) + p;
+    // compat HUD
+    const actor = state.snakes[actorId];
+    if (actor?.isPlayerControlled) {
+        state.score = anyState.scores[actorId];
+    }
+}
+function getScore(state, actorId) {
+    const anyState = state;
+    const scores = anyState?.scores ?? {};
+    const v = scores?.[actorId];
+    return Number.isFinite(Number(v)) ? Number(v) : 0;
 }
 /* ============================================================
    2. RESPAWN DE FRUIT (guidé par le DSL)
 ============================================================ */
-function respawnFruitIfNeeded(state) {
+/**
+ * Respawn des fruits :
+ * - "fruits reappear when eaten"  => onEaten = true, enabled = true, everySeconds = null
+ * - "fruits reappear every n seconds" => enabled = true, everySeconds = n, onEaten = false
+ * - rien => enabled = false
+ *
+ * ✅ Anti double-respawn :
+ * Si onEaten ET everySeconds tombent sur le même tour, on ne respawn qu'une seule fois.
+ */
+function respawnFruitIfNeeded(state, ateFruit) {
     const rules = state.config.fruitRespawn;
-    if (!rules.enabled)
+    if (!rules?.enabled)
         return;
-    if (!rules.frequencySeconds) {
-        respawnOneFruit(state);
-        return;
+    const everySeconds = rules.everySeconds ?? rules.frequencySeconds ?? null;
+    const freq = Number(everySeconds);
+    let shouldRespawn = false;
+    if (ateFruit && !!rules.onEaten) {
+        shouldRespawn = true;
     }
-    if (state.turn % rules.frequencySeconds === 0) {
+    if (Number.isFinite(freq) && freq > 0) {
+        if (state.turn > 0 && state.turn % freq === 0) {
+            shouldRespawn = true;
+        }
+    }
+    if (shouldRespawn) {
         respawnOneFruit(state);
     }
 }
@@ -119,21 +184,23 @@ function respawnOneFruit(state) {
     }
 }
 /* ============================================================
-   3. COLLISIONS ASYMÉTRIQUES PLAYER/ENEMY
+   3. COLLISIONS PLAYER/ENEMY
 ============================================================ */
 /**
- * Si actor est le joueur :
- *  - toucher tête/corps ennemi => joueur meurt
+ * Règles (celles que tu veux maintenant) :
+ * - Si le JOUEUR touche un ennemi (tête OU corps) => GAME OVER (joueur meurt)
+ * - Si un ENNEMI touche le joueur (tête OU corps) => l'ENNEMI meurt / disparaît
  *
- * Si actor est un ennemi :
- *  - toucher le corps du joueur (hors tête) => ennemi meurt
- *  - toucher la tête du joueur => joueur meurt (choix raisonnable pour un head-on)
+ * ⚠️ En head-to-head, les deux règles s'appliquent => joueur meurt => terminal.
+ *
+ * Note: on garde des règles "instantanées" (pas simultané).
+ * Si tu veux du vrai simultané, il faut un applyMove batch côté runtime/playable.
  */
 function resolvePlayerEnemyCollision(state, actor, newHead) {
     const player = Object.values(state.snakes).find((s) => s.isPlayerControlled);
     if (!player)
         return { terminal: false };
-    // collisions avec les ennemis (quand actor est joueur)
+    // --- Joueur sur ennemi : joueur meurt (tête OU corps)
     if (actor.isPlayerControlled) {
         for (const s of Object.values(state.snakes)) {
             if (s.isPlayerControlled)
@@ -145,16 +212,9 @@ function resolvePlayerEnemyCollision(state, actor, newHead) {
         }
         return { terminal: false };
     }
-    // actor est ennemi : collision avec joueur
-    const [playerHead, ...playerBody] = player.body;
-    // ennemi sur tête du joueur => joueur meurt
-    if (positionsEqual(newHead, playerHead)) {
-        killActor(state, player.id, "enemy");
-        return { terminal: state.isTerminal };
-    }
-    // ennemi sur corps du joueur (hors tête) => ennemi meurt
-    if (playerBody.some((p) => positionsEqual(p, newHead))) {
-        killActor(state, actor.id, "snake_body");
+    // --- Ennemi sur joueur : ennemi meurt (tête OU corps)
+    if (player.body.some((p) => positionsEqual(p, newHead))) {
+        killActor(state, actor.id, "hit_player");
         return { terminal: state.isTerminal };
     }
     return { terminal: false };
@@ -166,6 +226,8 @@ export const snakeContract = {
     getLegalMoves(state) {
         if (state.isTerminal)
             return [];
+        // IMPORTANT: ne jamais laisser le contrôle passer à un ennemi
+        ensureCurrentActorIsPlayer(state);
         const actor = state.snakes[state.currentActorId];
         if (!actor || !actor.alive)
             return [];
@@ -179,67 +241,108 @@ export const snakeContract = {
     },
     applyMove(state, move) {
         const newState = cloneState(state);
-        const actor = newState.snakes[move.actorId];
         const conf = newState.config;
-        if (!actor || !actor.alive || newState.isTerminal)
+        if (newState.isTerminal)
             return newState;
+        // Toujours garder le joueur comme acteur contrôlé
+        ensureCurrentActorIsPlayer(newState);
+        const actor = newState.snakes[move.actorId];
+        if (!actor || !actor.alive)
+            return newState;
+        ensureScores(newState);
         const headBefore = actor.body[0];
-        const newHead = stepHead(headBefore, move.direction, newState);
+        const { raw, wrapped } = computeNextHead(headBefore, move.direction, newState);
         // --- Border collision ---
-        if (conf.gameOverOn.includes("border") && isOutOfBounds(newHead, newState)) {
+        if (conf.gameOverOn.includes("border") && isOutOfBoundsRaw(raw, newState)) {
             killActor(newState, actor.id, "border");
-            // si joueur mort => terminal, sinon on continue
-            if (newState.isTerminal)
+            // respawn périodique possible même si pas de fruit mangé
+            respawnFruitIfNeeded(newState, false);
+            // si joueur mort => terminal => stop
+            if (newState.isTerminal) {
+                ensureCurrentActorIsPlayer(newState);
                 return newState;
+            }
+            // ennemi mort => on continue
+            newState.turn++;
+            ensureCurrentActorIsPlayer(newState);
+            return newState;
         }
-        // --- Mise à jour du corps (on avance la tête) ---
+        const newHead = wrapped;
+        // --- Wall collision / blocking ---
+        if (isWall(newHead, newState)) {
+            if (conf.gameOverOn.includes("wall")) {
+                killActor(newState, actor.id, "wall");
+                respawnFruitIfNeeded(newState, false);
+                if (newState.isTerminal) {
+                    ensureCurrentActorIsPlayer(newState);
+                    return newState;
+                }
+                newState.turn++;
+                ensureCurrentActorIsPlayer(newState);
+                return newState;
+            }
+            // mur bloquant (par défaut)
+            respawnFruitIfNeeded(newState, false);
+            newState.turn++;
+            ensureCurrentActorIsPlayer(newState);
+            return newState;
+        }
+        // --- Avance la tête ---
         actor.body = [newHead, ...actor.body];
-        // --- Fruit ---
+        // --- Fruits ---
+        // Seul le joueur peut consommer un fruit.
+        // Si un ennemi passe sur un fruit => il ne le mange PAS.
+        let ateFruit = false;
         const fruitIdx = newState.fruits.findIndex((f) => positionsEqual(f, newHead));
-        if (fruitIdx >= 0) {
+        if (fruitIdx >= 0 && actor.isPlayerControlled) {
+            ateFruit = true;
             newState.fruits.splice(fruitIdx, 1);
             const growth = Math.max(1, Number(conf.growthLength ?? 1));
-            // ✅ le score correspond aux fruits du JOUEUR seulement
-            if (actor.isPlayerControlled) {
-                newState.score = (newState.score ?? 0) + growth;
+            addScore(newState, actor.id, growth);
+            if (!isPacmanMode(newState)) {
+                growSnakeBy(actor, growth);
             }
-            // ✅ croissance pour tous (joueur + ennemis)
-            growSnakeBy(actor, growth);
-            respawnFruitIfNeeded(newState);
+            else {
+                // pacman : longueur constante même quand on mange
+                actor.body.pop();
+            }
         }
         else {
-            // pas de fruit => on retire la queue
+            // déplacement normal
             actor.body.pop();
         }
+        // respawn (anti double-respawn intégré)
+        respawnFruitIfNeeded(newState, ateFruit);
         // --- Self collision ---
         if (conf.gameOverOn.includes("self") && snakeSelfCollision(actor)) {
             killActor(newState, actor.id, "self");
-            if (newState.isTerminal)
+            if (newState.isTerminal) {
+                ensureCurrentActorIsPlayer(newState);
                 return newState;
+            }
+            newState.turn++;
+            ensureCurrentActorIsPlayer(newState);
+            return newState;
         }
-        // --- Wall collision ---
-        if (conf.gameOverOn.includes("wall") && isWall(newHead, newState)) {
-            killActor(newState, actor.id, "wall");
-            if (newState.isTerminal)
-                return newState;
-        }
-        // --- Collisions asymétriques player/enemy ---
-        // (doit arriver avant un éventuel "enemy collision" générique)
+        // --- Collisions player/enemy ---
         if (conf.gameOverOn.includes("enemy") || conf.gameOverOn.includes("snake_body")) {
             const res = resolvePlayerEnemyCollision(newState, actor, newHead);
-            if (res.terminal)
+            // si le joueur est mort => terminal => stop
+            if (res.terminal) {
+                ensureCurrentActorIsPlayer(newState);
                 return newState;
-            // si l'ennemi vient de mourir, actor n'existe plus
+            }
+            // si l'ennemi vient de mourir, il n'existe plus (removeSnake)
+            // => on ne doit SURTOUT PAS basculer le contrôle dessus
             if (!newState.snakes[actor.id]) {
-                // passe au tour suivant directement
                 newState.turn++;
-                newState.currentActorId = Object.keys(newState.snakes)[0] ?? newState.currentActorId;
+                ensureCurrentActorIsPlayer(newState);
                 return newState;
             }
         }
         // --- Prochain tour ---
         newState.turn++;
-        newState.currentActorId = nextActorId(newState);
+        ensureCurrentActorIsPlayer(newState);
         return newState;
     },
     getResult(state) {
@@ -252,13 +355,11 @@ export const snakeContract = {
         };
     },
     evaluate(state, forActorId) {
-        // (garde ta version heuristique améliorée)
         const s = state.snakes[forActorId];
         if (!s)
             return -1e9;
         if (state.isTerminal || !s.alive)
             return -1e6;
-        // distance fruit (wrap)
         function wrappedDelta(a, b, size, wrap) {
             const d = Math.abs(a - b);
             return wrap ? Math.min(d, size - d) : d;
@@ -278,11 +379,34 @@ export const snakeContract = {
             }
             return best === Infinity ? 0 : best;
         }
+        function distToPlayerHead(head) {
+            const player = Object.values(state.snakes).find((sn) => sn.isPlayerControlled);
+            if (!player)
+                return 0;
+            const pHead = player.body?.[0];
+            if (!pHead)
+                return 0;
+            const { width, height, wrapX, wrapY } = state.config;
+            const dx = wrappedDelta(head.x, pHead.x, width, wrapX);
+            const dy = wrappedDelta(head.y, pHead.y, height, wrapY);
+            return dx + dy;
+        }
         const head = s.body[0];
+        const pacman = isPacmanMode(state);
+        const isEnemy = !s.isPlayerControlled;
+        // ENNEMIS : ne mangent pas, ne visent pas les fruits => ils chassent le joueur
+        if (isEnemy) {
+            const dPlayer = distToPlayerHead(head);
+            const W_CHASE = 50;
+            return -dPlayer * W_CHASE;
+        }
+        // JOUEUR : fruits/score/longueur
         const distFruit = distToNearestFruit(head);
-        const W_LEN = 100;
-        const W_DIST = 10;
-        return s.body.length * W_LEN - distFruit * W_DIST;
+        const myScore = getScore(state, forActorId);
+        const W_SCORE = pacman ? 1000 : 0;
+        const W_LEN = pacman ? 0 : 100;
+        const W_DIST_FRUIT = 10;
+        return myScore * W_SCORE + s.body.length * W_LEN - distFruit * W_DIST_FRUIT;
     },
 };
 //# sourceMappingURL=snakeRules.js.map
