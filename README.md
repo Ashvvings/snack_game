@@ -131,7 +131,13 @@ To then launch a game where our AI actually plays the selected variant, run the 
 ```python3 "./FourchLang/src/backends/playable/python/play-ai.py" "./FourchLang/examples/variant-[X]/json/output.json" snake-ai```<br/>
 with X being the chosed variant.<br/><br/>
 This will open a window with the game running, where you can witness the AI playing the game. This window will close itself when the AI loses or if you click on the cross button on its top-right corner. <br/>
-A "next_state.json" file is also generated at the root of the project, displaying every move made by the AI until end of its trial.
+A "next_state.json" file is also generated at the root of the project, displaying every move made by the AI until end of its trial.<br/> <br/>
+Our AI is based on the A* algortihm, which is an extension of Dijkstra's shortest path algorithm. We tuned it to identify the shortest path from the snake's head to the nearest fruit, while avoiding eventual threats.<br/>
+By the end of our development on our project, the AI was very resilient, avoiding most of threats and swiftly eating fruits, always using the shortest path to do so.<br/>
+Although, it presents a potent weakness in its reluctancy to cross borders when possible. This is due to the distance computation using the coordinates of positions in the grid instead of relative positions from the snake's head.<br/>
+Thus, the AI always takes the shortest path _not_ crossing any borders (even when possible) by default. this results in weird behaviors, especially in the variant 4 (the Pac-Man variant) where it chooses to go backwards instead of crossing the tunnel.<br/>
+Another weakness we identified is the case where there is no fruits to be found in the grid. This happens in variant 2 where a timer regulates fruit spawning to happen 2 seconds after the fruit was eaten. In that period of time, our AI is unable to find the shortest path to a fruit (thanks to no fruits being anywhere), and chooses to pass priority, repeating the same move as previously without necessarily taking where that is headint them to.<br/>
+This behavior results in silly game overs, where the AI voluntarily ram through an enemy, a wall, or sometimes itself when no fruits are around.
 # 6. LLM protocol
 <!-- TODO -->
 
@@ -140,6 +146,7 @@ A "next_state.json" file is also generated at the root of the project, displayin
 <!-- TODO -->
 # 8. Unsupported features and limitations
 <!-- TODO -->
+
 # 9. Lessons learned
 <!-- TODO -->
 # 10. Ressources
