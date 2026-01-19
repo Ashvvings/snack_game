@@ -637,6 +637,11 @@ class Jeu :
         for body in game.enemyBodies:
             ebx, eby = body.position
             grid[ebx + 1][eby + 1] = 'X '
+
+        # Placer les murs internes
+        for wall in game.walls:
+            wx, wy = wall.position
+            grid[wx + 1][wy + 1] = '# '
         
         # Convertir la grille en chaîne de caractères
         for row in grid:
