@@ -124,6 +124,7 @@ class Jeu :
     score = 0
     initial_body_count = 0
     variant = None
+    moves_done = []
     
     variant_context = {
         "1" : "1 fruit is worth 1 point, makes you grow by 1 point, and reappears when eaten. The game ends if the snake bites itself. You can cross the edges.",
@@ -706,7 +707,7 @@ Concrete list of allowed moves for THIS state:\n\
         return direction
 
     # Lancement de la boucle de jeu
-    def go(self, ai_type : str, grid_path : str, next_move_path : str):
+    def go(self, ai_type : str):
         next_move = None
         last_move = None
         if ai_type != "llm" and ai_type != "snake-ai":
@@ -726,8 +727,8 @@ Concrete list of allowed moves for THIS state:\n\
             elif ai_type == "llm":
                 # Appel à une IA de type LLM par endpoint D'OpenAI
                 prompt = self.json_prompt()
-                with open("./prompt.txt", "w") as f:
-                    f.write(prompt)
+                # with open("./prompt.txt", "w") as f:
+                #     f.write(prompt)
                 ret = LLMAIPlayerRun(prompt, max_tokens=200)
                 next_move = self.ninety_degrees_fix(getLLMMove(ret))
                 print(f"Move given by LLM: {ret}")
@@ -743,9 +744,12 @@ Concrete list of allowed moves for THIS state:\n\
                     running = False
                     break
             time.sleep(0.5) # Modulable selon la vitesse voulue
-            # DEBUG : attendre un mouvement valide
-            while not next_move:
-                continue
+            # Ecrire le mouvement défini dans le fichier next_state.json
+            self.moves_done.append(next_move)
+            next_json = {"number_of_moves_done" : len(self.moves_done),
+                         "moves": self.moves_done}
+            with open("next_state.json", "w") as f:
+                json.dump(next_json, f)
             # Mettre à jour le jeu avec le mouvement défini par l'IA
             self.take_direction(next_move)
             self.player_forward()
@@ -764,10 +768,7 @@ if __name__ == "__main__":
     game.draw()
     
     ai_type = sys.argv[2] if len(sys.argv) > 2 else None
-
-    grid_path = "./grid.txt"
-    next_move_path = "./AI_response.txt"
-    game.go(ai_type, grid_path, next_move_path)
+    game.go(ai_type)
 
     print(f"Game Over\n Score obtenu : ${game.score}")
 
