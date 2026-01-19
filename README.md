@@ -1,12 +1,71 @@
 # 1. Project overview
 FourchLang is a domain-specific language (DSL) for describing snake-like games played on a 2D discrete grid.
-Our idea was to create a basic version that corresponds to the game Snake, then add variations such as “to grow, you only have to eat numbers that are multiples of 3”, etc. Another variation could typically be Pac-Man! We remove the size change dimension and can add enemies, for example.​
 A program specifies the grid, borders, players/snakes, objects (fruits, enemies, walls) and game-over conditions, which are then compiled to an executable game or a visual representation (ASCII / GUI).​
 The focus is on deterministic, turn-based updates (up, down, left, right) with simple collision and scoring rules, making it easy to explore many gameplay variants (multiples-of-3 fruits, pacman-like modes, etc.).​
 The project is implemented with Langium (TypeScript) and uses Node.js tooling (npm run langium:generate, generators, tests).​
 Optional AI agents (rule-based or LLM-controlled via OpenRouter) can play the game, evaluate variants, or act as opponents.​
 
-# 2. Representative DSL programs with some explanations 
+
+# 2. Representative DSL programs with some explanations
+We have created five representative examples of what can be done with our DSL.
+# Variation 1: Classic “Snake” game
+
+The code contained in the `program.fl` file in this folder represents the configuration of a classic “Snake” game, with a snake that is 3 squares long, a grid that is 10 squares long by 9 squares wide, and one piece of fruit already present.  
+Eating a piece of fruit with the snake increases the score by 1 and lengthens the snake by one square.  
+Coming into contact with a square where the snake is located ends the game.
+The edges of the grid can be crossed, causing the snake to reappear on the other side if it passes through an edge.  
+Fruit reappears in an empty square as soon as it is eaten by the snake.
+
+<video controls src="snake1-2026-01-19_10.18.29.mov" title="SnakeGame-Variant1"></video>
+
+
+# Variation 2: Classic “Snake” game with closed edges
+
+The code contained in the `program.fl` file in this folder represents the configuration of a “Snake” game with closed edges, with a snake that is 3 squares long, a grid that is 10 squares long by 9 squares wide, and one piece of fruit already present.  
+Eating a fruit with the snake increases the score by 1 and lengthens the snake by one square.  
+Eaten fruits reappear on a random empty square 2 seconds after they are eaten.  
+Touching the edge of the grid ends the game.
+
+<video controls src="snake2-2026-01-19_10.27.18.mov" title="SnakeGame-Variant2"></video>
+
+
+# Variation 3: “Snake” game with enemies Snake
+
+The code contained in the `program.fl` file in this folder resembles the configuration of a classic “Snake” game with a snake that is 4 squares long, a grid that is 10 squares long by 9 squares wide, and a fruit already present.  
+The difference with the classic “Snake” is the addition of an enemy, which is also a snake 4 squares long.  
+Eating a piece of fruit with the snake increases the score by 1, and it reappears in an empty square as soon as it is eaten.  
+The edges of the grid can be crossed, causing the snakes to reappear on the opposite side of the grid.  
+Coming into contact with a square where a snake (ally or enemy) is located ends the game.
+
+<video controls src="snake3-2026-01-19_10.30.42.mov" title="SnakeGame-Variant3"></video>
+
+
+
+
+# Variation 4: Pac-Man
+
+The code contained in the `program.fl` file in this folder resembles the configuration of a single-player Pac-Man game, with a grid 29 squares long by 28 squares wide, walls, fruit, and enemies.  
+There is a passage between the left and right edges towards the middle of the grid, so the vertical border can be crossed. The horizontal border cannot.  
+Eating a piece of fruit with the player increases the score by 10. The fruit does not reappear.  
+Several enemies are present in the grid.  
+Coming into contact with a square containing an enemy ends the game.
+
+<video controls src="snake3-2026-01-19_10.32.04.mov" title="SnakeGame-Variant4"></video>
+
+
+
+
+
+# Variation 5: Custom “Snake” game
+
+The code contained in the `program.fl` file in this folder represents the configuration of a custom “Snake” game, with a snake that is 3 squares long, a grid that is 4 squares long by 3 squares wide, one enemy, and two pieces of fruit already present. There is one healthy fruit and one rotten fruit. There are also impassable walls. The edges are impassable.  
+Eating a healthy fruit with the snake increases the score by 4 and lengthens the snake by one square.  
+Eating a rotten fruit with the snake decreases the score by 4 and lengthens the snake by one square.  
+Touching a square where the snake is located ends the game.
+Touching the enemy ends the game.
+Touching an edge ends the game.
+
+<video controls src="snake3-2026-01-19_10.34.28.mov" title="SnakeGame-Variant5"></video>
 
 # 3. How to run
 
